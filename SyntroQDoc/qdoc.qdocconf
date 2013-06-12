@@ -1,0 +1,24 @@
+project                 = SyntroCore
+description             = SyntroCore Documentation
+url                     = http://www.pansenti.com
+version                 = 0.6
+
+depends += ../SyntroLib \
+		./
+
+headerdirs  += ../SyntroLib \
+		./
+
+imagedirs   += ../SyntroLib \
+		./
+
+sourcedirs  += ../SyntroLib \
+		./
+
+outputdir = SyntroDocuments
+
+sources.fileextensions = "*.cpp *.qdoc *.mm *.qml"
+headers.fileextensions = "*.h *.ch *.h++ *.hh *.hpp *.hxx"
+
+include(qt-html-templates-online.qdocconf)
+include(qt-styles-online.qdocconf)

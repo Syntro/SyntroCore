@@ -1,0 +1,18 @@
+#ifndef SYNTROCONTROLLIB_GLOBAL_H
+#define SYNTROCONTROLLIB_GLOBAL_H
+
+#include <QtCore/qglobal.h>
+
+#if defined Q_OS_WIN
+	#if defined SYNTROCONTROL_STATIC_LIB
+		#define SYNTROCONTROLLIB_EXPORT
+    #elif defined SYNTROCONTROLLIB_LIB
+        #define SYNTROCONTROLLIB_EXPORT Q_DECL_EXPORT
+    #else
+        #define SYNTROCONTROLLIB_EXPORT Q_DECL_IMPORT
+    #endif
+#else
+    #define SYNTROCONTROLLIB_EXPORT
+#endif
+
+#endif // SYNTROCONTROLLIB_GLOBAL_H

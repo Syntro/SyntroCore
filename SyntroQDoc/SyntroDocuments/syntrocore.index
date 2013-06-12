@@ -1,0 +1,211 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE QDOCINDEX>
+<INDEX url="http://www.pansenti.com" title="SyntroCore Documentation" version="0.6">
+    <namespace access="public" threadsafety="unspecified" status="commendable" name="" href="" location="">
+        <class access="public" threadsafety="unspecified" status="commendable" name="Endpoint" href="endpoint.html" location="Endpoint.h" bases="SyntroThread" module="SyntroLib">
+            <function access="protected" threadsafety="unspecified" status="commendable" name="CFSAddEP" fullname="Endpoint::CFSAddEP" href="endpoint.html#CFSAddEP" location="Endpoint.h" virtual="non" meta="plain" const="false" static="false" overload="false" type="void" signature="CFSAddEP(int serviceEP)">
+                <parameter left="int" right="" name="serviceEP" default=""/>
+            </function>
+            <function access="protected" threadsafety="unspecified" status="commendable" name="CFSClose" fullname="Endpoint::CFSClose" href="endpoint.html#CFSClose" location="Endpoint.h" virtual="non" meta="plain" const="false" static="false" overload="false" type="bool" signature="CFSClose(int serviceEP, int handle)">
+                <parameter left="int" right="" name="serviceEP" default=""/>
+                <parameter left="int" right="" name="handle" default=""/>
+            </function>
+            <function access="protected" threadsafety="unspecified" status="commendable" name="CFSCloseResponse" fullname="Endpoint::CFSCloseResponse" href="endpoint.html#CFSCloseResponse" location="Endpoint.h" virtual="impure" meta="plain" const="false" static="false" overload="false" type="void" signature="CFSCloseResponse(int serviceEP, unsigned int responseCode, int handle)">
+                <parameter left="int" right="" name="serviceEP" default=""/>
+                <parameter left="unsigned int" right="" name="responseCode" default=""/>
+                <parameter left="int" right="" name="handle" default=""/>
+            </function>
+            <function access="protected" threadsafety="unspecified" status="commendable" name="CFSDeleteEP" fullname="Endpoint::CFSDeleteEP" href="endpoint.html#CFSDeleteEP" location="Endpoint.h" virtual="non" meta="plain" const="false" static="false" overload="false" type="void" signature="CFSDeleteEP(int serviceEP)">
+                <parameter left="int" right="" name="serviceEP" default=""/>
+            </function>
+            <function access="protected" threadsafety="unspecified" status="commendable" name="CFSDir" fullname="Endpoint::CFSDir" href="endpoint.html#CFSDir" location="Endpoint.h" virtual="non" meta="plain" const="false" static="false" overload="false" type="bool" signature="CFSDir(int serviceEP)">
+                <parameter left="int" right="" name="serviceEP" default=""/>
+            </function>
+            <function access="protected" threadsafety="unspecified" status="commendable" name="CFSDirResponse" fullname="Endpoint::CFSDirResponse" href="endpoint.html#CFSDirResponse" location="Endpoint.h" virtual="impure" meta="plain" const="false" static="false" overload="false" type="void" signature="CFSDirResponse(int serviceEP, unsigned int responseCode, QStringList filePaths)">
+                <parameter left="int" right="" name="serviceEP" default=""/>
+                <parameter left="unsigned int" right="" name="responseCode" default=""/>
+                <parameter left="QStringList" right="" name="filePaths" default=""/>
+            </function>
+            <function access="protected" threadsafety="unspecified" status="commendable" name="CFSKeepAliveTimeout" fullname="Endpoint::CFSKeepAliveTimeout" href="endpoint.html#CFSKeepAliveTimeout" location="Endpoint.h" virtual="impure" meta="plain" const="false" static="false" overload="false" type="void" signature="CFSKeepAliveTimeout(int serviceEP, int handle)">
+                <parameter left="int" right="" name="serviceEP" default=""/>
+                <parameter left="int" right="" name="handle" default=""/>
+            </function>
+            <function access="protected" threadsafety="unspecified" status="commendable" name="CFSOpen" fullname="Endpoint::CFSOpen" href="endpoint.html#CFSOpen" location="Endpoint.h" virtual="non" meta="plain" const="false" static="false" overload="false" type="int" signature="CFSOpen(int serviceEP, QString filePath, int blockSize)">
+                <parameter left="int" right="" name="serviceEP" default=""/>
+                <parameter left="QString" right="" name="filePath" default=""/>
+                <parameter left="int" right="" name="blockSize" default="128"/>
+            </function>
+            <function access="protected" threadsafety="unspecified" status="commendable" name="CFSOpenResponse" fullname="Endpoint::CFSOpenResponse" href="endpoint.html#CFSOpenResponse" location="Endpoint.h" virtual="impure" meta="plain" const="false" static="false" overload="false" type="void" signature="CFSOpenResponse(int remoteServiceEP, unsigned int responseCode, int handle, unsigned int fileLength)">
+                <parameter left="int" right="" name="remoteServiceEP" default=""/>
+                <parameter left="unsigned int" right="" name="responseCode" default=""/>
+                <parameter left="int" right="" name="handle" default=""/>
+                <parameter left="unsigned int" right="" name="fileLength" default=""/>
+            </function>
+            <function access="protected" threadsafety="unspecified" status="commendable" name="CFSReadAtIndex" fullname="Endpoint::CFSReadAtIndex" href="endpoint.html#CFSReadAtIndex" location="Endpoint.h" virtual="non" meta="plain" const="false" static="false" overload="false" type="bool" signature="CFSReadAtIndex(int serviceEP, int handle, unsigned int index, int blockCount)">
+                <parameter left="int" right="" name="serviceEP" default=""/>
+                <parameter left="int" right="" name="handle" default=""/>
+                <parameter left="unsigned int" right="" name="index" default=""/>
+                <parameter left="int" right="" name="blockCount" default="1"/>
+            </function>
+            <function access="protected" threadsafety="unspecified" status="commendable" name="CFSReadAtIndexResponse" fullname="Endpoint::CFSReadAtIndexResponse" href="endpoint.html#CFSReadAtIndexResponse" location="Endpoint.h" virtual="impure" meta="plain" const="false" static="false" overload="false" type="void" signature="CFSReadAtIndexResponse(int serviceEP, int handle, unsigned int index, unsigned int responseCode, unsigned char * fileData, int length)">
+                <parameter left="int" right="" name="serviceEP" default=""/>
+                <parameter left="int" right="" name="handle" default=""/>
+                <parameter left="unsigned int" right="" name="index" default=""/>
+                <parameter left="unsigned int" right="" name="responseCode" default=""/>
+                <parameter left="unsigned char *" right="" name="fileData" default=""/>
+                <parameter left="int" right="" name="length" default=""/>
+            </function>
+            <function access="protected" threadsafety="unspecified" status="commendable" name="CFSWriteAtIndex" fullname="Endpoint::CFSWriteAtIndex" href="endpoint.html#CFSWriteAtIndex" location="Endpoint.h" virtual="non" meta="plain" const="false" static="false" overload="false" type="bool" signature="CFSWriteAtIndex(int serviceEP, int handle, unsigned int index, unsigned char * fileData, int length)">
+                <parameter left="int" right="" name="serviceEP" default=""/>
+                <parameter left="int" right="" name="handle" default=""/>
+                <parameter left="unsigned int" right="" name="index" default=""/>
+                <parameter left="unsigned char *" right="" name="fileData" default=""/>
+                <parameter left="int" right="" name="length" default=""/>
+            </function>
+            <function access="protected" threadsafety="unspecified" status="commendable" name="CFSWriteAtIndexResponse" fullname="Endpoint::CFSWriteAtIndexResponse" href="endpoint.html#CFSWriteAtIndexResponse" location="Endpoint.h" virtual="impure" meta="plain" const="false" static="false" overload="false" type="void" signature="CFSWriteAtIndexResponse(int serviceEP, int handle, unsigned int index, unsigned int responseCode)">
+                <parameter left="int" right="" name="serviceEP" default=""/>
+                <parameter left="int" right="" name="handle" default=""/>
+                <parameter left="unsigned int" right="" name="index" default=""/>
+                <parameter left="unsigned int" right="" name="responseCode" default=""/>
+            </function>
+            <function access="public" threadsafety="unspecified" status="commendable" name="Endpoint" fullname="Endpoint::Endpoint" href="endpoint.html#Endpoint" location="Endpoint.h" virtual="non" meta="constructor" const="false" static="false" overload="false" type="" signature="Endpoint(QObject * parent, QSettings * settings, qint64 backgroundInterval)">
+                <parameter left="QObject *" right="" name="parent" default=""/>
+                <parameter left="QSettings *" right="" name="settings" default=""/>
+                <parameter left="qint64" right="" name="backgroundInterval" default=""/>
+            </function>
+            <function access="protected" threadsafety="unspecified" status="commendable" name="appClientBackground" fullname="Endpoint::appClientBackground" href="endpoint.html#appClientBackground" location="Endpoint.h" virtual="impure" meta="plain" const="false" static="false" overload="false" type="void" signature="appClientBackground()"/>
+            <function access="protected" threadsafety="unspecified" status="commendable" name="appClientClosed" fullname="Endpoint::appClientClosed" href="endpoint.html#appClientClosed" location="Endpoint.h" virtual="impure" meta="plain" const="false" static="false" overload="false" type="void" signature="appClientClosed()"/>
+            <function access="protected" threadsafety="unspecified" status="commendable" name="appClientConnected" fullname="Endpoint::appClientConnected" href="endpoint.html#appClientConnected" location="Endpoint.h" virtual="impure" meta="plain" const="false" static="false" overload="false" type="void" signature="appClientConnected()"/>
+            <function access="protected" threadsafety="unspecified" status="commendable" name="appClientExit" fullname="Endpoint::appClientExit" href="endpoint.html#appClientExit" location="Endpoint.h" virtual="impure" meta="plain" const="false" static="false" overload="false" type="void" signature="appClientExit()"/>
+            <function access="protected" threadsafety="unspecified" status="commendable" name="appClientHeartbeat" fullname="Endpoint::appClientHeartbeat" href="endpoint.html#appClientHeartbeat" location="Endpoint.h" virtual="impure" meta="plain" const="false" static="false" overload="false" type="void" signature="appClientHeartbeat(SYNTRO_HEARTBEAT * heartbeat, int length)">
+                <parameter left="SYNTRO_HEARTBEAT *" right="" name="heartbeat" default=""/>
+                <parameter left="int" right="" name="length" default=""/>
+            </function>
+            <function access="protected" threadsafety="unspecified" status="commendable" name="appClientInit" fullname="Endpoint::appClientInit" href="endpoint.html#appClientInit" location="Endpoint.h" virtual="impure" meta="plain" const="false" static="false" overload="false" type="void" signature="appClientInit()"/>
+            <function access="protected" threadsafety="unspecified" status="commendable" name="appClientProcessThreadMessage" fullname="Endpoint::appClientProcessThreadMessage" href="endpoint.html#appClientProcessThreadMessage" location="Endpoint.h" virtual="impure" meta="plain" const="false" static="false" overload="false" type="bool" signature="appClientProcessThreadMessage(SyntroThreadMsg * msg)">
+                <parameter left="SyntroThreadMsg *" right="" name="msg" default=""/>
+            </function>
+            <function access="protected" threadsafety="unspecified" status="commendable" name="appClientReceiveDirectory" fullname="Endpoint::appClientReceiveDirectory" href="endpoint.html#appClientReceiveDirectory" location="Endpoint.h" virtual="impure" meta="plain" const="false" static="false" overload="false" type="void" signature="appClientReceiveDirectory(SYNTRO_DIRECTORY_RESPONSE * directory, int length)">
+                <parameter left="SYNTRO_DIRECTORY_RESPONSE *" right="" name="directory" default=""/>
+                <parameter left="int" right="" name="length" default=""/>
+            </function>
+            <function access="protected" threadsafety="unspecified" status="commendable" name="appClientReceiveE2E" fullname="Endpoint::appClientReceiveE2E" href="endpoint.html#appClientReceiveE2E" location="Endpoint.h" virtual="impure" meta="plain" const="false" static="false" overload="false" type="void" signature="appClientReceiveE2E(int servicePort, SYNTRO_EHEAD * message, int length)">
+                <parameter left="int" right="" name="servicePort" default=""/>
+                <parameter left="SYNTRO_EHEAD *" right="" name="message" default=""/>
+                <parameter left="int" right="" name="length" default=""/>
+            </function>
+            <function access="protected" threadsafety="unspecified" status="commendable" name="appClientReceiveMulticast" fullname="Endpoint::appClientReceiveMulticast" href="endpoint.html#appClientReceiveMulticast" location="Endpoint.h" virtual="impure" meta="plain" const="false" static="false" overload="false" type="void" signature="appClientReceiveMulticast(int servicePort, SYNTRO_EHEAD * message, int length)">
+                <parameter left="int" right="" name="servicePort" default=""/>
+                <parameter left="SYNTRO_EHEAD *" right="" name="message" default=""/>
+                <parameter left="int" right="" name="length" default=""/>
+            </function>
+            <function access="protected" threadsafety="unspecified" status="commendable" name="appClientReceiveMulticastAck" fullname="Endpoint::appClientReceiveMulticastAck" href="endpoint.html#appClientReceiveMulticastAck" location="Endpoint.h" virtual="impure" meta="plain" const="false" static="false" overload="false" type="void" signature="appClientReceiveMulticastAck(int servicePort, SYNTRO_EHEAD * message, int length)">
+                <parameter left="int" right="" name="servicePort" default=""/>
+                <parameter left="SYNTRO_EHEAD *" right="" name="message" default=""/>
+                <parameter left="int" right="" name="length" default=""/>
+            </function>
+            <function access="protected" threadsafety="unspecified" status="commendable" name="clientAddService" fullname="Endpoint::clientAddService" href="endpoint.html#clientAddService" location="Endpoint.h" virtual="non" meta="plain" const="false" static="false" overload="false" type="int" signature="clientAddService(QString servicePath, int serviceType, bool local, bool enabled)">
+                <parameter left="QString" right="" name="servicePath" default=""/>
+                <parameter left="int" right="" name="serviceType" default=""/>
+                <parameter left="bool" right="" name="local" default=""/>
+                <parameter left="bool" right="" name="enabled" default="true"/>
+            </function>
+            <function access="protected" threadsafety="unspecified" status="commendable" name="clientBuildLocalE2EMessage" fullname="Endpoint::clientBuildLocalE2EMessage" href="endpoint.html#clientBuildLocalE2EMessage" location="Endpoint.h" virtual="non" meta="plain" const="false" static="false" overload="false" type="SYNTRO_EHEAD *" signature="clientBuildLocalE2EMessage(int clientPort, SYNTRO_UID * destUID, int destPort, int length)">
+                <parameter left="int" right="" name="clientPort" default=""/>
+                <parameter left="SYNTRO_UID *" right="" name="destUID" default=""/>
+                <parameter left="int" right="" name="destPort" default=""/>
+                <parameter left="int" right="" name="length" default=""/>
+            </function>
+            <function access="protected" threadsafety="unspecified" status="commendable" name="clientBuildMessage" fullname="Endpoint::clientBuildMessage" href="endpoint.html#clientBuildMessage" location="Endpoint.h" virtual="non" meta="plain" const="false" static="false" overload="false" type="SYNTRO_EHEAD *" signature="clientBuildMessage(int servicePort, int length)">
+                <parameter left="int" right="" name="servicePort" default=""/>
+                <parameter left="int" right="" name="length" default=""/>
+            </function>
+            <function access="protected" threadsafety="unspecified" status="commendable" name="clientClearToSend" fullname="Endpoint::clientClearToSend" href="endpoint.html#clientClearToSend" location="Endpoint.h" virtual="non" meta="plain" const="false" static="false" overload="false" type="bool" signature="clientClearToSend(int servicePort)">
+                <parameter left="int" right="" name="servicePort" default=""/>
+            </function>
+            <function access="protected" threadsafety="unspecified" status="commendable" name="clientDisableService" fullname="Endpoint::clientDisableService" href="endpoint.html#clientDisableService" location="Endpoint.h" virtual="non" meta="plain" const="false" static="false" overload="false" type="bool" signature="clientDisableService(int servicePort)">
+                <parameter left="int" right="" name="servicePort" default=""/>
+            </function>
+            <function access="protected" threadsafety="unspecified" status="commendable" name="clientEnableService" fullname="Endpoint::clientEnableService" href="endpoint.html#clientEnableService" location="Endpoint.h" virtual="non" meta="plain" const="false" static="false" overload="false" type="bool" signature="clientEnableService(int servicePort)">
+                <parameter left="int" right="" name="servicePort" default=""/>
+            </function>
+            <function access="protected" threadsafety="unspecified" status="commendable" name="clientGetLastSendTime" fullname="Endpoint::clientGetLastSendTime" href="endpoint.html#clientGetLastSendTime" location="Endpoint.h" virtual="non" meta="plain" const="false" static="false" overload="false" type="qint64" signature="clientGetLastSendTime(int servicePort)">
+                <parameter left="int" right="" name="servicePort" default=""/>
+            </function>
+            <function access="protected" threadsafety="unspecified" status="commendable" name="clientGetRemoteServiceState" fullname="Endpoint::clientGetRemoteServiceState" href="endpoint.html#clientGetRemoteServiceState" location="Endpoint.h" virtual="non" meta="plain" const="false" static="false" overload="false" type="int" signature="clientGetRemoteServiceState(int servicePort)">
+                <parameter left="int" right="" name="servicePort" default=""/>
+            </function>
+            <function access="protected" threadsafety="unspecified" status="commendable" name="clientGetRemoteServiceUID" fullname="Endpoint::clientGetRemoteServiceUID" href="endpoint.html#clientGetRemoteServiceUID" location="Endpoint.h" virtual="non" meta="plain" const="false" static="false" overload="false" type="SYNTRO_UID *" signature="clientGetRemoteServiceUID(int servicePort)">
+                <parameter left="int" right="" name="servicePort" default=""/>
+            </function>
+            <function access="protected" threadsafety="unspecified" status="commendable" name="clientGetServiceData" fullname="Endpoint::clientGetServiceData" href="endpoint.html#clientGetServiceData" location="Endpoint.h" virtual="non" meta="plain" const="false" static="false" overload="false" type="int" signature="clientGetServiceData(int servicePort)">
+                <parameter left="int" right="" name="servicePort" default=""/>
+            </function>
+            <function access="protected" threadsafety="unspecified" status="commendable" name="clientGetServiceDestPort" fullname="Endpoint::clientGetServiceDestPort" href="endpoint.html#clientGetServiceDestPort" location="Endpoint.h" virtual="non" meta="plain" const="false" static="false" overload="false" type="int" signature="clientGetServiceDestPort(int servicePort)">
+                <parameter left="int" right="" name="servicePort" default=""/>
+            </function>
+            <function access="protected" threadsafety="unspecified" status="commendable" name="clientGetServicePath" fullname="Endpoint::clientGetServicePath" href="endpoint.html#clientGetServicePath" location="Endpoint.h" virtual="non" meta="plain" const="false" static="false" overload="false" type="QString" signature="clientGetServicePath(int servicePort)">
+                <parameter left="int" right="" name="servicePort" default=""/>
+            </function>
+            <function access="protected" threadsafety="unspecified" status="commendable" name="clientGetServiceType" fullname="Endpoint::clientGetServiceType" href="endpoint.html#clientGetServiceType" location="Endpoint.h" virtual="non" meta="plain" const="false" static="false" overload="false" type="int" signature="clientGetServiceType(int servicePort)">
+                <parameter left="int" right="" name="servicePort" default=""/>
+            </function>
+            <function access="protected" threadsafety="unspecified" status="commendable" name="clientIsConnected" fullname="Endpoint::clientIsConnected" href="endpoint.html#clientIsConnected" location="Endpoint.h" virtual="non" meta="plain" const="false" static="false" overload="false" type="bool" signature="clientIsConnected()"/>
+            <function access="protected" threadsafety="unspecified" status="commendable" name="clientIsServiceActive" fullname="Endpoint::clientIsServiceActive" href="endpoint.html#clientIsServiceActive" location="Endpoint.h" virtual="non" meta="plain" const="false" static="false" overload="false" type="bool" signature="clientIsServiceActive(int servicePort)">
+                <parameter left="int" right="" name="servicePort" default=""/>
+            </function>
+            <function access="protected" threadsafety="unspecified" status="commendable" name="clientIsServiceEnabled" fullname="Endpoint::clientIsServiceEnabled" href="endpoint.html#clientIsServiceEnabled" location="Endpoint.h" virtual="non" meta="plain" const="false" static="false" overload="false" type="bool" signature="clientIsServiceEnabled(int servicePort)">
+                <parameter left="int" right="" name="servicePort" default=""/>
+            </function>
+            <function access="protected" threadsafety="unspecified" status="commendable" name="clientIsServiceLocal" fullname="Endpoint::clientIsServiceLocal" href="endpoint.html#clientIsServiceLocal" location="Endpoint.h" virtual="non" meta="plain" const="false" static="false" overload="false" type="bool" signature="clientIsServiceLocal(int servicePort)">
+                <parameter left="int" right="" name="servicePort" default=""/>
+            </function>
+            <function access="protected" threadsafety="unspecified" status="commendable" name="clientLoadServices" fullname="Endpoint::clientLoadServices" href="endpoint.html#clientLoadServices" location="Endpoint.h" virtual="non" meta="plain" const="false" static="false" overload="false" type="bool" signature="clientLoadServices(bool enabled, int * serviceCount, int * serviceStart)">
+                <parameter left="bool" right="" name="enabled" default=""/>
+                <parameter left="int *" right="" name="serviceCount" default=""/>
+                <parameter left="int *" right="" name="serviceStart" default=""/>
+            </function>
+            <function access="protected" threadsafety="unspecified" status="commendable" name="clientRemoveService" fullname="Endpoint::clientRemoveService" href="endpoint.html#clientRemoveService" location="Endpoint.h" virtual="non" meta="plain" const="false" static="false" overload="false" type="bool" signature="clientRemoveService(int servicePort)">
+                <parameter left="int" right="" name="servicePort" default=""/>
+            </function>
+            <function access="protected" threadsafety="unspecified" status="commendable" name="clientSendMessage" fullname="Endpoint::clientSendMessage" href="endpoint.html#clientSendMessage" location="Endpoint.h" virtual="non" meta="plain" const="false" static="false" overload="false" type="bool" signature="clientSendMessage(int servicePort, SYNTRO_EHEAD * message, int length, int priority)">
+                <parameter left="int" right="" name="servicePort" default=""/>
+                <parameter left="SYNTRO_EHEAD *" right="" name="message" default=""/>
+                <parameter left="int" right="" name="length" default=""/>
+                <parameter left="int" right="" name="priority" default="SYNTROLINK_LOWPRI"/>
+            </function>
+            <function access="protected" threadsafety="unspecified" status="commendable" name="clientSendMulticastAck" fullname="Endpoint::clientSendMulticastAck" href="endpoint.html#clientSendMulticastAck" location="Endpoint.h" virtual="non" meta="plain" const="false" static="false" overload="false" type="bool" signature="clientSendMulticastAck(int servicePort)">
+                <parameter left="int" right="" name="servicePort" default=""/>
+            </function>
+            <function access="protected" threadsafety="unspecified" status="commendable" name="clientSetServiceData" fullname="Endpoint::clientSetServiceData" href="endpoint.html#clientSetServiceData" location="Endpoint.h" virtual="non" meta="plain" const="false" static="false" overload="false" type="bool" signature="clientSetServiceData(int servicePort, int value)">
+                <parameter left="int" right="" name="servicePort" default=""/>
+                <parameter left="int" right="" name="value" default=""/>
+            </function>
+            <function access="public" threadsafety="unspecified" status="commendable" name="exitThread" fullname="Endpoint::exitThread" href="endpoint.html#exitThread" location="Endpoint.h" virtual="impure" meta="plain" const="false" static="false" overload="false" type="void" signature="exitThread()"/>
+            <function access="public" threadsafety="unspecified" status="commendable" name="getLinkState" fullname="Endpoint::getLinkState" href="endpoint.html#getLinkState" location="Endpoint.h" virtual="non" meta="plain" const="false" static="false" overload="false" type="QString" signature="getLinkState()"/>
+            <function access="public" threadsafety="unspecified" status="commendable" name="requestDirectory" fullname="Endpoint::requestDirectory" href="endpoint.html#requestDirectory" location="Endpoint.h" virtual="non" meta="plain" const="false" static="false" overload="false" type="void" signature="requestDirectory()"/>
+            <function access="public" threadsafety="unspecified" status="commendable" name="~Endpoint" fullname="Endpoint::~Endpoint" href="endpoint.html#dtor.Endpoint" location="Endpoint.h" virtual="impure" meta="destructor" const="false" static="false" overload="false" type="" signature="~Endpoint()"/>
+            <variable access="protected" threadsafety="unspecified" status="commendable" name="m_UID" fullname="Endpoint::m_UID" href="endpoint.html#m_UID-var" location="Endpoint.h" type="SYNTRO_UID" static="false"/>
+            <variable access="protected" threadsafety="unspecified" status="commendable" name="m_settings" fullname="Endpoint::m_settings" href="endpoint.html#m_settings-var" location="Endpoint.h" type="QSettings *" static="false"/>
+        </class>
+        <class access="public" threadsafety="unspecified" status="commendable" name="SyntroThread" href="syntrothread.html" location="SyntroThread.h" bases="" module="SyntroLib">
+            <function access="public" threadsafety="unspecified" status="commendable" name="SyntroThread" fullname="SyntroThread::SyntroThread" href="syntrothread.html#SyntroThread" location="SyntroThread.h" virtual="non" meta="constructor" const="false" static="false" overload="false" type="" signature="SyntroThread(QString threadName)">
+                <parameter left="QString" right="" name="threadName" default="&quot;Thread&quot;"/>
+            </function>
+            <function access="public" threadsafety="unspecified" status="commendable" name="exitThread" fullname="SyntroThread::exitThread" href="syntrothread.html#exitThread" location="SyntroThread.h" virtual="impure" meta="plain" const="false" static="false" overload="false" type="void" signature="exitThread()"/>
+            <function access="protected" threadsafety="unspecified" status="commendable" name="initThread" fullname="SyntroThread::initThread" href="syntrothread.html#initThread" location="SyntroThread.h" virtual="impure" meta="plain" const="false" static="false" overload="false" type="void" signature="initThread()"/>
+            <function access="public" threadsafety="unspecified" status="commendable" name="isRunning" fullname="SyntroThread::isRunning" href="syntrothread.html#isRunning" location="SyntroThread.h" virtual="non" meta="plain" const="false" static="false" overload="false" type="bool" signature="isRunning()"/>
+            <function access="public" threadsafety="unspecified" status="commendable" name="postThreadMessage" fullname="SyntroThread::postThreadMessage" href="syntrothread.html#postThreadMessage" location="SyntroThread.h" virtual="impure" meta="plain" const="false" static="false" overload="false" type="void" signature="postThreadMessage(int message, int intParam, void * ptrParam)">
+                <parameter left="int" right="" name="message" default=""/>
+                <parameter left="int" right="" name="intParam" default=""/>
+                <parameter left="void *" right="" name="ptrParam" default=""/>
+            </function>
+            <function access="protected" threadsafety="unspecified" status="commendable" name="processMessage" fullname="SyntroThread::processMessage" href="syntrothread.html#processMessage" location="SyntroThread.h" virtual="impure" meta="plain" const="false" static="false" overload="false" type="bool" signature="processMessage(SyntroThreadMsg * msg)">
+                <parameter left="SyntroThreadMsg *" right="" name="msg" default=""/>
+            </function>
+            <function access="public" threadsafety="unspecified" status="commendable" name="resumeThread" fullname="SyntroThread::resumeThread" href="syntrothread.html#resumeThread" location="SyntroThread.h" virtual="impure" meta="plain" const="false" static="false" overload="false" type="void" signature="resumeThread()"/>
+            <variable access="protected" threadsafety="unspecified" status="commendable" name="m_event" fullname="SyntroThread::m_event" href="syntrothread.html#m_event-var" location="SyntroThread.h" type="int" static="false"/>
+            <variable access="protected" threadsafety="unspecified" status="commendable" name="m_run" fullname="SyntroThread::m_run" href="syntrothread.html#m_run-var" location="SyntroThread.h" type="bool" static="false"/>
+        </class>
+    </namespace>
+</INDEX>
