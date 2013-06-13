@@ -149,8 +149,7 @@ void SyntroServer::addLogService()
 	m_settings->endGroup();
 
 	if (m_netLogEnabled) {
-		m_logServiceName = m_settings->value(SYNTRO_PARAMS_APPNAME).toString() + 
-			m_settings->value(SYNTRO_PARAMS_COMPTYPE).toString() + 
+		m_logServiceName = m_settings->value(SYNTRO_PARAMS_COMPTYPE).toString() + 
 			SYNTRO_LOG_SERVICE_TAG;
 
 		// Rebuild directory entry

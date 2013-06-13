@@ -102,7 +102,7 @@ class SyntroSocket;
 #define SYNTRO_LOG_LEVEL_INFO 2
 #define SYNTRO_LOG_LEVEL_DEBUG 3
 
-#define SYNTRO_LOG_SERVICE_TAG			":LOG"
+#define SYNTRO_LOG_SERVICE_TAG			":log"
 
 //	Standard stream entries
 

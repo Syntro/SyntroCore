@@ -384,6 +384,23 @@ typedef	struct
     SYNTRO_UC2 milliseconds;
 } SYNTRO_TIMESTAMP;
 
+//	Standard stream names
+
+#define SYNTRO_STREAMNAME_VIDEO				"video"
+#define SYNTRO_STREAMNAME_AUDIO				"audio"
+#define SYNTRO_STREAMNAME_NAV				"nav"
+#define SYNTRO_STREAMNAME_LOG				"log"
+#define SYNTRO_STREAMNAME_SENSOR			"sensor"
+#define SYNTRO_STREAMNAME_TEMPERATURE		"temperature"
+#define SYNTRO_STREAMNAME_HUMIDITY			"humidity"
+#define SYNTRO_STREAMNAME_LIGHT				"light"
+#define SYNTRO_STREAMNAME_MOTION			"motion"
+#define SYNTRO_STREAMNAME_AIRQUALITY		"airquality"
+#define SYNTRO_STREAMNAME_PRESSURE			"pressure"
+#define SYNTRO_STREAMNAME_ACCELEROMETER		"accelerometer"
+#define SYNTRO_STREAMNAME_ZIGBEE_MULTICAST  "zbmc"
+#define SYNTRO_STREAMNAME_ZIGBEE_E2E	    "zbe2e"
+
 
 //-------------------------------------------------------------------------------------------
 //	Syntro Record Headers
@@ -402,10 +419,18 @@ typedef struct
 
 //	Major type codes
 
-#define	SYNTRO_RECORD_TYPE_VIDEO	0						// a video record
-#define	SYNTRO_RECORD_TYPE_AUDIO	1						// an audio record
-#define	SYNTRO_RECORD_TYPE_NAV		2						// navigation data
-#define SYNTRO_RECORD_TYPE_LOG		3						// log data
+#define	SYNTRO_RECORD_TYPE_VIDEO		0					// a video record
+#define	SYNTRO_RECORD_TYPE_AUDIO		1					// an audio record
+#define	SYNTRO_RECORD_TYPE_NAV			2					// navigation data
+#define SYNTRO_RECORD_TYPE_LOG			3					// log data
+#define SYNTRO_RECORD_TYPE_SENSOR		4					// multiplexed sensor data
+#define SYNTRO_RECORD_TYPE_TEMPERATURE	5					// temperature sensor
+#define SYNTRO_RECORD_TYPE_HUMIDITY		6					// humidity sensor
+#define SYNTRO_RECORD_TYPE_LIGHT		7					// light sensor
+#define SYNTRO_RECORD_TYPE_MOTION		8					// motion detection events
+#define SYNTRO_RECORD_TYPE_AIRQUALITY	9					// air quality sensor
+#define SYNTRO_RECORD_TYPE_PRESSURE		10					// air pressure sensor
+#define SYNTRO_RECORD_TYPE_ZIGBEE		11					// zigbee multicast data
 
 #define	SYNTRO_RECORD_TYPE_USER		(0x8000)				// user defined codes start here
 

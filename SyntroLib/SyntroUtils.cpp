@@ -25,6 +25,7 @@
 #include "Endpoint.h"
 #include <qfileinfo.h>
 #include <qdir.h>
+#include <qhostinfo.h>
 
 //	globals
 
@@ -372,8 +373,7 @@ QSettings *loadStandardSettings(const char *appType, QStringList arglist)
 	//	Make sure common settings are present or else generate defaults
 
 	if (!settings->contains(SYNTRO_PARAMS_APPNAME))
-		settings->setValue(SYNTRO_PARAMS_APPNAME, QString(appType) + "-1");	// a reasonable default for the name 
-
+		settings->setValue(SYNTRO_PARAMS_APPNAME, QHostInfo::localHostName());		// use hostname for app name
 	//	Force type to be mine always
 
 	settings->setValue(SYNTRO_PARAMS_APPTYPE, appType);

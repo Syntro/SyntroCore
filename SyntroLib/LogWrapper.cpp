@@ -33,6 +33,7 @@ bool logCreate(QSettings *settings)
 		return false;
 
 	QString appName = settings->value(SYNTRO_PARAMS_APPNAME).toString();
+	QString appType = settings->value(SYNTRO_PARAMS_APPTYPE).toString();
 
 	settings->beginGroup(SYNTRO_PARAMS_LOG_GROUP);
 
@@ -69,7 +70,7 @@ bool logCreate(QSettings *settings)
 
 	settings->endGroup();
 
-	logSingleton = new Logger(appName, logLevel, diskLog, netLog, logKeep);
+	logSingleton = new Logger(appType, appName, logLevel, diskLog, netLog, logKeep);
 
 	return (logSingleton != NULL);
 }

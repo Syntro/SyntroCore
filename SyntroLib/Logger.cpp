@@ -28,7 +28,7 @@
 
 #define MAX_STREAM_QUEUE_MESSAGES 64
 
-Logger::Logger(QString appName, int level, bool diskLog, bool netLog, int logKeep)
+Logger::Logger(QString appType, QString appName, int level, bool diskLog, bool netLog, int logKeep)
 {
     m_thread = NULL;
     m_activeDiskQ = 0;
@@ -43,6 +43,13 @@ Logger::Logger(QString appName, int level, bool diskLog, bool netLog, int logKee
 	if (m_appName.length() < 1)
 		m_appName = "Unknown";
 
+	if (appType.length() > 0)
+		m_logName = appType + "-" + m_appName + ".log";
+	else
+		m_logName = m_appName + ".log";
+
+	m_logName.replace(' ', '_');
+
  	if (m_diskLog) {
 		if (diskOpen()) {
 			m_thread = new LogThread();
@@ -55,7 +62,7 @@ Logger::Logger(QString appName, int level, bool diskLog, bool netLog, int logKee
 	}
 
 	if (level >= SYNTRO_LOG_LEVEL_INFO) {
-        logWrite("INFO", QString("Log start - name: %1").arg(appName));
+        logWrite("INFO", QString("Log start: %1").arg(m_logName.left(m_logName.length() - 4)));
 
 		if (level == SYNTRO_LOG_LEVEL_DEBUG)
 			logWrite("DEBUG", QString("Qt  runtime %1  build %2").arg(qVersion()).arg(QT_VERSION_STR));
@@ -106,16 +113,12 @@ bool Logger::diskOpen()
 	if (m_file.isOpen())
         return true;
 
-	QString logName = m_appName + ".log";
-
-	logName.replace(' ', '_');
-
 	if (m_logKeep > 0) {
-		if (!rotateLogs(logName))
+		if (!rotateLogs(m_logName))
 			return false;
 	}
 
-	m_file.setFileName(logName);
+	m_file.setFileName(m_logName);
 
 	if (!m_file.open(QIODevice::WriteOnly | QIODevice::Truncate))
 		return false;

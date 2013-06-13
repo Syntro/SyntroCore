@@ -61,7 +61,7 @@ class Logger
 friend class LogThread;
 
 public:
-	Logger(QString appName, int level, bool diskLog, bool netLog, int logKeep);
+	Logger(QString appType, QString appName, int level, bool diskLog, bool netLog, int logKeep);
 
 	~Logger();
 
@@ -73,6 +73,7 @@ private:
     void diskFlush();
 	bool rotateLogs(QString logName);
 
+	QString m_logName;
 	QString m_appName;
 	bool m_diskLog;
 	bool m_netLog;
