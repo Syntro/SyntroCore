@@ -32,7 +32,7 @@
 SyntroStoreConsole::SyntroStoreConsole(QSettings *settings, QObject *parent)
 	: QThread(parent), m_settings(settings)
 {
-	syntroAppInit(m_settings);
+	SyntroUtils::syntroAppInit(m_settings);
 	m_client = new StoreClient(this, m_settings);
 	m_client->resumeThread();
 	connect(this, SIGNAL(refreshStreamSource(int)), m_client, SLOT(refreshStreamSource(int)), Qt::QueuedConnection); 
@@ -121,7 +121,7 @@ void SyntroStoreConsole::run()
 			printf("\nExiting\n");
 			m_client->exitThread();
 			mustExit = true;
-			syntroAppExit();
+			SyntroUtils::syntroAppExit();
 			((QCoreApplication *)parent())->exit();
 			break;
 

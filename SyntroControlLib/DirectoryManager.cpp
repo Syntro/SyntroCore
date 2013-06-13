@@ -91,7 +91,7 @@ bool DirectoryManager::DMProcessDE(DM_CONNECTEDCOMPONENT *connectedComponent, ch
 	if (len == 0)
 		return true;										// means that there's no change
 
-	TRACE1("New directory from %s", qPrintable(displayUID(&(connectedComponent->connectedComponentUID))));
+	TRACE1("New directory from %s", qPrintable(SyntroUtils::displayUID(&(connectedComponent->connectedComponentUID))));
 	QMutexLocker locker(&m_lock);
 
 	changed = false;
@@ -123,11 +123,11 @@ bool DirectoryManager::DMProcessDE(DM_CONNECTEDCOMPONENT *connectedComponent, ch
 			goto deerr;
 		if (!getSimpleValue(DETAG_COMPTYPE, component->componentType))
 			goto deerr;
-		UIDSTRtoUID(component->UIDStr, &(component->componentUID));
+		SyntroUtils::UIDSTRtoUID(component->UIDStr, &(component->componentUID));
 		if ((componentLookup = findComponent(connectedComponent, &(component->componentUID), 
 							component->componentName, component->componentType)) != NULL) {	// this component already exists in directory
 			if(componentLookup->originalDE == NULL) {			// should never happen but just in case
-				logError(QString("DirectoryManager found NULL origde when processing ") + displayUID(&(component->componentUID)));
+				logError(QString("DirectoryManager found NULL origde when processing ") + SyntroUtils::displayUID(&(component->componentUID)));
 				free(component);
 				goto nextde;
 			}
@@ -274,7 +274,7 @@ bool DirectoryManager::DMFindService(SYNTRO_UID *sourceUID, SYNTRO_SERVICE_LOOKU
 	DM_SERVICE *service;
 
 	QMutexLocker locker(&m_lock);
-	if (!crackServicePath(serviceLookup->servicePath, regionName, componentName, serviceName)) {
+	if (!SyntroUtils::crackServicePath(serviceLookup->servicePath, regionName, componentName, serviceName)) {
 		serviceLookup->response = SERVICE_LOOKUP_FAIL;
 		TRACE1("Path %s is invalid", serviceLookup->servicePath);
 		return false;
@@ -286,20 +286,20 @@ bool DirectoryManager::DMFindService(SYNTRO_UID *sourceUID, SYNTRO_SERVICE_LOOKU
 					(serviceName == m_server->m_logServiceName)) {
 		if ((componentName.length() == 0) || (componentName == m_server->m_componentName)) { // destined for log service
 			memcpy(&(serviceLookup->lookupUID), &(m_server->m_myUID), sizeof(SYNTRO_UID));
-			convertIntToUC4(0, serviceLookup->ID);
-			convertIntToUC2(m_server->m_logMap->index, serviceLookup->remotePort);
-			convertIntToUC2(-1, serviceLookup->componentIndex);
+			SyntroUtils::convertIntToUC4(0, serviceLookup->ID);
+			SyntroUtils::convertIntToUC2(m_server->m_logMap->index, serviceLookup->remotePort);
+			SyntroUtils::convertIntToUC2(-1, serviceLookup->componentIndex);
 			if (m_server->m_multicastManager.MMCheckRegistered(m_server->m_logMap, sourceUID, 
-					convertUC2ToInt(serviceLookup->localPort))) {		// already there - just a refresh
+					SyntroUtils::convertUC2ToInt(serviceLookup->localPort))) {		// already there - just a refresh
 				TRACE1("Refreshed reg from component %s to log service", 
-					qPrintable(displayUID(sourceUID)));
+					qPrintable(SyntroUtils::displayUID(sourceUID)));
 				serviceLookup->response = SERVICE_LOOKUP_SUCCEED;
 				return true;	
 			}
 			//	Must add as this is a new one
-			m_server->m_multicastManager.MMAddRegistered(m_server->m_logMap, sourceUID, convertUC2ToInt(serviceLookup->localPort));
+			m_server->m_multicastManager.MMAddRegistered(m_server->m_logMap, sourceUID, SyntroUtils::convertUC2ToInt(serviceLookup->localPort));
 			logDebug(QString("Added reg request from component %1 to log service")
-				.arg(displayUID(sourceUID)));
+				.arg(SyntroUtils::displayUID(sourceUID)));
 
 			serviceLookup->response = SERVICE_LOOKUP_SUCCEED;
 			return true;
@@ -309,8 +309,8 @@ bool DirectoryManager::DMFindService(SYNTRO_UID *sourceUID, SYNTRO_SERVICE_LOOKU
 	// Not for local log service, see if expedited refresh is possible
 
 	if (serviceLookup->response == SERVICE_LOOKUP_SUCCEED) {	// this is a refresh - check all important fields for validity
-		componentIndex = convertUC2ToInt(serviceLookup->componentIndex);
-		servicePort = convertUC2ToInt(serviceLookup->remotePort);
+		componentIndex = SyntroUtils::convertUC2ToInt(serviceLookup->componentIndex);
+		servicePort = SyntroUtils::convertUC2ToInt(serviceLookup->remotePort);
 		if ((componentIndex < 0) || (componentIndex >= SYNTRO_MAX_CONNECTEDCOMPONENTS)) {
 			TRACE2("Lookup refresh with incorrect CompIndex %d for service %s", componentIndex, serviceLookup->servicePath);
 			goto fullLookup;
@@ -352,7 +352,7 @@ bool DirectoryManager::DMFindService(SYNTRO_UID *sourceUID, SYNTRO_SERVICE_LOOKU
 				}
 			}
 
-			if (component->sequenceID != convertUC4ToInt(serviceLookup->ID)) {
+			if (component->sequenceID != SyntroUtils::convertUC4ToInt(serviceLookup->ID)) {
 				component = component->next;
 				continue;
 			}
@@ -360,7 +360,7 @@ bool DirectoryManager::DMFindService(SYNTRO_UID *sourceUID, SYNTRO_SERVICE_LOOKU
 				component = component->next;
 				continue;
 			}
-			if (!compareUID(&(component->componentUID), &(serviceLookup->lookupUID))) {
+			if (!SyntroUtils::compareUID(&(component->componentUID), &(serviceLookup->lookupUID))) {
 				component = component->next;
 				continue;
 			}
@@ -369,8 +369,8 @@ bool DirectoryManager::DMFindService(SYNTRO_UID *sourceUID, SYNTRO_SERVICE_LOOKU
 				service->multicastMap->lastLookupRefresh = SyntroClock();
 
 			TRACE3("Expedited lookup from component %s to source %s port %d", 
-				qPrintable(displayUID(sourceUID)), qPrintable(displayUID(&component->componentUID)), 
-						convertUC2ToInt(serviceLookup->localPort));
+				qPrintable(SyntroUtils::displayUID(sourceUID)), qPrintable(SyntroUtils::displayUID(&component->componentUID)), 
+						SyntroUtils::convertUC2ToInt(serviceLookup->localPort));
 
 			return true;									// all good!
 		}
@@ -399,43 +399,43 @@ fullLookup:
 				// found it - but it could be a registration request or removal
 
 				if (serviceLookup->response == SERVICE_LOOKUP_REMOVE) { // this is a removal request
-					m_server->m_multicastManager.MMDeleteRegistered(sourceUID, convertUC2ToUInt(serviceLookup->localPort));
+					m_server->m_multicastManager.MMDeleteRegistered(sourceUID, SyntroUtils::convertUC2ToUInt(serviceLookup->localPort));
 					TRACE3("Removed reg from component %s to source %s port %d", 
-						qPrintable(displayUID(sourceUID)), 
-						qPrintable(displayUID(&component->componentUID)), convertUC2ToInt(serviceLookup->localPort));
+						qPrintable(SyntroUtils::displayUID(sourceUID)), 
+						qPrintable(SyntroUtils::displayUID(&component->componentUID)), SyntroUtils::convertUC2ToInt(serviceLookup->localPort));
 					return true;	
 				}
 
 				memcpy(&(serviceLookup->lookupUID), &(component->componentUID), sizeof(SYNTRO_UID));
-				convertIntToUC4(component->sequenceID, serviceLookup->ID);
+				SyntroUtils::convertIntToUC4(component->sequenceID, serviceLookup->ID);
 				if (serviceLookup->serviceType == SERVICETYPE_MULTICAST)
-					convertIntToUC2(service->multicastMap->index, serviceLookup->remotePort);
+					SyntroUtils::convertIntToUC2(service->multicastMap->index, serviceLookup->remotePort);
 				else
-					convertIntToUC2(service->port, serviceLookup->remotePort);
-				convertIntToUC2(componentIndex, serviceLookup->componentIndex);
+					SyntroUtils::convertIntToUC2(service->port, serviceLookup->remotePort);
+				SyntroUtils::convertIntToUC2(componentIndex, serviceLookup->componentIndex);
 				if (serviceLookup->serviceType == SERVICETYPE_MULTICAST) {		// must add this to the registered components list
 					if (m_server->m_multicastManager.MMCheckRegistered(service->multicastMap, 
-								sourceUID, convertUC2ToInt(serviceLookup->localPort))) { // already there - just a refresh
+								sourceUID, SyntroUtils::convertUC2ToInt(serviceLookup->localPort))) { // already there - just a refresh
 						TRACE3("Refreshed reg from component %s to source %s port %d", 
-							qPrintable(displayUID(sourceUID)), qPrintable(displayUID(&component->componentUID)), 
-							convertUC2ToInt(serviceLookup->localPort));
+							qPrintable(SyntroUtils::displayUID(sourceUID)), qPrintable(SyntroUtils::displayUID(&component->componentUID)), 
+							SyntroUtils::convertUC2ToInt(serviceLookup->localPort));
 						serviceLookup->response = SERVICE_LOOKUP_SUCCEED;
 						return true;	
 					}
 					//	Must add as this is a new one
 					m_server->m_multicastManager.MMAddRegistered(service->multicastMap, sourceUID, 
-								convertUC2ToInt(serviceLookup->localPort));
+								SyntroUtils::convertUC2ToInt(serviceLookup->localPort));
 					logDebug(QString("Added reg request from component %1 to source %2 port %3")
-						.arg(displayUID(sourceUID))
-						.arg(displayUID(&component->componentUID))
-						.arg(convertUC2ToInt(serviceLookup->localPort)));
+						.arg(SyntroUtils::displayUID(sourceUID))
+						.arg(SyntroUtils::displayUID(&component->componentUID))
+						.arg(SyntroUtils::convertUC2ToInt(serviceLookup->localPort)));
 
 					serviceLookup->response = SERVICE_LOOKUP_SUCCEED;
 					return true;
 				} else {
 					TRACE3("Refreshed E2E lookup from component %s to source %s port %d", 
-						qPrintable(displayUID(sourceUID)), qPrintable(displayUID(&component->componentUID)), 
-						convertUC2ToInt(serviceLookup->localPort));
+						qPrintable(SyntroUtils::displayUID(sourceUID)), qPrintable(SyntroUtils::displayUID(&component->componentUID)), 
+						SyntroUtils::convertUC2ToInt(serviceLookup->localPort));
 					serviceLookup->response = SERVICE_LOOKUP_SUCCEED;
 					return true;
 				}
@@ -497,7 +497,7 @@ void DirectoryManager::DMBuildDirectoryMessage(int offset, char **message, int *
 	for (i = 0; i < SYNTRO_MAX_CONNECTEDCOMPONENTS; i++, connectedComponent++) {
 		if (!connectedComponent->valid)
 			continue;
-		if (trunk && (convertUC2ToInt(connectedComponent->connectedComponentUID.instance) < INSTANCE_COMPONENT))
+		if (trunk && (SyntroUtils::convertUC2ToInt(connectedComponent->connectedComponentUID.instance) < INSTANCE_COMPONENT))
 			continue;										// must be a real component for trunk mode
 		component = connectedComponent->componentDE;
 		while (component != NULL) {
@@ -519,7 +519,7 @@ void DirectoryManager::DMBuildDirectoryMessage(int offset, char **message, int *
 	for (i = 0; i < SYNTRO_MAX_CONNECTEDCOMPONENTS; i++, connectedComponent++) {
 		if (!connectedComponent->valid)
 			continue;
-		if (trunk && (convertUC2ToInt(connectedComponent->connectedComponentUID.instance) < INSTANCE_COMPONENT))
+		if (trunk && (SyntroUtils::convertUC2ToInt(connectedComponent->connectedComponentUID.instance) < INSTANCE_COMPONENT))
 			continue;										// must be a real component if trunk moe
 		component = connectedComponent->componentDE;
 		while (component != NULL) {
@@ -551,7 +551,7 @@ void	DirectoryManager::buildLocalDE(DM_COMPONENT *component)
 
 	DE[0] = 0;
 	sprintf(DE, "<%s>", DETAG_COMP);
-	sprintf(DE + (int)strlen(DE), "<%s>%s</%s>", DETAG_UID, qPrintable(displayUID(&component->componentUID)), DETAG_UID);
+	sprintf(DE + (int)strlen(DE), "<%s>%s</%s>", DETAG_UID, qPrintable(SyntroUtils::displayUID(&component->componentUID)), DETAG_UID);
 	sprintf(DE + (int)strlen(DE), "<%s>%s</%s>", DETAG_COMPNAME, component->componentName, DETAG_COMPNAME);
 	sprintf(DE + (int)strlen(DE), "<%s>%s</%s>", DETAG_COMPTYPE, component->componentType, DETAG_COMPTYPE);
 
@@ -590,7 +590,7 @@ DM_COMPONENT *DirectoryManager::findComponent(DM_CONNECTEDCOMPONENT *connectedCo
 
 	component = connectedComponent->componentDE;
 	while (component != NULL) {
-		if (compareUID(UID, &(component->componentUID))) {	// found correct UID
+		if (SyntroUtils::compareUID(UID, &(component->componentUID))) {	// found correct UID
 			if ((strcmp(name, component->componentName) == 0) && (strcmp(type, component->componentType) == 0))
 				return component;							// found it
 			//	Correct UID but mismatch on name or type. Implies a new component on same instance.
@@ -608,7 +608,7 @@ void DirectoryManager::freeConnectedComponent(DM_CONNECTEDCOMPONENT *connectedCo
 	if (connectedComponent == NULL || !connectedComponent->valid)
 		return;												// if not set up yet
 
-	TRACE1("Freeing connected component %s", qPrintable(displayUID(&connectedComponent->connectedComponentUID)));
+	TRACE1("Freeing connected component %s", qPrintable(SyntroUtils::displayUID(&connectedComponent->connectedComponentUID)));
 
 	m_server->m_multicastManager.MMDeleteRegistered(&(connectedComponent->connectedComponentUID), -1);
 	connectedComponent->valid = false;

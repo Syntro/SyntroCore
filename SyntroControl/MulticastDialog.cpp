@@ -91,10 +91,10 @@ void MulticastDialog::MMNewEntry(int index)
 		return;												// must be historic
 
 	QTreeWidgetItem *twi = new QTreeWidgetItem((QTreeWidget*)0, QStringList(map->serviceLookup.servicePath));
-	new QTreeWidgetItem(twi, QStringList(QString(displayUID(&(map->sourceUID)))));
-	new QTreeWidgetItem(twi, QStringList(QString("Local port: %1").arg(convertUC2ToInt(map->serviceLookup.localPort))));
-	new QTreeWidgetItem(twi, QStringList(QString("Remote port: %1").arg(convertUC2ToInt(map->serviceLookup.remotePort))));
-	twi->setData(0, Qt::UserRole, convertUC2ToInt(map->serviceLookup.localPort));	// so we can identify the entry later
+	new QTreeWidgetItem(twi, QStringList(QString(SyntroUtils::displayUID(&(map->sourceUID)))));
+	new QTreeWidgetItem(twi, QStringList(QString("Local port: %1").arg(SyntroUtils::convertUC2ToInt(map->serviceLookup.localPort))));
+	new QTreeWidgetItem(twi, QStringList(QString("Remote port: %1").arg(SyntroUtils::convertUC2ToInt(map->serviceLookup.remotePort))));
+	twi->setData(0, Qt::UserRole, SyntroUtils::convertUC2ToInt(map->serviceLookup.localPort));	// so we can identify the entry later
 	m_treeItems.append(twi);
 	m_tree->insertTopLevelItem(0, twi);
 	m_tree->sortItems(0, Qt::AscendingOrder);
@@ -155,7 +155,7 @@ void MulticastDialog::MMDisplay()
 	while (registeredComponent != NULL) {
 		if (rowIndex >= m_table->rowCount())
 			addTableRow(rowIndex);
-		m_table->item(rowIndex, 0)->setText(displayUID(&(registeredComponent->registeredUID)));
+		m_table->item(rowIndex, 0)->setText(SyntroUtils::displayUID(&(registeredComponent->registeredUID)));
 		m_table->item(rowIndex, 1)->setText(QString::number(registeredComponent->port));
 		m_table->item(rowIndex, 2)->setText(QString::number(registeredComponent->sendSeq));
 		m_table->item(rowIndex, 3)->setText(QString::number(registeredComponent->lastAckSeq));

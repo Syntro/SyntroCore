@@ -33,7 +33,7 @@
 SyntroCFSConsole::SyntroCFSConsole(QSettings *settings, QObject *parent)
 	: QThread(parent), m_settings(settings)
 {
-	syntroAppInit(m_settings);
+	SyntroUtils::syntroAppInit(m_settings);
 	m_client = new SyntroCFSClient(this, m_settings);
 	m_client->resumeThread();
 	
@@ -71,7 +71,7 @@ void SyntroCFSConsole::showCounts()
 		if (!CFSState->inUse)
 			continue;
 	printf("\n%-50s %-12s %-16s %s", 
-		qPrintable(CFSState->filePath), qPrintable(displayUID(&CFSState->clientUID)),
+		qPrintable(CFSState->filePath), qPrintable(SyntroUtils::displayUID(&CFSState->clientUID)),
 		qPrintable(QString::number(CFSState->rxBytes)), qPrintable(QString::number(CFSState->txBytes)));
 	}
 	printf("\n");
@@ -114,7 +114,7 @@ void SyntroCFSConsole::run()
 		case 'X':
 			printf("\nExiting\n");
 			m_client->exitThread();
-			syntroAppExit();
+			SyntroUtils::syntroAppExit();
 			mustExit = true;
 			((QCoreApplication *)parent())->exit();
 			break;

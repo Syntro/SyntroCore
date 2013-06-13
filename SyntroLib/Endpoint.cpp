@@ -1,5 +1,5 @@
 //
-//  Copyright (c) 2012 Pansenti, LLC.
+//  Copyright (c) 2012, 2013 Pansenti, LLC.
 //	
 //  This file is part of SyntroLib
 //
@@ -493,7 +493,7 @@ int	Endpoint::clientGetServiceDestPort(int servicePort)
 			logWarn(QString("Tried to get dest port for inactive service port %1 in state %2").arg(servicePort).arg(service->state));
 			return -1;
 		}
-		return convertUC2ToInt(service->serviceLookup.remotePort);
+		return SyntroUtils::convertUC2ToInt(service->serviceLookup.remotePort);
 	}
 }
 
@@ -676,12 +676,12 @@ bool Endpoint::clientClearToSend(int servicePort)
 	}
 
 	// within the send/ack window ?
-	if (isSendOK(service->nextSendSeqNo, service->lastReceivedAck)) {
+	if (SyntroUtils::isSendOK(service->nextSendSeqNo, service->lastReceivedAck)) {
 		return true;
 	}
 
 	// if we haven't timed out, wait some more
-	if (!syntroTimerExpired(SyntroClock(),service->lastSendTime, ENDPOINT_MULTICAST_TIMEOUT)) {
+	if (!SyntroUtils::syntroTimerExpired(SyntroClock(),service->lastSendTime, ENDPOINT_MULTICAST_TIMEOUT)) {
 		return false;
 	}
 
@@ -722,7 +722,7 @@ SYNTRO_EHEAD *Endpoint::clientBuildMessage(int servicePort, int length)
 
 	locker.unlock();
 	if (service->serviceType == SERVICETYPE_MULTICAST) {
-		message = createEHEAD(&(m_UID), 
+		message = SyntroUtils::createEHEAD(&(m_UID), 
 					servicePort, 
 					&(m_UID), 
 					clientGetServiceDestPort(servicePort), 
@@ -734,7 +734,7 @@ SYNTRO_EHEAD *Endpoint::clientBuildMessage(int servicePort, int length)
 			return NULL;
 		}
 
-		message = createEHEAD(&(m_UID), 
+		message = SyntroUtils::createEHEAD(&(m_UID), 
 					servicePort, 
 					clientGetRemoteServiceUID(servicePort),										 
 					clientGetServiceDestPort(servicePort),										 
@@ -782,7 +782,7 @@ SYNTRO_EHEAD *Endpoint::clientBuildLocalE2EMessage(int clientPort, SYNTRO_UID *d
 		return NULL;
 	}
 
-	message = createEHEAD(&(m_UID), 
+	message = SyntroUtils::createEHEAD(&(m_UID), 
 					clientPort, 
 					destUID, 
 					destPort, 
@@ -1080,7 +1080,7 @@ void Endpoint::logServiceBackground()
 		LogMessage m = log->dequeue();
 		bulkMsg += m.m_level + SYNTRO_LOG_COMPONENT_SEP
 			+ m.m_timeStamp + SYNTRO_LOG_COMPONENT_SEP
-			+ displayUID(&m_UID) + SYNTRO_LOG_COMPONENT_SEP
+			+ SyntroUtils::displayUID(&m_UID) + SYNTRO_LOG_COMPONENT_SEP
 			+ m_logServiceName + SYNTRO_LOG_COMPONENT_SEP
 			+ m.m_msg + "\n";
 	}
@@ -1092,11 +1092,11 @@ void Endpoint::logServiceBackground()
 
 	if (multiCast) {
 		SYNTRO_RECORD_HEADER *recordHead = (SYNTRO_RECORD_HEADER *)(multiCast + 1);
-		convertIntToUC2(SYNTRO_RECORD_TYPE_LOG, recordHead->type);
-		convertIntToUC2(0, recordHead->subType);
-		convertIntToUC2(0, recordHead->param);
-		convertIntToUC2(sizeof(SYNTRO_RECORD_HEADER), recordHead->headerLength);
-		setSyntroTimestamp(&recordHead->timestamp);
+		SyntroUtils::convertIntToUC2(SYNTRO_RECORD_TYPE_LOG, recordHead->type);
+		SyntroUtils::convertIntToUC2(0, recordHead->subType);
+		SyntroUtils::convertIntToUC2(0, recordHead->param);
+		SyntroUtils::convertIntToUC2(sizeof(SYNTRO_RECORD_HEADER), recordHead->headerLength);
+		SyntroUtils::setSyntroTimestamp(&recordHead->timestamp);
 		memcpy((char *)(recordHead + 1), data.constData(), data.length());
 		syntroSendMessage(SYNTROMSG_MULTICAST_MESSAGE, (SYNTRO_MESSAGE *)multiCast, sizeof(SYNTRO_EHEAD) + length, SYNTROLINK_LOWPRI);
 	}
@@ -1196,8 +1196,8 @@ void Endpoint::endpointBackground()
 
 //	Do heartbeat and DE background processing
 
-	if (syntroTimerExpired(now, m_lastHeartbeatSent, m_heartbeatSendInterval)) {
-		if (syntroTimerExpired(now, m_DETimer, ENDPOINT_DE_INTERVAL)) {	// time to send a DE
+	if (SyntroUtils::syntroTimerExpired(now, m_lastHeartbeatSent, m_heartbeatSendInterval)) {
+		if (SyntroUtils::syntroTimerExpired(now, m_DETimer, ENDPOINT_DE_INTERVAL)) {	// time to send a DE
 			m_DETimer = now;
 			DE = m_componentData.getMyDE();						// get a copy of the DE
 			len = (int)strlen(DE)+1;
@@ -1213,7 +1213,7 @@ void Endpoint::endpointBackground()
 		m_lastHeartbeatSent = now;
 	}
 
-	if (syntroTimerExpired(now, m_lastHeartbeatReceived, m_heartbeatTimeoutPeriod)) {	
+	if (SyntroUtils::syntroTimerExpired(now, m_lastHeartbeatReceived, m_heartbeatTimeoutPeriod)) {	
 		// channel has timed out
 		logWarn(QString("SyntroLink timeout"));
 		syntroClose();
@@ -1223,7 +1223,7 @@ void Endpoint::endpointBackground()
 
 	CFSBackground();
 
-	if (!syntroTimerExpired(now, m_background, ENDPOINT_BACKGROUND_INTERVAL))
+	if (!SyntroUtils::syntroTimerExpired(now, m_background, ENDPOINT_BACKGROUND_INTERVAL))
 		return;									// not time yet
 
 	m_background = now;
@@ -1233,7 +1233,7 @@ void Endpoint::endpointBackground()
 	if (m_controlRevert) {
 		// send revert beacon if necessary
 
-		if (syntroTimerExpired(now, m_lastReversionBeacon, ENDPOINT_REVERSION_BEACON_INTERVAL)) {
+		if (SyntroUtils::syntroTimerExpired(now, m_lastReversionBeacon, ENDPOINT_REVERSION_BEACON_INTERVAL)) {
 			m_hello->sendHelloBeacon();
 			m_lastReversionBeacon = now;
 		}
@@ -1377,7 +1377,7 @@ void Endpoint::processReceivedDataDemux(int cmd, int len, SYNTRO_MESSAGE*syntroM
 
 			len -= sizeof(SYNTRO_EHEAD);
 			ehead = (SYNTRO_EHEAD *)syntroMessage;
-			destPort = convertUC2ToInt(ehead->destPort);
+			destPort = SyntroUtils::convertUC2ToInt(ehead->destPort);
 
 			if ((destPort < 0) || (destPort >= SYNTRO_MAX_SERVICESPERCOMPONENT)) {
 				logWarn(QString("Multicast message with out of range port number %1").arg(destPort));
@@ -1409,7 +1409,7 @@ void Endpoint::processReceivedDataDemux(int cmd, int len, SYNTRO_MESSAGE*syntroM
 
 			len -= sizeof(SYNTRO_EHEAD);
 			ehead = (SYNTRO_EHEAD *)syntroMessage;
-			destPort = convertUC2ToInt(ehead->destPort);
+			destPort = SyntroUtils::convertUC2ToInt(ehead->destPort);
 
 			if ((destPort < 0) || (destPort >= SYNTRO_MAX_SERVICESPERCOMPONENT)) {
 				logWarn(QString("Multicast ack message with out of range port number %1").arg(destPort));
@@ -1452,7 +1452,7 @@ void Endpoint::processReceivedDataDemux(int cmd, int len, SYNTRO_MESSAGE*syntroM
 			}
 			len -= sizeof(SYNTRO_EHEAD);
 			ehead = (SYNTRO_EHEAD *)syntroMessage;
-			destPort = convertUC2ToInt(ehead->destPort);
+			destPort = SyntroUtils::convertUC2ToInt(ehead->destPort);
 
 			if ((destPort < 0) || (destPort >= SYNTRO_MAX_SERVICESPERCOMPONENT)) {
 				logWarn(QString("E2E message with out of range port number %1").arg(destPort));
@@ -1489,8 +1489,8 @@ void Endpoint::sendMulticastAck(int servicePort, int seq)
     uid = m_componentData.getMyHeartbeat().hello.componentUID;
 
 	ehead = (SYNTRO_EHEAD *)malloc(sizeof(SYNTRO_EHEAD));
-	copyUC2(ehead->destPort, m_serviceInfo[servicePort].serviceLookup.remotePort);
-	copyUC2(ehead->sourcePort, m_serviceInfo[servicePort].serviceLookup.localPort);
+	SyntroUtils::copyUC2(ehead->destPort, m_serviceInfo[servicePort].serviceLookup.remotePort);
+	SyntroUtils::copyUC2(ehead->sourcePort, m_serviceInfo[servicePort].serviceLookup.localPort);
 	memcpy(&(ehead->destUID), &(m_serviceInfo[servicePort].serviceLookup.lookupUID), sizeof(SYNTRO_UID));
     memcpy(&(ehead->sourceUID), &uid, sizeof(SYNTRO_UID));
 	ehead->seq = seq;
@@ -1506,8 +1506,8 @@ void Endpoint::sendE2EAck(SYNTRO_EHEAD *originalEhead)
 	SYNTRO_EHEAD *ehead;
 
 	ehead = (SYNTRO_EHEAD *)malloc(sizeof(SYNTRO_EHEAD));
-	copyUC2(ehead->sourcePort, originalEhead->destPort);
-	copyUC2(ehead->destPort, originalEhead->sourcePort);
+	SyntroUtils::copyUC2(ehead->sourcePort, originalEhead->destPort);
+	SyntroUtils::copyUC2(ehead->destPort, originalEhead->sourcePort);
 	memcpy(&(ehead->sourceUID), &(originalEhead->destUID), sizeof(SYNTRO_UID));
 	memcpy(&(ehead->destUID), &(originalEhead->sourceUID), sizeof(SYNTRO_UID));
 	ehead->seq = originalEhead->seq;
@@ -1551,7 +1551,7 @@ void Endpoint::serviceBackground()
 			if (service->state != SYNTRO_LOCAL_SERVICE_STATE_ACTIVE)
 				continue;									// no current activation anyway
 
-			if (syntroTimerExpired(now, service->tLastLookup, SERVICE_REFRESH_TIMEOUT)) {
+			if (SyntroUtils::syntroTimerExpired(now, service->tLastLookup, SERVICE_REFRESH_TIMEOUT)) {
 				service->state = SYNTRO_LOCAL_SERVICE_STATE_INACTIVE;	// indicate inactive and no data should be sent
 				TRACE2("Timed out activation on local service %s port %d", service->servicePath, servicePort);
 			}
@@ -1564,18 +1564,18 @@ void Endpoint::serviceBackground()
 					break;
 
 				case SYNTRO_REMOTE_SERVICE_STATE_LOOKING:
-					if (syntroTimerExpired(now, service->tLastLookup, SERVICE_LOOKUP_INTERVAL))
+					if (SyntroUtils::syntroTimerExpired(now, service->tLastLookup, SERVICE_LOOKUP_INTERVAL))
 						sendRemoteServiceLookup(service);	// try again
 					break;
 
 				case SYNTRO_REMOTE_SERVICE_STATE_REGISTERED:
-					if (syntroTimerExpired(now, service->tLastLookupResponse, SERVICE_REFRESH_TIMEOUT)) {
+					if (SyntroUtils::syntroTimerExpired(now, service->tLastLookupResponse, SERVICE_REFRESH_TIMEOUT)) {
 						logWarn(QString("Refresh timeout on service %1 port %2")
 							.arg(service->serviceLookup.servicePath).arg(servicePort));
 						service->state = SYNTRO_REMOTE_SERVICE_STATE_LOOK;	// go back to looking
 						break;
 					}
-					if (syntroTimerExpired(now, service->tLastLookup, SERVICE_REFRESH_INTERVAL))
+					if (SyntroUtils::syntroTimerExpired(now, service->tLastLookup, SERVICE_REFRESH_INTERVAL))
 						sendRemoteServiceLookup(service);	// do a refresh
 					break;
 
@@ -1587,7 +1587,7 @@ void Endpoint::serviceBackground()
 					break;
 
 				case SYNTRO_REMOTE_SERVICE_STATE_REMOVING:
-					if (syntroTimerExpired(now, service->tLastLookup, SERVICE_REMOVING_INTERVAL)) {
+					if (SyntroUtils::syntroTimerExpired(now, service->tLastLookup, SERVICE_REMOVING_INTERVAL)) {
 						if (++service->closingRetries == SERVICE_REMOVING_MAX_RETRIES) {
 							logWarn(QString("Timed out attempt to remove remote registration for service %1 on port %2")
 								.arg(service->serviceLookup.servicePath).arg(servicePort));
@@ -1632,7 +1632,7 @@ void Endpoint::serviceInit()
 		service->state = SYNTRO_LOCAL_SERVICE_STATE_INACTIVE;
 		service->serviceLookup.response = SERVICE_LOOKUP_FAIL;// indicate lookup response not valid
 		service->serviceLookup.servicePath[0] = 0;			 // no service path
-		convertIntToUC2(i, service->serviceLookup.localPort); // this is my local port index
+		SyntroUtils::convertIntToUC2(i, service->serviceLookup.localPort); // this is my local port index
 	}	
 }
 
@@ -1645,7 +1645,7 @@ void Endpoint::processServiceActivate(SYNTRO_SERVICE_ACTIVATE *serviceActivate)
 	int servicePort;
 	SYNTRO_SERVICE_INFO	*serviceInfo;
 
-	servicePort = convertUC2ToInt(serviceActivate->endpointPort);
+	servicePort = SyntroUtils::convertUC2ToInt(serviceActivate->endpointPort);
 	if ((servicePort < 0) || (servicePort >= SYNTRO_MAX_SERVICESPERCOMPONENT)) {
 		logWarn(QString("Received service activate on out of range port %1").arg(servicePort));
 		return;
@@ -1663,7 +1663,7 @@ void Endpoint::processServiceActivate(SYNTRO_SERVICE_ACTIVATE *serviceActivate)
 	if (!serviceInfo->enabled) {
 		return;
 	}
-	serviceInfo->destPort = convertUC2ToUInt(serviceActivate->syntroControlPort);	// record the other end's port number
+	serviceInfo->destPort = SyntroUtils::convertUC2ToUInt(serviceActivate->syntroControlPort);	// record the other end's port number
 	serviceInfo->state = SYNTRO_LOCAL_SERVICE_STATE_ACTIVE;
 	serviceInfo->tLastLookup = SyntroClock();
 	TRACE2("Received service activate for port %d to SyntroControl port %d", servicePort, serviceInfo->destPort);
@@ -1684,7 +1684,7 @@ void Endpoint::sendRemoteServiceLookup(SYNTRO_SERVICE_INFO *remoteService)
 
 	serviceLookup = (SYNTRO_SERVICE_LOOKUP *)malloc(sizeof(SYNTRO_SERVICE_LOOKUP));
 	*serviceLookup = remoteService->serviceLookup;
-	TRACE2("Sending request for %s on local port %d", serviceLookup->servicePath, convertUC2ToUInt(serviceLookup->localPort));
+	TRACE2("Sending request for %s on local port %d", serviceLookup->servicePath, SyntroUtils::convertUC2ToUInt(serviceLookup->localPort));
 	syntroSendMessage(SYNTROMSG_SERVICE_LOOKUP_REQUEST, (SYNTRO_MESSAGE *)serviceLookup, sizeof(SYNTRO_SERVICE_LOOKUP), SYNTROLINK_MEDHIGHPRI);
 	remoteService->tLastLookup = SyntroClock();
 }
@@ -1702,12 +1702,12 @@ void Endpoint::processLookupResponse(SYNTRO_SERVICE_LOOKUP *serviceLookup)
 	int index;
 	SYNTRO_SERVICE_INFO *remoteService;
 
-	index = convertUC2ToInt(serviceLookup->localPort);		// get the local port
+	index = SyntroUtils::convertUC2ToInt(serviceLookup->localPort);		// get the local port
 	if ((index < 0) || (index >= SYNTRO_MAX_SERVICESPERCOMPONENT)) {
 		logWarn(QString("Lookup response from %1 port %2 to incorrect local port %3") 
-					.arg(displayUID(&serviceLookup->lookupUID))
-					.arg(convertUC2ToInt(serviceLookup->remotePort))
-					.arg(convertUC2ToInt(serviceLookup->localPort)));
+					.arg(SyntroUtils::displayUID(&serviceLookup->lookupUID))
+					.arg(SyntroUtils::convertUC2ToInt(serviceLookup->remotePort))
+					.arg(SyntroUtils::convertUC2ToInt(serviceLookup->localPort)));
 		return;
 	}
 
@@ -1743,8 +1743,8 @@ void Endpoint::processLookupResponse(SYNTRO_SERVICE_LOOKUP *serviceLookup)
 			} else if (serviceLookup->response == SERVICE_LOOKUP_SUCCEED) { // the service is there
 				TRACE3("Service %s mapped to %s port %d", 
 								serviceLookup->servicePath, 
-								displayUID(&(serviceLookup->lookupUID)), 
-								convertUC2ToInt(serviceLookup->remotePort));
+								SyntroUtils::displayUID(&(serviceLookup->lookupUID)), 
+								SyntroUtils::convertUC2ToInt(serviceLookup->remotePort));
 
 				// got a good response - record the data and change state to registered
 			
@@ -1755,7 +1755,7 @@ void Endpoint::processLookupResponse(SYNTRO_SERVICE_LOOKUP *serviceLookup)
 				remoteService->state = SYNTRO_REMOTE_SERVICE_STATE_REGISTERED; // this is now active
 				remoteService->tLastLookupResponse = SyntroClock();		// reset the timeout timer
 				remoteService->serviceLookup.response = SERVICE_LOOKUP_SUCCEED;
-				remoteService->destPort = convertUC2ToInt(remoteService->serviceLookup.remotePort);
+				remoteService->destPort = SyntroUtils::convertUC2ToInt(remoteService->serviceLookup.remotePort);
 			}
 			break;
 
@@ -1765,17 +1765,17 @@ void Endpoint::processLookupResponse(SYNTRO_SERVICE_LOOKUP *serviceLookup)
 				remoteService->state = SYNTRO_REMOTE_SERVICE_STATE_LOOK;	// start looking again
 			} else if (serviceLookup->response == SERVICE_LOOKUP_SUCCEED) { // the service is still there
 				remoteService->tLastLookupResponse = SyntroClock();		// reset the timeout timer
-				if ((convertUC4ToInt(serviceLookup->ID) == convertUC4ToInt(remoteService->serviceLookup.ID))
-					&& (compareUID(&(serviceLookup->lookupUID), &(remoteService->serviceLookup.lookupUID)))
-					&& (convertUC2ToInt(serviceLookup->remotePort) == convertUC2ToInt(remoteService->serviceLookup.remotePort))
-					&& (convertUC2ToInt(serviceLookup->componentIndex) == convertUC2ToInt(remoteService->serviceLookup.componentIndex))) {
+				if ((SyntroUtils::convertUC4ToInt(serviceLookup->ID) == SyntroUtils::convertUC4ToInt(remoteService->serviceLookup.ID))
+					&& (SyntroUtils::compareUID(&(serviceLookup->lookupUID), &(remoteService->serviceLookup.lookupUID)))
+					&& (SyntroUtils::convertUC2ToInt(serviceLookup->remotePort) == SyntroUtils::convertUC2ToInt(remoteService->serviceLookup.remotePort))
+					&& (SyntroUtils::convertUC2ToInt(serviceLookup->componentIndex) == SyntroUtils::convertUC2ToInt(remoteService->serviceLookup.componentIndex))) {
 					TRACE1("Reconfirmed %s", serviceLookup->servicePath);
 				} else {
 
 					TRACE3("Service %s remapped to %s port %d", 
 								serviceLookup->servicePath, 
-								displayUID(&(serviceLookup->lookupUID)), 
-								convertUC2ToInt(serviceLookup->remotePort));
+								SyntroUtils::displayUID(&(serviceLookup->lookupUID)), 
+								SyntroUtils::convertUC2ToInt(serviceLookup->remotePort));
 
 					// got a changed response - record the data and carry on
 			
@@ -1784,7 +1784,7 @@ void Endpoint::processLookupResponse(SYNTRO_SERVICE_LOOKUP *serviceLookup)
 					memcpy(remoteService->serviceLookup.componentIndex, serviceLookup->componentIndex, sizeof(SYNTRO_UC2));
 					memcpy(remoteService->serviceLookup.ID, serviceLookup->ID, sizeof(SYNTRO_UC4));
 					remoteService->serviceLookup.response = SERVICE_LOOKUP_SUCCEED;
-					remoteService->destPort = convertUC2ToInt(remoteService->serviceLookup.remotePort);
+					remoteService->destPort = SyntroUtils::convertUC2ToInt(remoteService->serviceLookup.remotePort);
 				}
 			}
 			break;
@@ -1880,7 +1880,7 @@ bool Endpoint::syntroConnect()
 
 	qint64 now = SyntroClock();
 
-	if (!syntroTimerExpired(now, m_connWait, ENDPOINT_CONNWAIT))
+	if (!SyntroUtils::syntroTimerExpired(now, m_connWait, ENDPOINT_CONNWAIT))
 		return false;				// not time yet
 
 	m_connWait = now;
@@ -2209,7 +2209,7 @@ bool Endpoint::CFSDir(int serviceEP)
 		return false;
 	}
 	requestHdr = reinterpret_cast<SYNTRO_CFSHEADER *>(requestE2E+1);			// pointer to the new SyntroCFS header
-	convertIntToUC2(SYNTROCFS_TYPE_DIR_REQ, requestHdr->cfsType);
+	SyntroUtils::convertIntToUC2(SYNTROCFS_TYPE_DIR_REQ, requestHdr->cfsType);
 	syntroSendMessage(SYNTROMSG_E2E, (SYNTRO_MESSAGE *)requestE2E, sizeof(SYNTRO_EHEAD) + sizeof(SYNTRO_CFSHEADER), SYNTROCFS_E2E_PRIORITY);
 	cfsEPInfo[serviceEP].dirReqTime = SyntroClock();
 	cfsEPInfo[serviceEP].dirInProgress = true;
@@ -2261,9 +2261,9 @@ int Endpoint::CFSOpen(int serviceEP, QString filePath, int blockSize)
 	scf->structured = filePath.endsWith(SYNTRO_RECORD_SRF_RECORD_DOTEXT);
 
 	requestHdr = reinterpret_cast<SYNTRO_CFSHEADER *>(requestE2E+1);	// pointer to the new SyntroCFS header
-	convertIntToUC2(SYNTROCFS_TYPE_OPEN_REQ, requestHdr->cfsType);
-	convertIntToUC2(scf->clientHandle, requestHdr->cfsClientHandle);
-	convertIntToUC2(blockSize, requestHdr->cfsParam);
+	SyntroUtils::convertIntToUC2(SYNTROCFS_TYPE_OPEN_REQ, requestHdr->cfsType);
+	SyntroUtils::convertIntToUC2(scf->clientHandle, requestHdr->cfsClientHandle);
+	SyntroUtils::convertIntToUC2(blockSize, requestHdr->cfsParam);
 	pData = reinterpret_cast<char *>(requestHdr + 1);
 	strcpy(pData, qPrintable(filePath));								// copy in file path
 	totalLength = sizeof(SYNTRO_EHEAD) + sizeof(SYNTRO_CFSHEADER) + (int)strlen(pData) + 1;
@@ -2315,9 +2315,9 @@ bool Endpoint::CFSClose(int serviceEP, int handle)
 	}
 
 	requestHdr = reinterpret_cast<SYNTRO_CFSHEADER *>(requestE2E+1);	// pointer to the new SyntroCFS header
-	convertIntToUC2(SYNTROCFS_TYPE_CLOSE_REQ, requestHdr->cfsType);
-	convertIntToUC2(scf->clientHandle, requestHdr->cfsClientHandle);
-	convertIntToUC2(scf->storeHandle, requestHdr->cfsStoreHandle);
+	SyntroUtils::convertIntToUC2(SYNTROCFS_TYPE_CLOSE_REQ, requestHdr->cfsType);
+	SyntroUtils::convertIntToUC2(scf->clientHandle, requestHdr->cfsClientHandle);
+	SyntroUtils::convertIntToUC2(scf->storeHandle, requestHdr->cfsStoreHandle);
 	syntroSendMessage(SYNTROMSG_E2E, 
 		(SYNTRO_MESSAGE *)requestE2E, 
 		sizeof(SYNTRO_EHEAD) + sizeof(SYNTRO_CFSHEADER), 
@@ -2366,11 +2366,11 @@ bool Endpoint::CFSReadAtIndex(int serviceEP, int handle, unsigned int index, int
 	}
 
 	requestHdr = reinterpret_cast<SYNTRO_CFSHEADER *>(requestE2E+1);	// pointer to the new SyntroCFS header
-	convertIntToUC2(SYNTROCFS_TYPE_READ_INDEX_REQ, requestHdr->cfsType);
-	convertIntToUC2(scf->clientHandle, requestHdr->cfsClientHandle);
-	convertIntToUC2(scf->storeHandle, requestHdr->cfsStoreHandle);
-	convertIntToUC4(index, requestHdr->cfsIndex);
-	convertIntToUC2(blockCount, requestHdr->cfsParam);		// number of blocks to read if flat
+	SyntroUtils::convertIntToUC2(SYNTROCFS_TYPE_READ_INDEX_REQ, requestHdr->cfsType);
+	SyntroUtils::convertIntToUC2(scf->clientHandle, requestHdr->cfsClientHandle);
+	SyntroUtils::convertIntToUC2(scf->storeHandle, requestHdr->cfsStoreHandle);
+	SyntroUtils::convertIntToUC4(index, requestHdr->cfsIndex);
+	SyntroUtils::convertIntToUC2(blockCount, requestHdr->cfsParam);		// number of blocks to read if flat
 	syntroSendMessage(SYNTROMSG_E2E, 
 		(SYNTRO_MESSAGE *)requestE2E, 
 		sizeof(SYNTRO_EHEAD) + sizeof(SYNTRO_CFSHEADER), 
@@ -2419,10 +2419,10 @@ bool Endpoint::CFSWriteAtIndex(int serviceEP, int handle, unsigned int index, un
 	}
 
 	requestHdr = reinterpret_cast<SYNTRO_CFSHEADER *>(requestE2E+1);	// pointer to the new SyntroCFS header
-	convertIntToUC2(SYNTROCFS_TYPE_WRITE_INDEX_REQ, requestHdr->cfsType);
-	convertIntToUC2(scf->clientHandle, requestHdr->cfsClientHandle);
-	convertIntToUC2(scf->storeHandle, requestHdr->cfsStoreHandle);
-	convertIntToUC4(index, requestHdr->cfsIndex);
+	SyntroUtils::convertIntToUC2(SYNTROCFS_TYPE_WRITE_INDEX_REQ, requestHdr->cfsType);
+	SyntroUtils::convertIntToUC2(scf->clientHandle, requestHdr->cfsClientHandle);
+	SyntroUtils::convertIntToUC2(scf->storeHandle, requestHdr->cfsStoreHandle);
+	SyntroUtils::convertIntToUC4(index, requestHdr->cfsIndex);
 	memcpy((unsigned char *)(requestHdr + 1), fileData, length);
 	syntroSendMessage(SYNTROMSG_E2E, 
 		(SYNTRO_MESSAGE *)requestE2E, 
@@ -2445,7 +2445,7 @@ SYNTRO_EHEAD *Endpoint::CFSBuildRequest(int serviceEP, int length)
 
 	SYNTRO_UID uid = m_componentData.getMyUID();
 
-	SYNTRO_EHEAD *requestE2E = createEHEAD(&uid,
+	SYNTRO_EHEAD *requestE2E = SyntroUtils::createEHEAD(&uid,
 					serviceEP, 
 					clientGetRemoteServiceUID(serviceEP), 
 					clientGetServiceDestPort(serviceEP), 
@@ -2455,7 +2455,7 @@ SYNTRO_EHEAD *Endpoint::CFSBuildRequest(int serviceEP, int length)
     if (requestE2E) {
         SYNTRO_CFSHEADER *requestHdr = reinterpret_cast<SYNTRO_CFSHEADER *>(requestE2E + 1);
         memset(requestHdr, 0, sizeof(SYNTRO_CFSHEADER));
-        convertIntToUC4(length, requestHdr->cfsLength);
+        SyntroUtils::convertIntToUC4(length, requestHdr->cfsLength);
     }
 
 	return requestE2E;
@@ -2477,7 +2477,7 @@ void Endpoint::CFSBackground()
 	for (i = 0; i < SYNTRO_MAX_SERVICESPERCOMPONENT; i++, EP++) {
 		if (EP->inUse) {
 			if (EP->dirInProgress) {
-				if (syntroTimerExpired(now, EP->dirReqTime, SYNTROCFS_DIRREQ_TIMEOUT)) {
+				if (SyntroUtils::syntroTimerExpired(now, EP->dirReqTime, SYNTROCFS_DIRREQ_TIMEOUT)) {
 					CFSDirResponse(i, SYNTROCFS_ERROR_REQUEST_TIMEOUT, QStringList());
 					EP->dirInProgress = false;
 					return;
@@ -2488,35 +2488,35 @@ void Endpoint::CFSBackground()
 				if (!scf->inUse)
 					continue;
 				if (scf->openInProgress) {					// process open timeout
-					if (syntroTimerExpired(now, scf->openReqTime, SYNTROCFS_OPENREQ_TIMEOUT)) {
+					if (SyntroUtils::syntroTimerExpired(now, scf->openReqTime, SYNTROCFS_OPENREQ_TIMEOUT)) {
 						TRACE2("Timed out open request on port %d slot %d", i, j);
 						scf->inUse = false;					// close it down
 						CFSOpenResponse(i, SYNTROCFS_ERROR_REQUEST_TIMEOUT, j, 0);	// tell client
 					}
 				}
 				if (scf->open) {
-					if (syntroTimerExpired(now, scf->lastKeepAliveSent, SYNTROCFS_KEEPALIVE_INTERVAL))
+					if (SyntroUtils::syntroTimerExpired(now, scf->lastKeepAliveSent, SYNTROCFS_KEEPALIVE_INTERVAL))
 						CFSSendKeepAlive(i, scf);
 
-					if (syntroTimerExpired(now, scf->lastKeepAliveReceived, SYNTROCFS_KEEPALIVE_TIMEOUT))
+					if (SyntroUtils::syntroTimerExpired(now, scf->lastKeepAliveReceived, SYNTROCFS_KEEPALIVE_TIMEOUT))
 						CFSTimeoutKeepAlive(i, scf);
 				}
 				if (scf->readInProgress) {
-					if (syntroTimerExpired(now, scf->readReqTime, SYNTROCFS_READREQ_TIMEOUT)) {
+					if (SyntroUtils::syntroTimerExpired(now, scf->readReqTime, SYNTROCFS_READREQ_TIMEOUT)) {
 						TRACE2("Timed out read request on port %d slot %d", i, j);
 						CFSReadAtIndexResponse(i, j, 0, SYNTROCFS_ERROR_REQUEST_TIMEOUT, NULL, 0);	// tell client
 						scf->readInProgress = false;
 					}
 				}
 				if (scf->writeInProgress) {
-					if (syntroTimerExpired(now, scf->writeReqTime, SYNTROCFS_WRITEREQ_TIMEOUT)) {
+					if (SyntroUtils::syntroTimerExpired(now, scf->writeReqTime, SYNTROCFS_WRITEREQ_TIMEOUT)) {
 						TRACE2("Timed out write request on port %d slot %d", i, j);
 						CFSWriteAtIndexResponse(i, j, 0, SYNTROCFS_ERROR_REQUEST_TIMEOUT);	// tell client
 						scf->writeInProgress = false;
 					}
 				}
 				if (scf->closeInProgress) {
-					if (syntroTimerExpired(now, scf->closeReqTime, SYNTROCFS_CLOSEREQ_TIMEOUT)) {
+					if (SyntroUtils::syntroTimerExpired(now, scf->closeReqTime, SYNTROCFS_CLOSEREQ_TIMEOUT)) {
 						TRACE2("Timed out close request on port %d slot %d", i, j);
 						scf->inUse = false;					// close it down
 						CFSCloseResponse(i, SYNTROCFS_ERROR_REQUEST_TIMEOUT, j);	// tell client
@@ -2550,15 +2550,15 @@ bool Endpoint::CFSProcessMessage(SYNTRO_EHEAD *pE2E, int nLen, int dstPort)
 	nLen -= sizeof(SYNTRO_CFSHEADER);
 	cfsHdr = reinterpret_cast<SYNTRO_CFSHEADER *>(pE2E + 1);
 
-	if (nLen != convertUC4ToInt(cfsHdr->cfsLength)) {
-		logWarn(QString("SyntroCFS message mismatch %1 %2 on port %3").arg(nLen).arg(convertUC2ToUInt(cfsHdr->cfsLength)).arg(dstPort));
+	if (nLen != SyntroUtils::convertUC4ToInt(cfsHdr->cfsLength)) {
+		logWarn(QString("SyntroCFS message mismatch %1 %2 on port %3").arg(nLen).arg(SyntroUtils::convertUC2ToUInt(cfsHdr->cfsLength)).arg(dstPort));
 		free(pE2E);
 		return true;
 	}
 
 	//	Have trapped a SyntroCFS message
 
-	switch (convertUC2ToUInt(cfsHdr->cfsType)) {
+	switch (SyntroUtils::convertUC2ToUInt(cfsHdr->cfsType)) {
 		case SYNTROCFS_TYPE_DIR_RES:
 			CFSProcessDirResponse(cfsHdr, dstPort);
 			break;
@@ -2584,7 +2584,7 @@ bool Endpoint::CFSProcessMessage(SYNTRO_EHEAD *pE2E, int nLen, int dstPort)
 			break;
 
 		default:
-			logWarn(QString("Unrecognized SyntroCFS message %1 on port %2").arg(convertUC2ToUInt(cfsHdr->cfsType)).arg(dstPort)); 
+			logWarn(QString("Unrecognized SyntroCFS message %1 on port %2").arg(SyntroUtils::convertUC2ToUInt(cfsHdr->cfsType)).arg(dstPort)); 
 			break;
 	}
 	free (pE2E);
@@ -2603,7 +2603,7 @@ void Endpoint::CFSProcessDirResponse(SYNTRO_CFSHEADER *cfsHdr, int dstPort)
 	pData = reinterpret_cast<char *>(cfsHdr + 1);			// pointer to strings
 	filePaths = QString(pData).split(SYNTROCFS_FILENAME_SEP);		// break up the file paths
 	cfsEPInfo[dstPort].dirInProgress = false;				// dir process complete
-	CFSDirResponse(dstPort, convertUC2ToUInt(cfsHdr->cfsParam), filePaths);
+	CFSDirResponse(dstPort, SyntroUtils::convertUC2ToUInt(cfsHdr->cfsParam), filePaths);
 }
 
 /*!
@@ -2631,14 +2631,14 @@ void Endpoint::CFSProcessOpenResponse(SYNTRO_CFSHEADER *cfsHdr, int dstPort)
 	int responseCode;
 
 	EP = cfsEPInfo + dstPort;
-	handle = convertUC2ToUInt(cfsHdr->cfsClientHandle);		// get the client handle
+	handle = SyntroUtils::convertUC2ToUInt(cfsHdr->cfsClientHandle);		// get the client handle
 
 	if (handle >= SYNTROCFS_MAX_CLIENT_FILES) {
 		logWarn(QString("Open response with invalid handle %1 on port %2").arg(handle).arg(dstPort));
 		return;
 	}
 	scf = EP->cfsFile + handle;								// get the file slot pointer
-	responseCode = convertUC2ToUInt(cfsHdr->cfsParam);		// get the response code
+	responseCode = SyntroUtils::convertUC2ToUInt(cfsHdr->cfsParam);		// get the response code
 	if (!scf->inUse) {
 		logWarn(QString("Open response with not in use handle %1 on port %2").arg(handle).arg(dstPort));
 		return;
@@ -2650,13 +2650,13 @@ void Endpoint::CFSProcessOpenResponse(SYNTRO_CFSHEADER *cfsHdr, int dstPort)
 	scf->openInProgress = false;
 	if (responseCode == SYNTROCFS_SUCCESS) {
 		scf->open = true;
-		scf->storeHandle = convertUC2ToUInt(cfsHdr->cfsStoreHandle);// record SyntroCFS store handle
+		scf->storeHandle = SyntroUtils::convertUC2ToUInt(cfsHdr->cfsStoreHandle);// record SyntroCFS store handle
 		scf->lastKeepAliveSent = SyntroClock();
 		scf->lastKeepAliveReceived = scf->lastKeepAliveSent;
 	} else {
 		scf->inUse = false;									// close it down
 	}
-	CFSOpenResponse(dstPort, responseCode, handle, convertUC4ToInt(cfsHdr->cfsIndex));
+	CFSOpenResponse(dstPort, responseCode, handle, SyntroUtils::convertUC4ToInt(cfsHdr->cfsIndex));
 }
 
 /*!
@@ -2684,14 +2684,14 @@ void Endpoint::CFSProcessCloseResponse(SYNTRO_CFSHEADER *cfsHdr, int dstPort)
 	int responseCode;
 
 	EP = cfsEPInfo + dstPort;
-	handle = convertUC2ToUInt(cfsHdr->cfsClientHandle);		// get the client handle
+	handle = SyntroUtils::convertUC2ToUInt(cfsHdr->cfsClientHandle);		// get the client handle
 
 	if (handle >= SYNTROCFS_MAX_CLIENT_FILES) {
 		logWarn(QString("Close response with invalid handle %1 on port %2").arg(handle).arg(dstPort));
 		return;
 	}
 	scf = EP->cfsFile + handle;							// get the stream slot pointer
-	responseCode = convertUC2ToUInt(cfsHdr->cfsParam);		// get the response code
+	responseCode = SyntroUtils::convertUC2ToUInt(cfsHdr->cfsParam);		// get the response code
 	if (!scf->inUse) {
 		logWarn(QString("Close response with not in use handle %1 on port %2").arg(handle).arg(dstPort));
 		return;
@@ -2730,7 +2730,7 @@ void Endpoint::CFSProcessKeepAliveResponse(SYNTRO_CFSHEADER *cfsHdr, int dstPort
 	int handle;
 
 	EP = cfsEPInfo + dstPort;
-	handle = convertUC2ToUInt(cfsHdr->cfsClientHandle);		// get the client handle
+	handle = SyntroUtils::convertUC2ToUInt(cfsHdr->cfsClientHandle);		// get the client handle
 
 	if (handle >= SYNTROCFS_MAX_CLIENT_FILES) {
 		logWarn(QString("Keep alive response with invalid handle %1 on port %2").arg(handle).arg(dstPort));
@@ -2762,9 +2762,9 @@ void Endpoint::CFSSendKeepAlive(int serviceEP, SYNTRO_CFS_FILE *scf)
 	}
 
 	requestHdr = reinterpret_cast<SYNTRO_CFSHEADER *>(requestE2E+1);	// pointer to the new SyntroCFS header
-	convertIntToUC2(SYNTROCFS_TYPE_KEEPALIVE_REQ, requestHdr->cfsType);
-	convertIntToUC2(scf->clientHandle, requestHdr->cfsClientHandle);
-	convertIntToUC2(scf->storeHandle, requestHdr->cfsStoreHandle);
+	SyntroUtils::convertIntToUC2(SYNTROCFS_TYPE_KEEPALIVE_REQ, requestHdr->cfsType);
+	SyntroUtils::convertIntToUC2(scf->clientHandle, requestHdr->cfsClientHandle);
+	SyntroUtils::convertIntToUC2(scf->storeHandle, requestHdr->cfsStoreHandle);
 
 	syntroSendMessage(SYNTROMSG_E2E, (SYNTRO_MESSAGE *)requestE2E, sizeof(SYNTRO_EHEAD) + sizeof(SYNTRO_CFSHEADER), SYNTROCFS_E2E_PRIORITY);
 }
@@ -2804,7 +2804,7 @@ void Endpoint::CFSProcessReadAtIndexResponse(SYNTRO_CFSHEADER *cfsHdr, int dstPo
 	unsigned char *fileData;
 
 	EP = cfsEPInfo + dstPort;
-	handle = convertUC2ToUInt(cfsHdr->cfsClientHandle);		// get the client handle
+	handle = SyntroUtils::convertUC2ToUInt(cfsHdr->cfsClientHandle);		// get the client handle
 
 	if (handle >= SYNTROCFS_MAX_CLIENT_FILES) {
 		logWarn(QString("ReadAtIndex response with invalid handle %1 on port %2").arg(handle).arg(dstPort));
@@ -2820,15 +2820,15 @@ void Endpoint::CFSProcessReadAtIndexResponse(SYNTRO_CFSHEADER *cfsHdr, int dstPo
 		return;
 	}
 	scf->readInProgress = false;
-	responseCode = convertUC2ToUInt(cfsHdr->cfsParam);		// get the response code
+	responseCode = SyntroUtils::convertUC2ToUInt(cfsHdr->cfsParam);		// get the response code
 	TRACE3("Got ReadAtIndex response on handle %d port %d code %d", handle, dstPort, responseCode);
 	if (responseCode == SYNTROCFS_SUCCESS) {
-		length = convertUC4ToInt(cfsHdr->cfsLength);
+		length = SyntroUtils::convertUC4ToInt(cfsHdr->cfsLength);
 		fileData = reinterpret_cast<unsigned char *>(malloc(length));
 		memcpy(fileData, cfsHdr + 1, length);				// make a copy of the record to give to the client
-		CFSReadAtIndexResponse(dstPort, handle, convertUC4ToInt(cfsHdr->cfsIndex), responseCode, fileData, length); 
+		CFSReadAtIndexResponse(dstPort, handle, SyntroUtils::convertUC4ToInt(cfsHdr->cfsIndex), responseCode, fileData, length); 
 	} else {
-		CFSReadAtIndexResponse(dstPort, handle, convertUC4ToInt(cfsHdr->cfsIndex), responseCode, NULL, 0); 
+		CFSReadAtIndexResponse(dstPort, handle,SyntroUtils:: convertUC4ToInt(cfsHdr->cfsIndex), responseCode, NULL, 0); 
 	}
 }
 
@@ -2860,7 +2860,7 @@ void Endpoint::CFSProcessWriteAtIndexResponse(SYNTRO_CFSHEADER *cfsHdr, int dstP
 	int responseCode;
 
 	EP = cfsEPInfo + dstPort;
-	handle = convertUC2ToUInt(cfsHdr->cfsClientHandle);		// get the client handle
+	handle = SyntroUtils::convertUC2ToUInt(cfsHdr->cfsClientHandle);		// get the client handle
 
 	if (handle >= SYNTROCFS_MAX_CLIENT_FILES) {
 		logWarn(QString("WriteAtIndex response with invalid handle %1 on port %2").arg(handle).arg(dstPort));
@@ -2876,9 +2876,9 @@ void Endpoint::CFSProcessWriteAtIndexResponse(SYNTRO_CFSHEADER *cfsHdr, int dstP
 		return;
 	}
 	scf->writeInProgress = false;
-	responseCode = convertUC2ToUInt(cfsHdr->cfsParam);		// get the response code
+	responseCode = SyntroUtils::convertUC2ToUInt(cfsHdr->cfsParam);		// get the response code
 	TRACE3("Got WriteAtIndex response on handle %d port %d code %d", handle, dstPort, responseCode);
-	CFSWriteAtIndexResponse(dstPort, handle, convertUC4ToInt(cfsHdr->cfsIndex), responseCode); 
+	CFSWriteAtIndexResponse(dstPort, handle, SyntroUtils::convertUC4ToInt(cfsHdr->cfsIndex), responseCode); 
 }
 
 /*!

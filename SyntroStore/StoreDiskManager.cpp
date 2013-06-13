@@ -91,12 +91,12 @@ void StoreDiskManager::writeBlocksSRF(int blockCount)
 	}
 
 	strncpy(cHeadV0.sync, SYNC_STRINGV0, SYNC_LENGTH);
-	convertIntToUC4(0, cHeadV0.data);
+	SyntroUtils::convertIntToUC4(0, cHeadV0.data);
 
 	for (int i = 0; i < blockCount; i++) {
 		QByteArray block = m_stream->dequeueBlock();
 
-		convertIntToUC4(block.size(), cHeadV0.size);
+		SyntroUtils::convertIntToUC4(block.size(), cHeadV0.size);
 		
 		record = reinterpret_cast<SYNTRO_RECORD_HEADER *>(block.data());
 
@@ -137,7 +137,7 @@ void StoreDiskManager::writeBlocksRaw(int blockCount)
 		QByteArray block = m_stream->dequeueBlock();
 
 		record = reinterpret_cast<SYNTRO_RECORD_HEADER *>(block.data());
-		headerLen = convertUC2ToInt(record->headerLength);
+		headerLen = SyntroUtils::convertUC2ToInt(record->headerLength);
 
 		if (headerLen < 0 || headerLen > block.size()) {
 			logWarn(QString("SyntroRecordWriteFlat - invalid header size %1").arg(headerLen));

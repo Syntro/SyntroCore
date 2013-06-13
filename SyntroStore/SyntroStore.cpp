@@ -42,7 +42,7 @@ SyntroStore::SyntroStore(QSettings *settings, QWidget *parent)
 
 	m_timerId = startTimer(2000);
 
-	syntroAppInit(m_settings);
+	SyntroUtils::syntroAppInit(m_settings);
 	m_client = new StoreClient(this, m_settings);
 	setWindowTitle(QString("%1 - %2")
 		.arg(m_settings->value(SYNTRO_PARAMS_APPNAME).toString())
@@ -89,7 +89,7 @@ void SyntroStore::closeEvent(QCloseEvent *)
 	m_settings->endArray();
 
 	saveWindowState();
-	syntroAppExit();
+	SyntroUtils::syntroAppExit();
 }
 
 void SyntroStore::displayStreamDetails(int index)

@@ -31,7 +31,7 @@ QSettings *loadSettings(QStringList arglist);
 
 int main(int argc, char *argv[])
 {
-	if (checkConsoleModeFlag(argc, argv))
+	if (SyntroUtils::checkConsoleModeFlag(argc, argv))
 		return runConsoleApp(argc, argv);
 	else
 		return runGuiApp(argc, argv);
@@ -65,7 +65,7 @@ int runConsoleApp(int argc, char *argv[])
 
 QSettings *loadSettings(QStringList arglist)
 {
-	QSettings *settings = loadStandardSettings(PRODUCT_TYPE, arglist);
+	QSettings *settings = SyntroUtils::loadStandardSettings(PRODUCT_TYPE, arglist);
 
 	// app-specific part
 

@@ -33,7 +33,7 @@ QSettings *loadSettings(QStringList arglist);
 
 int main(int argc, char *argv[])
 {
-	if (checkConsoleModeFlag(argc, argv))
+	if (SyntroUtils::checkConsoleModeFlag(argc, argv))
 		return runConsoleApp(argc, argv);
 	else
 		return runGuiApp(argc, argv);
@@ -67,7 +67,7 @@ int runConsoleApp(int argc, char *argv[])
 
 QSettings *loadSettings(QStringList arglist)
 {
-	QSettings *settings = loadStandardSettings(PRODUCT_TYPE, arglist);
+	QSettings *settings = SyntroUtils::loadStandardSettings(PRODUCT_TYPE, arglist);
 
 	// app-specific part
 
@@ -76,12 +76,6 @@ QSettings *loadSettings(QStringList arglist)
 	// Where the files will be stored
 	if (!settings->contains(SYNTRO_CFS_STORE_PATH))
 		settings->setValue(SYNTRO_CFS_STORE_PATH, "./");
-
-	// This is the name to use to publish the SyntroCFS service. 
-	// A null string turns off the service.
-
-	if (!settings->contains(SYNTRO_CFS_SERVICE_NAME))
-		settings->setValue(SYNTRO_CFS_SERVICE_NAME, DE_E2ESERVICE_SYNTROCFS);		
 
 	return settings;
 }

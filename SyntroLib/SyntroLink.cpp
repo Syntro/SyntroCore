@@ -63,7 +63,7 @@ void SyntroLink::send(int cmd, int len, int priority, SYNTRO_MESSAGE *syntroMess
 	syntroMessage->cmd = cmd;
 	syntroMessage->flags = priority;
 	syntroMessage->spare = 0;
-	convertIntToUC4(len, syntroMessage->len);
+	SyntroUtils::convertIntToUC4(len, syntroMessage->len);
 	computeChecksum(syntroMessage);
 
 	addToTXQueue(wrapper, priority);
@@ -109,9 +109,9 @@ int SyntroLink::tryReceiving(SyntroSocket *sock)
 					resetReceive(m_RXIPPriority);
 					continue;
 				}
-				TRACE2("Received hdr %d %d", m_syntroMessage.cmd, convertUC4ToInt(m_syntroMessage.len));
+				TRACE2("Received hdr %d %d", m_syntroMessage.cmd, SyntroUtils::convertUC4ToInt(m_syntroMessage.len));
 				m_RXIPPriority = m_syntroMessage.flags & SYNTROLINK_PRI;
-				len = convertUC4ToInt(m_syntroMessage.len);
+				len = SyntroUtils::convertUC4ToInt(m_syntroMessage.len);
 				if (m_RXIP[m_RXIPPriority] == NULL) {		// nothing in progress at this priority
 					m_RXIP[m_RXIPPriority] = new SyntroMessageWrapper();
 					m_RXIP[m_RXIPPriority]->m_cmd = m_syntroMessage.cmd;

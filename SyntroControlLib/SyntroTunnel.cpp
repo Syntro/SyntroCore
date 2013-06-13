@@ -51,7 +51,7 @@ bool SyntroTunnel::connect()
 	m_connectInProgress = false;
 	m_connected = false;
 
-	if (!syntroTimerExpired(now, m_connWait, ENDPOINT_CONNWAIT))
+	if (!SyntroUtils::syntroTimerExpired(now, m_connWait, ENDPOINT_CONNWAIT))
 		return false;				// not time yet
 
 	m_connWait = now;

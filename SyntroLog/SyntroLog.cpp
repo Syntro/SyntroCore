@@ -39,7 +39,7 @@ SyntroLog::SyntroLog(QSettings *settings, QWidget *parent)
 	connect(ui.actionAbout, SIGNAL(triggered()), this, SLOT(onAbout()));
 	connect(ui.actionBasicSetup, SIGNAL(triggered()), this, SLOT(onBasicSetup()));
 
-	syntroAppInit(m_settings);
+	SyntroUtils::syntroAppInit(m_settings);
 
 	m_client = new LogClient(this, settings);
 	connect(m_client, SIGNAL(newLogMsg(QByteArray)), this, SLOT(newLogMsg(QByteArray)), Qt::DirectConnection);
@@ -70,7 +70,7 @@ void SyntroLog::closeEvent(QCloseEvent *)
 	}
 
 	saveWindowState();
-	syntroAppExit();
+	SyntroUtils::syntroAppExit();
 }
 
 void SyntroLog::newLogMsg(QByteArray bulkMsg)

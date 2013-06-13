@@ -55,7 +55,7 @@ void ComponentManager::initThread()
 	m_components[INSTANCE_EXEC].appName = COMPTYPE_EXEC;
 	m_components[INSTANCE_EXEC].processState = "Execing";
 	m_components[INSTANCE_EXEC].UID = m_componentData.getMyUID();		// form SyntroExec's UID
-	convertIntToUC2(INSTANCE_EXEC, m_components[INSTANCE_EXEC].UID.instance);
+	SyntroUtils::convertIntToUC2(INSTANCE_EXEC, m_components[INSTANCE_EXEC].UID.instance);
 	emit updateExecStatus(m_components + INSTANCE_EXEC);
 }
 
@@ -89,7 +89,7 @@ void ComponentManager::killComponents()
 
 	// wait for up to five seconds to see if they have all died
 
-	while (!syntroTimerExpired(SyntroClock(), startTime, 2000)) {
+	while (!SyntroUtils::syntroTimerExpired(SyntroClock(), startTime, 2000)) {
 		for (i = 0; i < SYNTRO_MAX_COMPONENTSPERDEVICE; i++) {
 			if (i == INSTANCE_EXEC)
 				continue;
@@ -184,7 +184,7 @@ void ComponentManager::loadComponent(int index)
 		component->workingDirectory = component->executableDirectory;
 
 	component->UID = m_componentData.getMyUID();			// form the component's UID
-	convertIntToUC2(component->instance, component->UID.instance);
+	SyntroUtils::convertIntToUC2(component->instance, component->UID.instance);
 
 	if ((m_settings->value(SYNTROEXEC_PARAMS_INUSE).toString() == SYNTRO_PARAMS_FALSE) ||
 		(m_settings->value(SYNTROEXEC_PARAMS_APP_NAME).toString()) == "") {
@@ -226,7 +226,7 @@ void ComponentManager::managerBackground()
 	now = SyntroClock();
 
 	if (m_startMode) {										// do special processing in start mode
-		if (!syntroTimerExpired(now, m_startTime, SYNTROEXEC_STARTUP_DELAY))
+		if (!SyntroUtils::syntroTimerExpired(now, m_startTime, SYNTROEXEC_STARTUP_DELAY))
 			return;											// do nothing while waiting for timer
 		// now exiting start mode - kill anything from this machine generating hellos
 		m_startMode = false;
@@ -246,7 +246,7 @@ void ComponentManager::managerBackground()
 		switch (component->process.state()) {
 			case QProcess::NotRunning:
 				component->processState = "Not running";
-				if (syntroTimerExpired(now, component->timeStarted, SYNTROEXEC_RESTART_INTERVAL)) 
+				if (SyntroUtils::syntroTimerExpired(now, component->timeStarted, SYNTROEXEC_RESTART_INTERVAL)) 
 					startComponent(component);
 				break;
 
@@ -317,7 +317,7 @@ void ComponentManager::checkHello(ManagerComponent *component)
 	}
 	// this means no hello in table
 	if (component->helloSeen || 
-			syntroTimerExpired(SyntroClock(), component->lastHelloTime, SYNTROEXEC_HELLO_STARTUP_DELAY)) {
+			SyntroUtils::syntroTimerExpired(SyntroClock(), component->lastHelloTime, SYNTROEXEC_HELLO_STARTUP_DELAY)) {
 		component->process.kill();							// kill the process due to hello loss
 		component->helloStateString = "Lost hellos";
 	}
@@ -347,7 +347,7 @@ void ComponentManager::startModeKillAll()
 	for (i = 0; i < SYNTRO_MAX_COMPONENTSPERDEVICE; i++) {
 		if (i == INSTANCE_EXEC)
 			continue;										// don't kill SyntroExec!
-		convertIntToUC2(i, UID.instance);					// form the UID for this instance
+		SyntroUtils::convertIntToUC2(i, UID.instance);					// form the UID for this instance
 		if (m_hello->findComponent(&helloEntry, &UID)) {
 			findAndKillProcess(helloEntry.hello.componentType + m_extension);	// get rid of it
 		}

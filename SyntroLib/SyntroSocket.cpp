@@ -211,7 +211,7 @@ int		SyntroSocket::sockSendTo(const void *buf, int bufLen, int hostPort, char *h
 		return false;
 	}
 	if (host == NULL)
-		return m_UDPSocket->writeDatagram((const char *)buf, bufLen, getMyBroadcastAddress(), hostPort);	
+		return m_UDPSocket->writeDatagram((const char *)buf, bufLen, SyntroUtils::getMyBroadcastAddress(), hostPort);	
 	else
 		return m_UDPSocket->writeDatagram((const char *)buf, bufLen, QHostAddress(host), hostPort);	
 }

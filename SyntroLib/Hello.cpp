@@ -96,7 +96,7 @@ char *Hello::getHelloEntry(int index)
 
 	sprintf(buf, "%-20s %-20s %d.%d.%d.%d",
 			helloEntry->hello.componentType,
-			qPrintable(displayUID(&helloEntry->hello.componentUID)),
+			qPrintable(SyntroUtils::displayUID(&helloEntry->hello.componentUID)),
 			helloEntry->hello.IPAddr[0], helloEntry->hello.IPAddr[1], helloEntry->hello.IPAddr[2], 
 				helloEntry->hello.IPAddr[3]);
 
@@ -130,7 +130,7 @@ bool Hello::findComponent(HELLOENTRY *foundHelloEntry, SYNTRO_UID *UID)
 	for (i = 0; i < SYNTRO_MAX_CONNECTEDCOMPONENTS; i++, helloEntry++) {
 		if (!helloEntry->inUse)
 			continue;
-		if (!compareUID(&(helloEntry->hello.componentUID), UID))
+		if (!SyntroUtils::compareUID(&(helloEntry->hello.componentUID), UID))
 			continue;
 
 // found it!!
@@ -212,12 +212,12 @@ void Hello::processHello()
 
 	// check it's from correct subnet - must be the same
 
-	if (!isInMySubnet(m_RXHello.IPAddr))
+	if (!SyntroUtils::isInMySubnet(m_RXHello.IPAddr))
 		return;												// just ignore if not from my subnet
 
 	m_RXHello.componentName[SYNTRO_MAX_COMPNAME-1] = 0;		// make sure zero terminated
 	m_RXHello.componentType[SYNTRO_MAX_COMPTYPE-1] = 0;		// make sure zero terminated
-	instance = convertUC2ToInt(m_RXHello.componentUID.instance);	// get the instance from where the hello came
+	instance = SyntroUtils::convertUC2ToInt(m_RXHello.componentUID.instance);	// get the instance from where the hello came
 	free = -1;
 
 	QMutexLocker locker(&m_lock);
@@ -254,7 +254,7 @@ void Hello::processHello()
 			memcpy(&(helloEntry->hello), &m_RXHello, sizeof(HELLO));
 			sprintf(helloEntry->IPAddr, "%d.%d.%d.%d",
 			m_RXHello.IPAddr[0], m_RXHello.IPAddr[1], m_RXHello.IPAddr[2], m_RXHello.IPAddr[3]);
-			TRACE2("Hello added %s, %s", qPrintable(displayUID(&helloEntry->hello.componentUID)), 
+			TRACE2("Hello added %s, %s", qPrintable(SyntroUtils::displayUID(&helloEntry->hello.componentUID)), 
 				helloEntry->hello.componentName);
 			emit helloDisplayEvent(this);
 		}
@@ -279,7 +279,7 @@ void Hello::processHello()
 
 bool Hello::matchHello(HELLO *a, HELLO *b)
 {
-	return compareUID(&(a->componentUID), &(b->componentUID));
+	return SyntroUtils::compareUID(&(a->componentUID), &(b->componentUID));
 }
 
 
@@ -294,7 +294,7 @@ void Hello::processTimers()
 		if (!helloEntry->inUse)
 			continue;								// not in use
 
-		if (syntroTimerExpired(now, helloEntry->lastHello, HELLO_LIFETIME)) {	// entry has timed out
+		if (SyntroUtils::syntroTimerExpired(now, helloEntry->lastHello, HELLO_LIFETIME)) {	// entry has timed out
 
 			HELLOENTRY	*messageHelloEntry;
 
@@ -334,7 +334,7 @@ void Hello::sendHelloBeaconResponse(HELLO *reqHello)
 
     HELLO hello = m_componentData->getMyHeartbeat().hello;
 
-    instance = convertUC2ToInt(reqHello->componentUID.instance);
+    instance = SyntroUtils::convertUC2ToInt(reqHello->componentUID.instance);
     m_helloSocket->sockSendTo(&(hello), sizeof(HELLO), SOCKET_HELLO + instance, NULL);
 }
 

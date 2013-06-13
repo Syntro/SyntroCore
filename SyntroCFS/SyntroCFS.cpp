@@ -41,7 +41,7 @@ SyntroCFS::SyntroCFS(QSettings *settings, QWidget *parent)
 
 	m_timerId = startTimer(2000);
 
-	syntroAppInit(m_settings);
+	SyntroUtils::syntroAppInit(m_settings);
 	m_client = new SyntroCFSClient(this, m_settings);
 	setWindowTitle(QString("%1 - %2")
 		.arg(m_settings->value(SYNTRO_PARAMS_APPNAME).toString())
@@ -55,7 +55,7 @@ void SyntroCFS::closeEvent(QCloseEvent *)
 	killTimer(m_timerId);
 	m_client->exitThread();
 	saveWindowState();
-	syntroAppExit();
+	SyntroUtils::syntroAppExit();
 }
 
 void SyntroCFS::timerEvent(QTimerEvent *)
@@ -122,7 +122,7 @@ void SyntroCFS::newStatus(int handle, SYNTROCFS_STATE *CFSState)
 		return;
 	}
 	(m_fileTable->item(handle, 0))->setText(CFSState->filePath);
-	(m_fileTable->item(handle, 1))->setText(displayUID(&CFSState->clientUID));
+	(m_fileTable->item(handle, 1))->setText(SyntroUtils::displayUID(&CFSState->clientUID));
 	(m_fileTable->item(handle, 2))->setText(QString::number(CFSState->rxBytes));
 	(m_fileTable->item(handle, 3))->setText(QString::number(CFSState->txBytes));
 }

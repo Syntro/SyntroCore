@@ -1,5 +1,5 @@
 //
-//  Copyright (c) 2012 Pansenti, LLC.
+//  Copyright (c) 2012, 2013 Pansenti, LLC.
 //	
 //  This file is part of SyntroLib
 //
@@ -28,60 +28,61 @@
 #include <qhostinfo.h>
 
 //	globals
-
-SYNTRO_IPADDR myIPAddr;										// the IP address
-SYNTRO_MACADDR myMacAddr;									// the mac address
+	
+SYNTRO_IPADDR g_myIPAddr;								// the IP address
+SYNTRO_MACADDR g_myMacAddr;								// the mac address
 
 //	The actual SyntroClock generator
 
-SyntroClockObject *syntroClockGen;							// the actual clock generator
+SyntroClockObject *g_syntroClockGen;					// the actual clock generator
 
 //	The address info for the adaptor being used
 
-QHostAddress platformBroadcastAddress;					
-QHostAddress platformSubnetAddress;					
-QHostAddress platformNetMask;					
+QHostAddress g_platformBroadcastAddress;					
+QHostAddress g_platformSubnetAddress;					
+QHostAddress g_platformNetMask;					
 
-SYNTRO_IPADDR *getMyIPAddr()
+
+SYNTRO_IPADDR *SyntroUtils::getMyIPAddr()
 {
-	return &myIPAddr;
+	return &g_myIPAddr;
 }
 
-SYNTRO_MACADDR *getMyMacAddr()
+SYNTRO_MACADDR *SyntroUtils::getMyMacAddr()
 {
-	return &myMacAddr;
+	return &g_myMacAddr;
 }
 
 
-const char *syntroLibVersion()
+const char *SyntroUtils::syntroLibVersion()
 {
 	return SYNTROLIB_VERSION;
 }
 
 
-void syntroAppInit(QSettings *settings)
+void SyntroUtils::syntroAppInit(QSettings *settings)
 {
-	syntroClockGen = new SyntroClockObject();
-	syntroClockGen->start();
+	g_syntroClockGen = new SyntroClockObject();
+	g_syntroClockGen->start();
 	logCreate(settings);
 	getMyIPAddress(settings);
 }
 
-void syntroAppExit()
+void SyntroUtils::syntroAppExit()
 {
 	logDestroy();
-	if (syntroClockGen) {
-		syntroClockGen->m_run = false;
-		syntroClockGen->wait(200);							// should never take more than this
-		delete syntroClockGen;
-		syntroClockGen = NULL;
+	if (g_syntroClockGen) {
+		g_syntroClockGen->m_run = false;
+		g_syntroClockGen->wait(200);							// should never take more than this
+		delete g_syntroClockGen;
+		g_syntroClockGen = NULL;
 	}
 }
 
 
 //	checkConsoleModeFlag check for "-c" in the runtime args and returns true if found
 
-bool checkConsoleModeFlag(int argc, char *argv[])
+bool SyntroUtils::checkConsoleModeFlag(int argc, char *argv[])
 {
 	for (int i = 1; i < argc; i++) {
 		if (!strcmp(argv[i], "-c"))
@@ -91,7 +92,7 @@ bool checkConsoleModeFlag(int argc, char *argv[])
 	return false;
 }
 
-bool checkDaemonModeFlag(int argc, char *argv[])
+bool SyntroUtils::checkDaemonModeFlag(int argc, char *argv[])
 {
     for (int i = 1; i < argc; i++) {
         if (!strcmp(argv[i], "-d"))
@@ -101,20 +102,20 @@ bool checkDaemonModeFlag(int argc, char *argv[])
     return false;
 }
 
-bool isSendOK(unsigned char seq, unsigned char ack)
+bool SyntroUtils::isSendOK(unsigned char seq, unsigned char ack)
 {
 	return (seq - ack) < SYNTRO_MAX_WINDOW;
 }
 
 
-void makeUIDSTR(SYNTRO_UIDSTR UIDStr, SYNTRO_MACADDRSTR macAddress, int instance)
+void SyntroUtils::makeUIDSTR(SYNTRO_UIDSTR UIDStr, SYNTRO_MACADDRSTR macAddress, int instance)
 {
 	sprintf(UIDStr, "%s%04x", macAddress, instance);
 }
 
 //	UIDSTRtoUID converts a string UID to a binary one
 
-void UIDSTRtoUID(SYNTRO_UIDSTR sourceStr, SYNTRO_UID *destUID)
+void SyntroUtils::UIDSTRtoUID(SYNTRO_UIDSTR sourceStr, SYNTRO_UID *destUID)
 {
 	int byteTemp;
 
@@ -129,7 +130,7 @@ void UIDSTRtoUID(SYNTRO_UIDSTR sourceStr, SYNTRO_UID *destUID)
 
 //	UIDtoUIDSTR converts a binary UID to a string one
 
-void UIDtoUIDSTR(SYNTRO_UID *sourceUID, SYNTRO_UIDSTR destStr)
+void SyntroUtils::UIDtoUIDSTR(SYNTRO_UID *sourceUID, SYNTRO_UIDSTR destStr)
 {
 	for (int i = 0; i < SYNTRO_MACADDR_LEN; i++)
 		sprintf(destStr + i * 2, "%02X", sourceUID->macAddr[i]);
@@ -139,14 +140,14 @@ void UIDtoUIDSTR(SYNTRO_UID *sourceUID, SYNTRO_UIDSTR destStr)
 
 //	displayIPAddr - returns a string version of UP address for displaying
 
-QString displayIPAddr(SYNTRO_IPADDR address)
+QString SyntroUtils::displayIPAddr(SYNTRO_IPADDR address)
 {
 	return QString("%1.%2.%3.%4").arg(address[0]).arg(address[1]).arg(address[2]).arg(address[3]);
 }
 
 //	convertIPStringToIPAddr converts a string form IP address (with dots) to the internal form
 
-void convertIPStringToIPAddr(char *IPStr, SYNTRO_IPADDR IPAddr)
+void SyntroUtils::convertIPStringToIPAddr(char *IPStr, SYNTRO_IPADDR IPAddr)
 {
 	int	a[4];
 
@@ -156,12 +157,12 @@ void convertIPStringToIPAddr(char *IPStr, SYNTRO_IPADDR IPAddr)
 		IPAddr[i] = (unsigned char)a[i];
 }
 
-bool IPZero(SYNTRO_IPADDR addr)
+bool SyntroUtils::IPZero(SYNTRO_IPADDR addr)
 {
 	return (addr[0] == 0) && (addr[1] == 0) && (addr[2] == 0) && (addr[3] == 0);
 }
 
-bool IPLoopback(SYNTRO_IPADDR addr)
+bool SyntroUtils::IPLoopback(SYNTRO_IPADDR addr)
 {
 	return (addr[0] == 127) && (addr[1] == 0) && (addr[2] == 0) && (addr[3] == 1);
 }
@@ -169,7 +170,7 @@ bool IPLoopback(SYNTRO_IPADDR addr)
 
 //	displayUID - returns a string version of UID for displaying
 
-QString displayUID(SYNTRO_UID *uid)
+QString SyntroUtils::displayUID(SYNTRO_UID *uid)
 {
 	char temp[20];
 
@@ -178,19 +179,19 @@ QString displayUID(SYNTRO_UID *uid)
 	return QString(temp);
 }
 
-bool compareUID(SYNTRO_UID *a, SYNTRO_UID *b)
+bool SyntroUtils::compareUID(SYNTRO_UID *a, SYNTRO_UID *b)
 {
 	return memcmp(a, b, sizeof(SYNTRO_UID)) == 0;
 }
 
-bool UIDHigher(SYNTRO_UID *a, SYNTRO_UID *b)
+bool SyntroUtils::UIDHigher(SYNTRO_UID *a, SYNTRO_UID *b)
 {
 	return memcmp(a, b, sizeof(SYNTRO_UID)) > 0;
 }
 
 //	swapEHead swaps UIDs and ports in a SYNTRO_EHEAD
 
-void swapEHead(SYNTRO_EHEAD *ehead)
+void SyntroUtils::swapEHead(SYNTRO_EHEAD *ehead)
 {
 	swapUID(&(ehead->sourceUID), &(ehead->destUID));
 
@@ -201,7 +202,7 @@ void swapEHead(SYNTRO_EHEAD *ehead)
 	convertIntToUC2(i, ehead->destPort);
 }
 
-void swapUID(SYNTRO_UID *a, SYNTRO_UID *b)
+void SyntroUtils::swapUID(SYNTRO_UID *a, SYNTRO_UID *b)
 {
 	SYNTRO_UID temp;
 
@@ -215,12 +216,12 @@ void swapUID(SYNTRO_UID *a, SYNTRO_UID *b)
 //	*** Note: 32 bit int assumed ***
 //
 
-int	convertUC4ToInt(SYNTRO_UC4 uc4)
+int	SyntroUtils::convertUC4ToInt(SYNTRO_UC4 uc4)
 {
 	return ((int)uc4[0] << 24) | ((int)uc4[1] << 16) | ((int)uc4[2] << 8) | uc4[3];
 }
 
-void convertIntToUC4(int val, SYNTRO_UC4 uc4)
+void SyntroUtils::convertIntToUC4(int val, SYNTRO_UC4 uc4)
 {
 	uc4[3] = val & 0xff;
 	uc4[2] = (val >> 8) & 0xff;
@@ -228,7 +229,7 @@ void convertIntToUC4(int val, SYNTRO_UC4 uc4)
 	uc4[0] = (val >> 24) & 0xff;
 }
 
-int	convertUC2ToInt(SYNTRO_UC2 uc2)
+int	SyntroUtils::convertUC2ToInt(SYNTRO_UC2 uc2)
 {
 	int val = ((int)uc2[0] << 8) | uc2[1];
 	
@@ -238,25 +239,25 @@ int	convertUC2ToInt(SYNTRO_UC2 uc2)
 	return val;
 }
 
-int convertUC2ToUInt(SYNTRO_UC2 uc2)
+int SyntroUtils::convertUC2ToUInt(SYNTRO_UC2 uc2)
 {
 	return ((int)uc2[0] << 8) | uc2[1];
 }
 
-void convertIntToUC2(int val, SYNTRO_UC2 uc2)
+void SyntroUtils::convertIntToUC2(int val, SYNTRO_UC2 uc2)
 {
 	uc2[1] = val & 0xff;
 	uc2[0] = (val >> 8) & 0xff;
 }
 
-void copyUC2(SYNTRO_UC2 dst, SYNTRO_UC2 src)
+void SyntroUtils::copyUC2(SYNTRO_UC2 dst, SYNTRO_UC2 src)
 {
 	dst[0] = src[0];
 	dst[1] = src[1];
 }
 
 
-SYNTRO_EHEAD *createEHEAD(SYNTRO_UID *sourceUID, int sourcePort, SYNTRO_UID *destUID, int destPort, 
+SYNTRO_EHEAD *SyntroUtils::createEHEAD(SYNTRO_UID *sourceUID, int sourcePort, SYNTRO_UID *destUID, int destPort, 
 										unsigned char seq, int len)
 {
 	SYNTRO_EHEAD *ehead;
@@ -272,7 +273,7 @@ SYNTRO_EHEAD *createEHEAD(SYNTRO_UID *sourceUID, int sourcePort, SYNTRO_UID *des
 }
 
 
-bool crackServicePath(QString servicePath, QString& regionName, QString& componentName, QString& serviceName)
+bool SyntroUtils::crackServicePath(QString servicePath, QString& regionName, QString& componentName, QString& serviceName)
 {
 	regionName.clear();
 	componentName.clear();
@@ -307,7 +308,7 @@ bool crackServicePath(QString servicePath, QString& regionName, QString& compone
 //		-s<settings-file-path>		- default is ./<COMPONENT_TYPE>.ini
 //		-a<network-adapter>			- default is first with valid IP address
 
-QSettings *loadStandardSettings(const char *appType, QStringList arglist)
+QSettings *SyntroUtils::loadStandardSettings(const char *appType, QStringList arglist)
 {
 	QString args;
 	QString adapter;									// IP adaptor name
@@ -411,11 +412,10 @@ QSettings *loadStandardSettings(const char *appType, QStringList arglist)
 	return settings;
 }
 
-bool isReservedNameCharacter(char value)
+bool SyntroUtils::isReservedNameCharacter(char value)
 {
 	switch (value) {
 		case SYNTROCFS_FILENAME_SEP:
-		case SYNTRO_STREAM_TYPE_SEP:
 		case SYNTRO_SERVICEPATH_SEP:
 		case SYNTRO_LOG_COMPONENT_SEP:
 		case ' ' :
@@ -427,11 +427,10 @@ bool isReservedNameCharacter(char value)
 	}
 }
 
-bool isReservedPathCharacter(char value)
+bool SyntroUtils::isReservedPathCharacter(char value)
 {
 	switch (value) {
 		case SYNTROCFS_FILENAME_SEP:
-		case SYNTRO_STREAM_TYPE_SEP:
 		case SYNTRO_LOG_COMPONENT_SEP:
 		case ' ' :
 		case '\\':
@@ -442,22 +441,39 @@ bool isReservedPathCharacter(char value)
 	}
 }
 
-QHostAddress getMyBroadcastAddress()
+ QString SyntroUtils::insertStreamNameInPath(const QString& streamSource, const QString& streamName)
+ {
+	 int index;
+	 QString result;
+
+	 index = streamSource.indexOf(SYNTRO_STREAM_TYPE_SEP);
+	 if (index == -1) {
+		 // there is no extension - just add stream name to the end
+		 result = streamSource + "/" + streamName;
+	 } else {
+		 // there is an extension - insert stream name before extension
+		 result = streamSource;
+		 result.insert(index, QString("/") + streamName);
+	 }
+	 return result;
+ }
+
+QHostAddress SyntroUtils::getMyBroadcastAddress()
 {
-	return platformBroadcastAddress;
+	return g_platformBroadcastAddress;
 }
 
-QHostAddress getMySubnetAddress()
+QHostAddress SyntroUtils::getMySubnetAddress()
 {
-	return platformSubnetAddress;
+	return g_platformSubnetAddress;
 }
 
-QHostAddress getMyNetMask()
+QHostAddress SyntroUtils::getMyNetMask()
 {
-	return platformNetMask;
+	return g_platformNetMask;
 }
 
-bool isInMySubnet(SYNTRO_IPADDR IPAddr)
+bool SyntroUtils::isInMySubnet(SYNTRO_IPADDR IPAddr)
 {
 	quint32 intaddr;
 
@@ -466,18 +482,18 @@ bool isInMySubnet(SYNTRO_IPADDR IPAddr)
 	if ((IPAddr[0] == 0xff) && (IPAddr[1] == 0xff) && (IPAddr[2] == 0xff) && (IPAddr[3] == 0xff))
 		return true;
 	intaddr = (IPAddr[0] << 24) + (IPAddr[1] << 16) + (IPAddr[2] << 8) + IPAddr[3];
-	return (intaddr & platformNetMask.toIPv4Address()) == platformSubnetAddress.toIPv4Address(); 
+	return (intaddr & g_platformNetMask.toIPv4Address()) == g_platformSubnetAddress.toIPv4Address(); 
 }
 
 
-bool syntroTimerExpired(qint64 now, qint64 start, qint64 interval)
+bool SyntroUtils::syntroTimerExpired(qint64 now, qint64 start, qint64 interval)
 {
 	if (interval == 0)
 		return false;										// can never expire
 	return ((now - start) >= interval);
 }
 
-void getMyIPAddress(QSettings *settings)
+void SyntroUtils::getMyIPAddress(QSettings *settings)
 {
 	QNetworkInterface		cInterface;
 	QNetworkAddressEntry	cEntry;
@@ -503,31 +519,31 @@ void getMyIPAddress(QSettings *settings)
 						if (intaddr == 0)
 							continue;								// not real
 	
-						myIPAddr[0] = intaddr >> 24;
-						myIPAddr[1] = intaddr >> 16;
-						myIPAddr[2] = intaddr >> 8;
-						myIPAddr[3] = intaddr;
-						if (IPLoopback(myIPAddr) || IPZero(myIPAddr))
+						g_myIPAddr[0] = intaddr >> 24;
+						g_myIPAddr[1] = intaddr >> 16;
+						g_myIPAddr[2] = intaddr >> 8;
+						g_myIPAddr[3] = intaddr;
+						if (IPLoopback(g_myIPAddr) || IPZero(g_myIPAddr))
 							continue;
 						QString macaddr = cInterface.hardwareAddress();					// get the MAC address
 						sscanf(macaddr.toLocal8Bit().constData(), "%x:%x:%x:%x:%x:%x", 
 							addr, addr+1, addr+2, addr+3, addr+4, addr+5);
 
 						for (int i = 0; i < SYNTRO_MACADDR_LEN; i++)
-							myMacAddr[i] = addr[i];
+							g_myMacAddr[i] = addr[i];
 
-						logInfo(QString("Using IP adaptor %1").arg(displayIPAddr(myIPAddr)));
+						logInfo(QString("Using IP adaptor %1").arg(displayIPAddr(g_myIPAddr)));
 
-						platformNetMask = cEntry.netmask();
-						intmask = platformNetMask.toIPv4Address();
+						g_platformNetMask = cEntry.netmask();
+						intmask = g_platformNetMask.toIPv4Address();
 						intaddr &= intmask;
-						platformSubnetAddress = QHostAddress(intaddr);
+						g_platformSubnetAddress = QHostAddress(intaddr);
 						intaddr |= ~intmask;
-						platformBroadcastAddress = QHostAddress(intaddr);
+						g_platformBroadcastAddress = QHostAddress(intaddr);
 						logInfo(QString("Subnet = %1, netmask = %2, bcast = %3")
-							.arg(platformSubnetAddress.toString())
-							.arg(platformNetMask.toString())
-							.arg(platformBroadcastAddress.toString()));
+							.arg(g_platformSubnetAddress.toString())
+							.arg(g_platformNetMask.toString())
+							.arg(g_platformBroadcastAddress.toString()));
 
 						return;
 					}
@@ -540,7 +556,7 @@ void getMyIPAddress(QSettings *settings)
 	}
 }
 
-void setSyntroTimestamp(SYNTRO_TIMESTAMP *timestamp)
+void SyntroUtils::setSyntroTimestamp(SYNTRO_TIMESTAMP *timestamp)
 {
 	QDateTime	tm = QDateTime::currentDateTime();
 	QDate tmd = tm.date();
@@ -556,7 +572,7 @@ void setSyntroTimestamp(SYNTRO_TIMESTAMP *timestamp)
 	convertIntToUC2(tmt.msec(), timestamp->milliseconds);
 }
 
-QString timestampToString(SYNTRO_TIMESTAMP *timestamp)
+QString SyntroUtils::timestampToString(SYNTRO_TIMESTAMP *timestamp)
 {
 	QString str;
 
@@ -571,7 +587,7 @@ QString timestampToString(SYNTRO_TIMESTAMP *timestamp)
 	return str;
 }
 
-QString timestampToString(QDateTime *timestamp)
+QString SyntroUtils::timestampToString(QDateTime *timestamp)
 {
 	QString str;
 
@@ -589,7 +605,7 @@ QString timestampToString(QDateTime *timestamp)
 	return str;
 }
 
-QString timestampToDateString(SYNTRO_TIMESTAMP *timestamp)
+QString SyntroUtils::timestampToDateString(SYNTRO_TIMESTAMP *timestamp)
 {
 	QString str;
 
@@ -601,7 +617,7 @@ QString timestampToDateString(SYNTRO_TIMESTAMP *timestamp)
 	return str;
 }
 
-QString timestampToTimeString(SYNTRO_TIMESTAMP *timestamp)
+QString SyntroUtils::timestampToTimeString(SYNTRO_TIMESTAMP *timestamp)
 {
 	QString str;
 
@@ -615,7 +631,7 @@ QString timestampToTimeString(SYNTRO_TIMESTAMP *timestamp)
 }
 
 
-void getSyntroTimestamp(SYNTRO_TIMESTAMP *timestamp, QDateTime *time)
+void SyntroUtils::getSyntroTimestamp(SYNTRO_TIMESTAMP *timestamp, QDateTime *time)
 {
 	time->setTime(QTime(convertUC2ToUInt(timestamp->hour), convertUC2ToUInt(timestamp->minute), 
 			convertUC2ToUInt(timestamp->second), convertUC2ToUInt(timestamp->milliseconds)));
@@ -624,7 +640,7 @@ void getSyntroTimestamp(SYNTRO_TIMESTAMP *timestamp, QDateTime *time)
 		convertUC2ToUInt(timestamp->milliseconds)));
 }
 
-QDateTime syntroTimestampToQDateTime(SYNTRO_TIMESTAMP *timestamp)
+QDateTime SyntroUtils::syntroTimestampToQDateTime(SYNTRO_TIMESTAMP *timestamp)
 {
 	QDate d(convertUC2ToInt(timestamp->year), convertUC2ToInt(timestamp->month), 
 			convertUC2ToInt(timestamp->day));

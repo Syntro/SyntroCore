@@ -334,7 +334,7 @@ bool	SyntroServer::syAccept(bool staticTunnel)
 	sock->sockSetReceiveMsg(SYNTROSERVER_ONRECEIVE_MESSAGE);
 	sock->sockSetSendMsg(SYNTROSERVER_ONSEND_MESSAGE);
 	logDebug(QString("Accepted call from %1 port %2").arg(IPStr).arg(componentPort));
-	convertIPStringToIPAddr(IPStr, componentIPAddr);
+	SyntroUtils::convertIPStringToIPAddr(IPStr, componentIPAddr);
 
 	component = findComponent(componentIPAddr, componentPort);	// see if know about this client already
 	if (component != NULL) {								// do know about this one
@@ -370,7 +370,7 @@ bool	SyntroServer::syAccept(bool staticTunnel)
 
 void	SyntroServer::syClose(SS_COMPONENT *syntroComponent)
 {
-	TRACE1("Closing %s", qPrintable(displayUID(&syntroComponent->heartbeat.hello.componentUID)));
+	TRACE1("Closing %s", qPrintable(SyntroUtils::displayUID(&syntroComponent->heartbeat.hello.componentUID)));
 	syCleanup(syntroComponent);
 	emit UpdateSyntroStatusBox(syntroComponent);
 	emit DMDisplay(&m_dirManager);
@@ -447,12 +447,12 @@ bool SyntroServer::sendSyntroMessage(SYNTRO_UID *uid, int cmd, SYNTRO_MESSAGE *m
 
 	for (int i = 0; i < SYNTRO_MAX_CONNECTEDCOMPONENTS; i++, syntroComponent++) {
 		if (syntroComponent->inUse && (syntroComponent->state >= ConnWFHeartbeat)) {
-			if (!compareUID(uid, &(syntroComponent->heartbeat.hello.componentUID)))
+			if (!SyntroUtils::compareUID(uid, &(syntroComponent->heartbeat.hello.componentUID)))
 				continue;
 
 			// send over link to component
 			if (syntroComponent->syntroLink != NULL) {
-				TRACE1("\nSend to %s", qPrintable(displayUID(&syntroComponent->heartbeat.hello.componentUID)));
+				TRACE1("\nSend to %s", qPrintable(SyntroUtils::displayUID(&syntroComponent->heartbeat.hello.componentUID)));
 				syntroComponent->syntroLink->send(cmd, length, priority, (SYNTRO_MESSAGE *)message);
 				syntroComponent->syntroLink->trySending(syntroComponent->sock);
 				return true;
@@ -461,7 +461,7 @@ bool SyntroServer::sendSyntroMessage(SYNTRO_UID *uid, int cmd, SYNTRO_MESSAGE *m
 	}
 
 	free(message);
-	logWarn(QString("Failed sending message to %1").arg(qPrintable(displayUID(uid))));
+	logWarn(QString("Failed sending message to %1").arg(qPrintable(SyntroUtils::displayUID(uid))));
 	return false;
 }
 
@@ -489,12 +489,12 @@ void	SyntroServer::processReceivedData(SS_COMPONENT *syntroComponent)
 			continue;
 		if (syntroComponent->state < ConnNormal) {
 			if (syntroComponent->tunnelSource) {
-				TRACE2("Received %d from %s", cmd, qPrintable(displayUID(&syntroComponent->syntroTunnel->m_helloEntry.hello.componentUID)));
+				TRACE2("Received %d from %s", cmd, qPrintable(SyntroUtils::displayUID(&syntroComponent->syntroTunnel->m_helloEntry.hello.componentUID)));
 			} else {
-				TRACE3("Received %d from %s port %d", cmd, qPrintable(displayIPAddr(syntroComponent->compIPAddr)), syntroComponent->compPort);
+				TRACE3("Received %d from %s port %d", cmd, qPrintable(SyntroUtils::displayIPAddr(syntroComponent->compIPAddr)), syntroComponent->compPort);
 			}
 		} else {
-			TRACE2("Received %d from %s", cmd, qPrintable(displayUID(&syntroComponent->heartbeat.hello.componentUID)));
+			TRACE2("Received %d from %s", cmd, qPrintable(SyntroUtils::displayUID(&syntroComponent->heartbeat.hello.componentUID)));
 		}
 		processReceivedDataDemux(syntroComponent, cmd, length, message);
 	}
@@ -518,11 +518,11 @@ void SyntroServer::processReceivedDataDemux(SS_COMPONENT *syntroComponent, int c
 	
 			syntroComponent->lastHeartbeatReceived = SyntroClock();
 			if (!syntroComponent->tunnelSource)			// tunnel sources use their configured value
-				syntroComponent->heartbeatInterval = convertUC2ToInt(heartbeat->hello.interval) * SYNTRO_CLOCKS_PER_SEC;	// record advertised heartbeat interval
+				syntroComponent->heartbeatInterval = SyntroUtils::convertUC2ToInt(heartbeat->hello.interval) * SYNTRO_CLOCKS_PER_SEC;	// record advertised heartbeat interval
 			memcpy(&(syntroComponent->heartbeat), message, sizeof(SYNTRO_HEARTBEAT));
 			if (syntroComponent->state == ConnWFHeartbeat) {	// first time for heartbeat
 				syntroComponent->state = ConnNormal;
-				logInfo(QString("New component %1").arg(displayUID(&syntroComponent->heartbeat.hello.componentUID)));
+				logInfo(QString("New component %1").arg(SyntroUtils::displayUID(&syntroComponent->heartbeat.hello.componentUID)));
 				if (!syntroComponent->tunnelSource && 
 							(strcmp(syntroComponent->heartbeat.hello.componentType, COMPTYPE_CONTROL) == 0))
 					syntroComponent->tunnelDest = true;
@@ -580,7 +580,7 @@ void SyntroServer::processReceivedDataDemux(SS_COMPONENT *syntroComponent, int c
 		default:
 			if (message != NULL) {
 				logWarn(QString("Unrecognized message %1 from %2")
-					.arg(displayUID(&syntroComponent->heartbeat.hello.componentUID))
+					.arg(SyntroUtils::displayUID(&syntroComponent->heartbeat.hello.componentUID))
 					.arg(cmd));
 				free(message);
 			}
@@ -603,7 +603,7 @@ void	SyntroServer::setComponentDE(char *dirEntry, int length, SS_COMPONENT *synt
 	memcpy(syntroComponent->dirEntry, dirEntry, length);	// remember new DE
 	syntroComponent->dirManagerConnComp->connectedComponentUID = syntroComponent->heartbeat.hello.componentUID;
 	m_dirManager.DMProcessDE(syntroComponent->dirManagerConnComp, dirEntry, length);
-	TRACE1("Updated component %s", qPrintable(displayUID(&syntroComponent->heartbeat.hello.componentUID)));
+	TRACE1("Updated component %s", qPrintable(SyntroUtils::displayUID(&syntroComponent->heartbeat.hello.componentUID)));
 	emit DMDisplay(&m_dirManager);
 }
 
@@ -620,7 +620,7 @@ void	SyntroServer::sendHeartbeat(SS_COMPONENT *syntroComponent)
 	memcpy(pMsg, &hb, sizeof(SYNTRO_HEARTBEAT));
 	syntroComponent->syntroLink->send(SYNTROMSG_HEARTBEAT, sizeof(SYNTRO_HEARTBEAT), SYNTROLINK_MEDHIGHPRI, (SYNTRO_MESSAGE *)pMsg);
 	syntroComponent->syntroLink->trySending(syntroComponent->sock);
-	TRACE2("Sent response HB to %s from slot %d", qPrintable(displayUID(&syntroComponent->heartbeat.hello.componentUID)), syntroComponent->index);
+	TRACE2("Sent response HB to %s from slot %d", qPrintable(SyntroUtils::displayUID(&syntroComponent->heartbeat.hello.componentUID)), syntroComponent->index);
 }
 
 
@@ -760,7 +760,7 @@ bool SyntroServer::processMessage(SyntroThreadMsg* msg)
 
 void SyntroServer::processHelloBeacon(HELLO *hello)
 {
-	TRACE1("Sending beacon response to %s", qPrintable(displayUID(&hello->componentUID)));
+	TRACE1("Sending beacon response to %s", qPrintable(SyntroUtils::displayUID(&hello->componentUID)));
 	m_hello->sendHelloBeaconResponse(hello);
 }
 
@@ -777,23 +777,23 @@ void	SyntroServer::processHelloUp(HELLOENTRY *helloEntry)
 		return;
 	}
 
-	if (compareUID(&(helloEntry->hello.componentUID), &(myHello->componentUID)))
+	if (SyntroUtils::compareUID(&(helloEntry->hello.componentUID), &(myHello->componentUID)))
 		return;												// this is me - ignore!
 
 	TRACE2("Got Hello UP from %s %s", helloEntry->hello.componentName, 
-					qPrintable(displayIPAddr(helloEntry->hello.IPAddr)));
+					qPrintable(SyntroUtils::displayIPAddr(helloEntry->hello.IPAddr)));
 
 	if (m_fastUIDLookup.FULLookup(&(helloEntry->hello.componentUID))) {
 		// component already in table - should mean that this is one in a different mode
-		TRACE1("Received hello up from %s", qPrintable(displayUID(&helloEntry->hello.componentUID)));
+		TRACE1("Received hello up from %s", qPrintable(SyntroUtils::displayUID(&helloEntry->hello.componentUID)));
 		return;
 	}
 
-	if (UIDHigher(&(helloEntry->hello.componentUID), &(myHello->componentUID)))
+	if (SyntroUtils::UIDHigher(&(helloEntry->hello.componentUID), &(myHello->componentUID)))
 		return;												// the new UID is lower than mine - let that device establish the call
 
 	if ((component = getFreeComponent()) == NULL) {
-		logError(QString("No component table space for %1").arg(displayUID(&helloEntry->hello.componentUID)));
+		logError(QString("No component table space for %1").arg(SyntroUtils::displayUID(&helloEntry->hello.componentUID)));
 		return;
 	}
 
@@ -817,11 +817,11 @@ void	SyntroServer::processHelloDown(HELLOENTRY *helloEntry)
 	if (strcmp(helloEntry->hello.componentType, COMPTYPE_CONTROL) != 0)
 		return;												// not a SyntroControl
 
-	if (compareUID(&(helloEntry->hello.componentUID), &(heartbeat.hello.componentUID)))
+	if (SyntroUtils::compareUID(&(helloEntry->hello.componentUID), &(heartbeat.hello.componentUID)))
 		return;												// this is me - ignore!
 
 	TRACE2("Got Hello DOWN from %s %s", helloEntry->hello.componentName, 
-							qPrintable(displayIPAddr(helloEntry->hello.IPAddr)));
+							qPrintable(SyntroUtils::displayIPAddr(helloEntry->hello.IPAddr)));
 
 	if (m_hello->findComponent(&foundHelloEntry, &(helloEntry->hello.componentUID))) {
 		// component still in hello table so leave channel (must be a primary/backup pair)
@@ -829,12 +829,12 @@ void	SyntroServer::processHelloDown(HELLOENTRY *helloEntry)
 	}
 
 	if ((component = (SS_COMPONENT *)m_fastUIDLookup.FULLookup(&(helloEntry->hello.componentUID))) == NULL) {
-		TRACE1("Failed to find channel for %s", qPrintable(displayUID(&helloEntry->hello.componentUID)));
+		TRACE1("Failed to find channel for %s", qPrintable(SyntroUtils::displayUID(&helloEntry->hello.componentUID)));
 		return;
 	}
 
 	TRACE2("Deleting entry for SyntroControl %s %s", helloEntry->hello.componentName, 
-									qPrintable(displayIPAddr(helloEntry->hello.IPAddr)));
+									qPrintable(SyntroUtils::displayIPAddr(helloEntry->hello.IPAddr)));
 
 	m_fastUIDLookup.FULDelete(&(helloEntry->hello.componentUID)); 
 
@@ -877,7 +877,7 @@ void	SyntroServer::syntroBackground()
 			if (syntroComponent->tunnelSource) {			
 				syntroComponent->syntroTunnel->tunnelBackground();
 				if (syntroComponent->syntroTunnel->m_connected) {
-					if (syntroTimerExpired(now, syntroComponent->lastHeartbeatSent, syntroComponent->heartbeatInterval)) {
+					if (SyntroUtils::syntroTimerExpired(now, syntroComponent->lastHeartbeatSent, syntroComponent->heartbeatInterval)) {
 						sendTunnelHeartbeat(syntroComponent);
 						syntroComponent->lastHeartbeatSent = now;
 					}
@@ -886,7 +886,7 @@ void	SyntroServer::syntroBackground()
 				}
 
 				if (syntroComponent->syntroTunnel->m_connectInProgress || syntroComponent->syntroTunnel->m_connected) {
-					if (syntroTimerExpired(now, syntroComponent->lastHeartbeatReceived,	m_heartbeatTimeoutCount * syntroComponent->heartbeatInterval)) {
+					if (SyntroUtils::syntroTimerExpired(now, syntroComponent->lastHeartbeatReceived,	m_heartbeatTimeoutCount * syntroComponent->heartbeatInterval)) {
 						if (!syntroComponent->tunnelStatic)
 							logWarn(QString("Timeout on tunnel source to %1").arg(syntroComponent->syntroTunnel->m_helloEntry.hello.componentName));
 						else
@@ -901,7 +901,7 @@ void	SyntroServer::syntroBackground()
 					syntroComponent->syntroLink->trySending(syntroComponent->sock);
 				}
 
-				if (syntroTimerExpired(SyntroClock(), syntroComponent->lastHeartbeatReceived, m_heartbeatTimeoutCount * syntroComponent->heartbeatInterval)) {
+				if (SyntroUtils::syntroTimerExpired(SyntroClock(), syntroComponent->lastHeartbeatReceived, m_heartbeatTimeoutCount * syntroComponent->heartbeatInterval)) {
 					logWarn(QString("Timeout on %1").arg(syntroComponent->index));
 					syCleanup(syntroComponent);
 					emit UpdateSyntroStatusBox(syntroComponent);
@@ -935,7 +935,7 @@ void SyntroServer::logServiceBackground()
 		LogMessage m = log->dequeue();
 		bulkMsg += m.m_level + SYNTRO_LOG_COMPONENT_SEP
 			+ m.m_timeStamp + SYNTRO_LOG_COMPONENT_SEP
-			+ displayUID(&m_myUID) + SYNTRO_LOG_COMPONENT_SEP
+			+ SyntroUtils::displayUID(&m_myUID) + SYNTRO_LOG_COMPONENT_SEP
 			+ m_logServiceName + SYNTRO_LOG_COMPONENT_SEP
 			+ m.m_msg + "\n";
 	}
@@ -943,7 +943,7 @@ void SyntroServer::logServiceBackground()
 	QByteArray data = bulkMsg.toLatin1();
 	int length = sizeof(SYNTRO_RECORD_HEADER) + data.length();
 
-	SYNTRO_EHEAD *multiCast = createEHEAD(&(m_myUID), 
+	SYNTRO_EHEAD *multiCast = SyntroUtils::createEHEAD(&(m_myUID), 
 					SYNTROCONTROL_LOG_PORT, 
 					&(m_myUID), 
 					SYNTROCONTROL_LOG_PORT, 
@@ -952,11 +952,11 @@ void SyntroServer::logServiceBackground()
 
 	if (multiCast) {
 		SYNTRO_RECORD_HEADER *recordHead = (SYNTRO_RECORD_HEADER *)(multiCast + 1);
-		convertIntToUC2(SYNTRO_RECORD_TYPE_LOG, recordHead->type);
-		convertIntToUC2(0, recordHead->subType);
-		convertIntToUC2(0, recordHead->param);
-		convertIntToUC2(sizeof(SYNTRO_RECORD_HEADER), recordHead->headerLength);
-		setSyntroTimestamp(&recordHead->timestamp);
+		SyntroUtils::convertIntToUC2(SYNTRO_RECORD_TYPE_LOG, recordHead->type);
+		SyntroUtils::convertIntToUC2(0, recordHead->subType);
+		SyntroUtils::convertIntToUC2(0, recordHead->param);
+		SyntroUtils::convertIntToUC2(sizeof(SYNTRO_RECORD_HEADER), recordHead->headerLength);
+		SyntroUtils::setSyntroTimestamp(&recordHead->timestamp);
 		memcpy((char *)(recordHead + 1), data.constData(), data.length());
 		m_multicastManager.MMForwardMulticastMessage(SYNTROMSG_MULTICAST_MESSAGE, (SYNTRO_MESSAGE *)multiCast,
 						sizeof(SYNTRO_EHEAD) + length);
@@ -983,7 +983,7 @@ void	SyntroServer::forwardE2EMessage(SYNTRO_MESSAGE *syntroMessage, int len)
 
 		if (component->inUse && (component->state >= ConnWFHeartbeat)) {
 			if (component->syntroLink != NULL) {
-				TRACE1("Send to %s", qPrintable(displayUID(&component->heartbeat.hello.componentUID)));
+				TRACE1("Send to %s", qPrintable(SyntroUtils::displayUID(&component->heartbeat.hello.componentUID)));
 				component->syntroLink->send(SYNTROMSG_E2E, len, syntroMessage->flags & SYNTROLINK_PRI, syntroMessage);
 				component->syntroLink->trySending(component->sock);
 				m_E2EOut++;
@@ -997,7 +997,7 @@ void	SyntroServer::forwardE2EMessage(SYNTRO_MESSAGE *syntroMessage, int len)
 
 //	Not found!
 
-	logError(QString("Failed to E2E dest for %1").arg(displayUID(&ehead->destUID)));
+	logError(QString("Failed to E2E dest for %1").arg(SyntroUtils::displayUID(&ehead->destUID)));
 	free(syntroMessage);
 }
 
@@ -1005,7 +1005,7 @@ void	SyntroServer::forwardE2EMessage(SYNTRO_MESSAGE *syntroMessage, int len)
 void	SyntroServer::forwardMulticastMessage(SS_COMPONENT *syntroComponent, int cmd, SYNTRO_MESSAGE *message, int length)
 {
 	if (!syntroComponent->inUse) {
-		logWarn(QString("ForwardMessage on not in use component %1").arg(displayUID(&syntroComponent->heartbeat.hello.componentUID)));
+		logWarn(QString("ForwardMessage on not in use component %1").arg(SyntroUtils::displayUID(&syntroComponent->heartbeat.hello.componentUID)));
 		return;												// not in use - hmmm. Should not happen!
 	}
 	if (length < (int)sizeof(SYNTRO_EHEAD)) {

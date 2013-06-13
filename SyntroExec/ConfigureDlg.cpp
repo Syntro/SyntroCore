@@ -172,7 +172,7 @@ QValidator::State ExecNameValidator::validate(QString &input, int &pos) const
 	if (pos == 0)
 		return QValidator::Acceptable;						// empty string ok
 
-	if (isReservedNameCharacter(input.at(pos-1).toLatin1()))
+	if (SyntroUtils::isReservedNameCharacter(input.at(pos-1).toLatin1()))
 		return QValidator::Invalid;
 
 	if (pos >= SYNTRO_MAX_NAME)

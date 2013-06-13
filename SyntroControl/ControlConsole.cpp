@@ -32,7 +32,7 @@ ControlConsole::ControlConsole(QSettings *settings, QObject *parent)
 	: QThread(parent)
 {
 	m_settings = settings;
-	syntroAppInit(m_settings);
+	SyntroUtils::syntroAppInit(m_settings);
 
 	connect((QCoreApplication *)parent, SIGNAL(aboutToQuit()), this, SLOT(aboutToQuit()));
 
@@ -44,7 +44,7 @@ ControlConsole::ControlConsole(QSettings *settings, QObject *parent)
 void ControlConsole::aboutToQuit()
 {
 	m_client->exitThread();
-	syntroAppExit();
+	SyntroUtils::syntroAppExit();
 	for (int i = 0; i < 5; i++) {
 		if (wait(1000))
 			break;
@@ -71,8 +71,8 @@ void ControlConsole::displayComponents()
 		HELLO *hello = &(syntroComponent->heartbeat.hello);
 
 		printf("%-16s %-16s %-16s %-15s\n", hello->componentType, hello->componentName,
-				qPrintable(displayUID(&hello->componentUID)),
-				qPrintable(displayIPAddr(hello->IPAddr)));
+				qPrintable(SyntroUtils::displayUID(&hello->componentUID)),
+				qPrintable(SyntroUtils::displayIPAddr(hello->IPAddr)));
 	}
 
 	if (first)
@@ -144,16 +144,16 @@ void ControlConsole::displayMulticast()
 		first = false;
 
 		printf("\n\nMap: Srv=%s, UID=%s, \n", multicastMap->serviceLookup.servicePath, 
-					qPrintable(displayUID(&multicastMap->sourceUID)));
+					qPrintable(SyntroUtils::displayUID(&multicastMap->sourceUID)));
 		printf("     LPort=%d, RPort=%d\n", 
-				convertUC2ToUInt(multicastMap->serviceLookup.localPort), 
-				convertUC2ToUInt(multicastMap->serviceLookup.remotePort));
+				SyntroUtils::convertUC2ToUInt(multicastMap->serviceLookup.localPort), 
+				SyntroUtils::convertUC2ToUInt(multicastMap->serviceLookup.remotePort));
 
 		MM_REGISTEREDCOMPONENT *registeredComponent = multicastMap->head;
 
 		while (registeredComponent != NULL) {
 			printf("          RC: UID=%s, port=%d, seq=%d, ack=%d\n", 
-				qPrintable(displayUID(&registeredComponent->registeredUID)), registeredComponent->port, 
+				qPrintable(SyntroUtils::displayUID(&registeredComponent->registeredUID)), registeredComponent->port, 
 				registeredComponent->sendSeq, registeredComponent->lastAckSeq);
 			registeredComponent = registeredComponent->next;
 		}

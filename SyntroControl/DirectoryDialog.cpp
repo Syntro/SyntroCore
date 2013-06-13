@@ -89,7 +89,7 @@ void DirectoryDialog::DMNewDirectory(int index)
 	DM_CONNECTEDCOMPONENT *connectedComponent = m_directoryMgr->m_directory + index;
 	if (!connectedComponent->valid)
 		return;												// not a valid entry
-	TRACE1("Displaying new directory from %s", qPrintable(displayUID(&(connectedComponent->connectedComponentUID))));
+	TRACE1("Displaying new directory from %s", qPrintable(SyntroUtils::displayUID(&(connectedComponent->connectedComponentUID))));
 
 	DM_COMPONENT *component = connectedComponent->componentDE;
 
@@ -174,7 +174,7 @@ QTreeWidgetItem *DirectoryDialog::findTreeItem(DM_COMPONENT *component)
 {
 	QString entryPath;
 
-	entryPath = displayUID(&(component->componentUID)) + ", " + QString(component->componentName);
+	entryPath = SyntroUtils::displayUID(&(component->componentUID)) + ", " + QString(component->componentName);
 	
 	QList <QTreeWidgetItem *> matchItems = m_tree->findItems(entryPath, Qt::MatchExactly);
 	if (matchItems.count() == 0)
@@ -193,7 +193,7 @@ void DirectoryDialog::addTreeItem(DM_CONNECTEDCOMPONENT *connectedComponent, DM_
 	QString controlName;
 	QString entryPath;
 
-	entryPath = displayUID(&(component->componentUID)) + ", " + QString(component->componentName);
+	entryPath = SyntroUtils::displayUID(&(component->componentUID)) + ", " + QString(component->componentName);
 
 	control = connectedComponent->connectedComponentUID.instance == INSTANCE_CONTROL;
 	if (control) {
@@ -220,7 +220,7 @@ void DirectoryDialog::updateTreeItem(QTreeWidgetItem *twi, DM_COMPONENT *compone
 
 QString DirectoryDialog::entryPath(DM_COMPONENT *component)
 {
-	QString path = displayUID(&(component->componentUID)) + ", " + QString(component->componentName);
+	QString path = SyntroUtils::displayUID(&(component->componentUID)) + ", " + QString(component->componentName);
 	return path;
 }
 

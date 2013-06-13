@@ -97,7 +97,7 @@ SyntroControl::SyntroControl(QSettings *settings, QWidget *parent)
 		.arg(m_settings->value(SYNTRO_PARAMS_APPNAME).toString())
 		.arg(m_settings->value(SYNTRO_PARAMS_APPTYPE).toString()));
 
-	syntroAppInit(m_settings);
+	SyntroUtils::syntroAppInit(m_settings);
 	m_server = new SyntroServer(settings);
 
 	m_multicastDlg->m_multicastMgr = &(m_server->m_multicastManager);
@@ -140,7 +140,7 @@ void SyntroControl::closeEvent(QCloseEvent *)
 {
 	killTimer(m_timer);
 	m_server->exitThread();
-	syntroAppExit();
+	SyntroUtils::syntroAppExit();
 	saveWindowState();
 }
 
@@ -179,8 +179,8 @@ void SyntroControl::UpdateSyntroStatusBox(SS_COMPONENT *syntroComponent)
 		QString heartbeatInterval = QString ("%1") .arg(syntroComponent->heartbeatInterval / SYNTRO_CLOCKS_PER_SEC);
 		ui.m_table->item(syntroComponent->index, 0)->setText(hello->componentType);
 		ui.m_table->item(syntroComponent->index, 1)->setText(hello->componentName);
-		ui.m_table->item(syntroComponent->index, 2)->setText(displayUID(&hello->componentUID));
-		ui.m_table->item(syntroComponent->index, 3)->setText(displayIPAddr(hello->IPAddr));
+		ui.m_table->item(syntroComponent->index, 2)->setText(SyntroUtils::displayUID(&hello->componentUID));
+		ui.m_table->item(syntroComponent->index, 3)->setText(SyntroUtils::displayIPAddr(hello->IPAddr));
 		if (syntroComponent->tunnelSource)					// if I am a tunnel source...
             ui.m_table->item(syntroComponent->index, 4)->setText("Tunnel dest");	// ...indicate other end is a tunnel dest
 		else

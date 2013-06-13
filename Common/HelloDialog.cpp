@@ -79,8 +79,8 @@ void HelloDialog::helloDisplayEvent(Hello *helloThread)
 		if (helloEntry->inUse) {
 			m_table->item(nEntry, 0)->setText(helloEntry->hello.componentType);
 			m_table->item(nEntry, 1)->setText(helloEntry->hello.componentName);
-			m_table->item(nEntry, 2)->setText(displayUID(&helloEntry->hello.componentUID));
-			m_table->item(nEntry, 3)->setText(displayIPAddr(helloEntry->hello.IPAddr));
+			m_table->item(nEntry, 2)->setText(SyntroUtils::displayUID(&helloEntry->hello.componentUID));
+			m_table->item(nEntry, 3)->setText(SyntroUtils::displayIPAddr(helloEntry->hello.IPAddr));
 			nEntry++;
 		}
 		else {

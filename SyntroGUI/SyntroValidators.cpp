@@ -26,7 +26,7 @@ QValidator::State ServiceNameValidator::validate(QString &input, int &pos) const
 	if (pos == 0)
 		return QValidator::Acceptable;						// empty string ok
 
-	if (isReservedNameCharacter(input.at(pos-1).toLatin1())) 
+	if (SyntroUtils::isReservedNameCharacter(input.at(pos-1).toLatin1())) 
 		return QValidator::Invalid;
 	if (pos >= SYNTRO_MAX_NAME)
 		return QValidator::Invalid;
@@ -39,7 +39,7 @@ QValidator::State ServicePathValidator::validate(QString &input, int &pos) const
 	if (pos == 0)
 		return QValidator::Acceptable;						// empty string ok
 
-	if (isReservedPathCharacter(input.at(pos-1).toLatin1())) 
+	if (SyntroUtils::isReservedPathCharacter(input.at(pos-1).toLatin1())) 
 		return QValidator::Invalid;
 	if (pos >= SYNTRO_MAX_SERVPATH)
 		return QValidator::Invalid;

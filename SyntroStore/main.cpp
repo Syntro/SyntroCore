@@ -33,7 +33,7 @@ QSettings *loadSettings(QStringList arglist);
 
 int main(int argc, char *argv[])
 {
-	if (checkConsoleModeFlag(argc, argv))
+	if (SyntroUtils::checkConsoleModeFlag(argc, argv))
 		return runConsoleApp(argc, argv);
 	else
 		return runGuiApp(argc, argv);
@@ -67,7 +67,7 @@ int runConsoleApp(int argc, char *argv[])
 
 QSettings *loadSettings(QStringList arglist)
 {
-	QSettings *settings = loadStandardSettings(PRODUCT_TYPE, arglist);
+	QSettings *settings = SyntroUtils::loadStandardSettings(PRODUCT_TYPE, arglist);
 
 	// app-specific part
 
@@ -90,7 +90,7 @@ QSettings *loadSettings(QStringList arglist)
 			settings->setArrayIndex(index);
 			if (index == 0) {
 				settings->setValue(SYNTROSTORE_PARAMS_INUSE, SYNTRO_PARAMS_TRUE);
-				settings->setValue(SYNTROSTORE_PARAMS_STREAM_SOURCE, "Video");
+				settings->setValue(SYNTROSTORE_PARAMS_STREAM_SOURCE, "source/video");
 			} else {
 				settings->setValue(SYNTROSTORE_PARAMS_INUSE, SYNTRO_PARAMS_FALSE);
 				settings->setValue(SYNTROSTORE_PARAMS_STREAM_SOURCE, "");

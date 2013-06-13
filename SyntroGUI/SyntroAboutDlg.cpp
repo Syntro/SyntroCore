@@ -36,7 +36,7 @@ SyntroAbout::SyntroAbout(QWidget *parent, QSettings *settings)
 	m_appName->setText(appType);
 	m_componentName->setText(appName);
 	m_buildDate->setText(QString("%1 %2").arg(__DATE__).arg(__TIME__));
-	m_syntroLibVersion->setText(syntroLibVersion());
+	m_syntroLibVersion->setText(SyntroUtils::syntroLibVersion());
 	m_qtRuntime->setText(qVersion());
 	
 	connect(m_actionOk, SIGNAL(clicked()), this, SLOT(close()));

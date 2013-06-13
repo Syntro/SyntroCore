@@ -62,10 +62,10 @@ void *FastUIDLookup::FULLookup(SYNTRO_UID *UID)
 	void *returnValue;
 
 	U2 = (SYNTRO_UC2 *)UID;
-	indexL0 = convertUC2ToUInt(U2[0]);						// get UID as four separate unsigned ints
-	indexL1 = convertUC2ToUInt(U2[1]);
-	indexL2 = convertUC2ToUInt(U2[2]);
-	indexL3 = convertUC2ToUInt(U2[3]);
+	indexL0 = SyntroUtils::convertUC2ToUInt(U2[0]);						// get UID as four separate unsigned ints
+	indexL1 = SyntroUtils::convertUC2ToUInt(U2[1]);
+	indexL2 = SyntroUtils::convertUC2ToUInt(U2[2]);
+	indexL3 = SyntroUtils::convertUC2ToUInt(U2[3]);
 
 	QMutexLocker locker (&m_lock);
 
@@ -100,10 +100,10 @@ void	FastUIDLookup::FULAdd(SYNTRO_UID *UID, void *data)
 	SYNTRO_UC2 *U2;
 
 	U2 = (SYNTRO_UC2 *)UID;
-	indexL0 = convertUC2ToUInt(U2[0]);						// get UID as four separate unsigned ints
-	indexL1 = convertUC2ToUInt(U2[1]);
-	indexL2 = convertUC2ToUInt(U2[2]);
-	indexL3 = convertUC2ToUInt(U2[3]);
+	indexL0 = SyntroUtils::convertUC2ToUInt(U2[0]);						// get UID as four separate unsigned ints
+	indexL1 = SyntroUtils::convertUC2ToUInt(U2[1]);
+	indexL2 = SyntroUtils::convertUC2ToUInt(U2[2]);
+	indexL3 = SyntroUtils::convertUC2ToUInt(U2[3]);
 
 	if ((ptr = FULLookup(UID)) != NULL)
 		FULDelete(UID);
@@ -136,10 +136,10 @@ void FastUIDLookup::FULDelete(SYNTRO_UID *UID)
 	SYNTRO_UC2 *U2;
 
 	U2 = (SYNTRO_UC2 *)UID;
-	indexL0 = convertUC2ToUInt(U2[0]);	// get UID as four separate unsigned ints
-	indexL1 = convertUC2ToUInt(U2[1]);
-	indexL2 = convertUC2ToUInt(U2[2]);
-	indexL3 = convertUC2ToUInt(U2[3]);
+	indexL0 = SyntroUtils::convertUC2ToUInt(U2[0]);	// get UID as four separate unsigned ints
+	indexL1 = SyntroUtils::convertUC2ToUInt(U2[1]);
+	indexL2 = SyntroUtils::convertUC2ToUInt(U2[2]);
+	indexL3 = SyntroUtils::convertUC2ToUInt(U2[3]);
 
 	QMutexLocker locker(&m_lock);
 

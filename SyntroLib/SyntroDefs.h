@@ -384,9 +384,10 @@ typedef	struct
     SYNTRO_UC2 milliseconds;
 } SYNTRO_TIMESTAMP;
 
-//	Standard stream names
+//	Standard multicast stream names
 
 #define SYNTRO_STREAMNAME_VIDEO				"video"
+#define	SYNTRO_STREAMNAME_VIDEOLR			"video:lr"
 #define SYNTRO_STREAMNAME_AUDIO				"audio"
 #define SYNTRO_STREAMNAME_NAV				"nav"
 #define SYNTRO_STREAMNAME_LOG				"log"
@@ -399,7 +400,14 @@ typedef	struct
 #define SYNTRO_STREAMNAME_PRESSURE			"pressure"
 #define SYNTRO_STREAMNAME_ACCELEROMETER		"accelerometer"
 #define SYNTRO_STREAMNAME_ZIGBEE_MULTICAST  "zbmc"
+
+//	Standard E2E stream names
+
 #define SYNTRO_STREAMNAME_ZIGBEE_E2E	    "zbe2e"
+#define SYNTRO_STREAMNAME_CONTROL			"control"
+#define SYNTRO_STREAMNAME_FILETRANSFER		"filetransfer"
+#define SYNTRO_STREAMNAME_PTZ				"ptz"
+#define	SYNTRO_STREAMNAME_CFS				"cfs"
 
 
 //-------------------------------------------------------------------------------------------

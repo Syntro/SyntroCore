@@ -32,7 +32,7 @@ SyntroCFSClient::SyntroCFSClient(QObject *parent, QSettings *settings)
 
 void SyntroCFSClient::appClientInit()
 {
-	m_CFSPort = clientAddService(m_settings->value(SYNTRO_CFS_SERVICE_NAME).toString(), SERVICETYPE_E2E, true);
+	m_CFSPort = clientAddService(SYNTRO_STREAMNAME_CFS, SERVICETYPE_E2E, true);
 	m_CFSThread->resumeThread();
 	return;
 }

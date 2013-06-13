@@ -22,10 +22,10 @@
 
 /*!
     \class SyntroThread
-    \brief SyntroThread is alightweight wrapper for QThread.
+    \brief SyntroThread is a lightweight wrapper for QThread.
 	\inmodule SyntroLib
  
-	yntroThread is a thin wrapper layer around Qt’s QThread. It provides a 
+	SyntroThread is a thin wrapper layer around Qt’s QThread. It provides a 
 	Windows-style message passing queue and associated functions. The 
 	normal sequence of events is to create a SyntroThread, perform any external 
 	initialization that might be required and then to call resumeThread(). 

@@ -45,7 +45,7 @@ SyntroExec::SyntroExec(QSettings *settings, QWidget *parent)
 		.arg(m_settings->value(SYNTRO_PARAMS_APPNAME).toString())
 		.arg(m_settings->value(SYNTRO_PARAMS_COMPTYPE).toString()));
 
-	syntroAppInit(m_settings);
+	SyntroUtils::syntroAppInit(m_settings);
 
 	m_manager = new ComponentManager(settings);
 	connect(m_manager, SIGNAL(updateExecStatus(ManagerComponent *)), this, SLOT(updateExecStatus(ManagerComponent *)), Qt::DirectConnection);
@@ -119,7 +119,7 @@ void SyntroExec::closeEvent(QCloseEvent *)
 {
 	m_manager->exitThread();
 	saveWindowState();
-	syntroAppExit();
+	SyntroUtils::syntroAppExit();
 }
 
 
@@ -140,7 +140,7 @@ void SyntroExec:: updateExecStatus(ManagerComponent *component)
 	m_useBox[component->instance]->setCheckState(component->inUse ? Qt::Checked : Qt::Unchecked);
 
 	if (component->inUse) {
-		m_table->item(component->instance, SYNTROEXEC_COL_UID)->setText(displayUID(&component->UID));
+		m_table->item(component->instance, SYNTROEXEC_COL_UID)->setText(SyntroUtils::displayUID(&component->UID));
 		if (component->monitored) {
 			m_table->item(component->instance, SYNTROEXEC_COL_HELLOSTATE)->setText(component->helloStateString);
 			m_table->item(component->instance, SYNTROEXEC_COL_COMPNAME)->setText(component->componentName);

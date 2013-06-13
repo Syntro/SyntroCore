@@ -32,7 +32,7 @@ ExecConsole::ExecConsole(QSettings *settings, QObject *parent)
 	: QThread(parent)
 {
 	m_settings = settings;
-	syntroAppInit(m_settings);
+	SyntroUtils::syntroAppInit(m_settings);
 
 	connect((QCoreApplication *)parent, SIGNAL(aboutToQuit()), this, SLOT(aboutToQuit()));
 
@@ -51,7 +51,7 @@ void ExecConsole::aboutToQuit()
 {
 	m_manager->exitThread();
 	delete m_manager;
-	syntroAppExit();
+	SyntroUtils::syntroAppExit();
 	for (int i = 0; i < 5; i++) {
 		if (wait(1000))
 			break;
@@ -83,8 +83,8 @@ void ExecConsole::displayComponents()
 		if (!helloEntry.inUse)
 			continue;										// not in use
 		printf("%-20s %-20s %-20s %-16s\n", helloEntry.hello.componentType, helloEntry.hello.componentName,
-				qPrintable(displayUID(&helloEntry.hello.componentUID)),
-				qPrintable(displayIPAddr(helloEntry.hello.IPAddr)));
+				qPrintable(SyntroUtils::displayUID(&helloEntry.hello.componentUID)),
+				qPrintable(SyntroUtils::displayIPAddr(helloEntry.hello.IPAddr)));
 	}
 }
 
@@ -107,7 +107,7 @@ void ExecConsole::displayManagedComponents()
 		printf("%-5d %-18s %-17s %-10s %-4s ", 
 			component->instance, 
 			qPrintable(component->appName), 
-			qPrintable(displayUID(&component->UID)), 
+			qPrintable(SyntroUtils::displayUID(&component->UID)), 
 			qPrintable(component->processState), 
 			component->monitored ? "yes" : "no");
 

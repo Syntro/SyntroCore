@@ -96,7 +96,7 @@ bool	MulticastManager::MMCheckRegistered(MM_MMAP *multicastMap, SYNTRO_UID *UID,
 	}
 	registeredComponent = multicastMap->head;
 	while (registeredComponent != NULL) {
-		if (compareUID(UID, &(registeredComponent->registeredUID)) && (registeredComponent->port == port)) {
+		if (SyntroUtils::compareUID(UID, &(registeredComponent->registeredUID)) && (registeredComponent->port == port)) {
 			multicastMap->lastLookupRefresh = SyntroClock();// somebody still wants it
 			return true;								// it is there
 		}
@@ -120,11 +120,11 @@ void MulticastManager::MMDeleteRegistered(SYNTRO_UID *UID, int port)
 		registeredComponent = multicastMap->head;
 		previousRegisteredComponent = NULL;
 		while (registeredComponent != NULL) {
-			if (compareUID(UID, &(registeredComponent->registeredUID))) {
+			if (SyntroUtils::compareUID(UID, &(registeredComponent->registeredUID))) {
 				if ((port == -1) || (port == registeredComponent->port)) {	// this is a matched entry
 					TRACE3("Deleting multicast registration on %s port %d for %s",
-						qPrintable(displayUID(&registeredComponent->registeredUID)), registeredComponent->port, 
-							qPrintable(displayUID(UID)))
+						qPrintable(SyntroUtils::displayUID(&registeredComponent->registeredUID)), registeredComponent->port, 
+							qPrintable(SyntroUtils::displayUID(UID)))
 					if (previousRegisteredComponent == NULL) {	// its the head of the list
 						multicastMap->head = registeredComponent->next;
 					} else {								// not the head so relink around
@@ -154,7 +154,7 @@ void	MulticastManager::MMForwardMulticastMessage(int cmd, SYNTRO_MESSAGE *messag
 
 	QMutexLocker locker (&m_lock);
 	inEhead = (SYNTRO_EHEAD *)message;
-	multicastMapIndex = convertUC2ToUInt(inEhead->destPort);	// get the dest port number (i.e. my slot number)
+	multicastMapIndex = SyntroUtils::convertUC2ToUInt(inEhead->destPort);	// get the dest port number (i.e. my slot number)
 	if (multicastMapIndex >= m_multicastMapSize) {
 		logWarn(QString("Multicast message with illegal DPort %1").arg(multicastMapIndex));
 		return;										
@@ -168,9 +168,9 @@ void	MulticastManager::MMForwardMulticastMessage(int cmd, SYNTRO_MESSAGE *messag
 		logWarn(QString("Multicast message is too short %1").arg(len));
 		return;										
 	}
-	if (!compareUID(&(multicastMap->sourceUID), &(inEhead->sourceUID))) {
+	if (!SyntroUtils::compareUID(&(multicastMap->sourceUID), &(inEhead->sourceUID))) {
 		logWarn(QString("UID %1 of incoming multicast didn't match UID of slot %2")
-			.arg(displayUID(&inEhead->sourceUID)).arg(displayUID(&multicastMap->sourceUID)));
+			.arg(SyntroUtils::displayUID(&inEhead->sourceUID)).arg(SyntroUtils::displayUID(&multicastMap->sourceUID)));
 
 		return;
 	}
@@ -180,26 +180,26 @@ void	MulticastManager::MMForwardMulticastMessage(int cmd, SYNTRO_MESSAGE *messag
 
 	registeredComponent = multicastMap->head;
 	while (registeredComponent != NULL) {
-		if (!isSendOK(registeredComponent->sendSeq, registeredComponent->lastAckSeq)) {	// see if we have timed out waiting for ack
-			if (!syntroTimerExpired(now, registeredComponent->lastSendTime, EXCHANGE_TIMEOUT)){
+		if (!SyntroUtils::isSendOK(registeredComponent->sendSeq, registeredComponent->lastAckSeq)) {	// see if we have timed out waiting for ack
+			if (!SyntroUtils::syntroTimerExpired(now, registeredComponent->lastSendTime, EXCHANGE_TIMEOUT)){
 				registeredComponent = registeredComponent->next;
 				continue;							// not yet long enough to declare a timeout
 			} else {
 				registeredComponent->lastAckSeq = registeredComponent->sendSeq;
-				logWarn(QString("WFAck timeout on %1").arg(displayUID(&registeredComponent->registeredUID)));
+				logWarn(QString("WFAck timeout on %1").arg(SyntroUtils::displayUID(&registeredComponent->registeredUID)));
 			}
 		}
 		msgCopy = (unsigned char *)malloc(len);
 		memcpy(msgCopy, message, len);
 		outEhead = (SYNTRO_EHEAD *)msgCopy;
-		convertIntToUC2(registeredComponent->port, outEhead->destPort);// this is the receiver's service index that was requested
-		convertIntToUC2(multicastMapIndex, outEhead->sourcePort);					// this is my slot number (needed for the ack)
+		SyntroUtils::convertIntToUC2(registeredComponent->port, outEhead->destPort);// this is the receiver's service index that was requested
+		SyntroUtils::convertIntToUC2(multicastMapIndex, outEhead->sourcePort);					// this is my slot number (needed for the ack)
 		outEhead->destUID = registeredComponent->registeredUID;
 		outEhead->sourceUID = multicastMap->sourceUID;
 		outEhead->seq = registeredComponent->sendSeq;
 		registeredComponent->sendSeq++;
 		TRACE2("Forwarding mcast from component %s to %s",
-				qPrintable(displayUID(&outEhead->sourceUID)), qPrintable(displayUID(&registeredComponent->registeredUID)));
+				qPrintable(SyntroUtils::displayUID(&outEhead->sourceUID)), qPrintable(SyntroUtils::displayUID(&registeredComponent->registeredUID)));
 		m_server->sendSyntroMessage(&(registeredComponent->registeredUID), cmd, (SYNTRO_MESSAGE *)msgCopy, 
 					len, SYNTROLINK_LOWPRI);
 		m_server->m_multicastOut++;
@@ -209,17 +209,17 @@ void	MulticastManager::MMForwardMulticastMessage(int cmd, SYNTRO_MESSAGE *messag
 	}
 
 	// send an ACK unless the recipient is us
-	if (!compareUID(&m_myUID, &multicastMap->sourceUID)) {
+	if (!SyntroUtils::compareUID(&m_myUID, &multicastMap->sourceUID)) {
 		ackEhead = (SYNTRO_EHEAD *)malloc(sizeof(SYNTRO_EHEAD));
 		ackEhead->sourceUID = m_myUID;
 		ackEhead->destUID = multicastMap->sourceUID;
-		copyUC2(ackEhead->sourcePort, inEhead->destPort);
-		copyUC2(ackEhead->destPort, inEhead->sourcePort);
+		SyntroUtils::copyUC2(ackEhead->sourcePort, inEhead->destPort);
+		SyntroUtils::copyUC2(ackEhead->destPort, inEhead->sourcePort);
 		ackEhead->seq = inEhead->seq + 1;
 
 		if (!m_server->sendSyntroMessage(&(multicastMap->prevHopUID), SYNTROMSG_MULTICAST_ACK,
 				(SYNTRO_MESSAGE *)ackEhead, sizeof(SYNTRO_EHEAD), SYNTROLINK_MEDHIGHPRI)) {
-			logWarn(QString("Failed mcast ack to %1").arg(displayUID(&multicastMap->prevHopUID)));
+			logWarn(QString("Failed mcast ack to %1").arg(SyntroUtils::displayUID(&multicastMap->prevHopUID)));
 		}
 	}
 }
@@ -236,9 +236,9 @@ void	MulticastManager::MMProcessMulticastAck(SYNTRO_EHEAD *ehead, int len)
 		return;
 	}
 
-	slot = convertUC2ToUInt(ehead->destPort);					// get the port number
+	slot = SyntroUtils::convertUC2ToUInt(ehead->destPort);					// get the port number
 	if (slot >= m_multicastMapSize) {
-		logWarn(QString("Invalid dest port %1 for multicast ack from %2").arg(slot).arg(displayUID(&ehead->sourceUID)));
+		logWarn(QString("Invalid dest port %1 for multicast ack from %2").arg(slot).arg(SyntroUtils::displayUID(&ehead->sourceUID)));
 		return;
 	}
 	QMutexLocker locker(&m_lock);
@@ -246,27 +246,28 @@ void	MulticastManager::MMProcessMulticastAck(SYNTRO_EHEAD *ehead, int len)
 	multicastMap = m_multicastMap + slot;
 	if (!multicastMap->valid)
 		return;									// probably disconnected or something
-	if (!compareUID(&(multicastMap->sourceUID), &(ehead->destUID))) {
+	if (!SyntroUtils::compareUID(&(multicastMap->sourceUID), &(ehead->destUID))) {
 		logWarn(QString("Multicast ack dest %1 doesn't match source %2")
-			.arg(displayUID(&ehead->destUID))
-			.arg(displayUID(&multicastMap->sourceUID)));
+			.arg(SyntroUtils::displayUID(&ehead->destUID))
+			.arg(SyntroUtils::displayUID(&multicastMap->sourceUID)));
 
 		return;
 	}
 
 	registeredComponent = multicastMap->head;
 	while (registeredComponent != NULL) {
-		if (compareUID(&(ehead->sourceUID), &(registeredComponent->registeredUID)) && 
-					(convertUC2ToInt(ehead->sourcePort) == registeredComponent->port)) {
+		if (SyntroUtils::compareUID(&(ehead->sourceUID), &(registeredComponent->registeredUID)) && 
+					(SyntroUtils::convertUC2ToInt(ehead->sourcePort) == registeredComponent->port)) {
 			TRACE2("\nMatched ack from remote component %s port %d", 
-					qPrintable(displayUID(&ehead->sourceUID)), registeredComponent->port);
+					qPrintable(SyntroUtils::displayUID(&ehead->sourceUID)), registeredComponent->port);
 			registeredComponent->lastAckSeq = ehead->seq;
 			return;
 		}
 		registeredComponent = registeredComponent->next;
 	}
 
-	logWarn(QString("Failed to match ack from %1 port %2").arg(displayUID(&ehead->sourceUID)).arg(convertUC2ToInt(ehead->sourcePort)));
+	logWarn(QString("Failed to match ack from %1 port %2").arg(SyntroUtils::displayUID(&ehead->sourceUID))
+		.arg(SyntroUtils::convertUC2ToInt(ehead->sourcePort)));
 }
 
 
@@ -294,8 +295,8 @@ MM_MMAP	*MulticastManager::MMAllocateMMap(SYNTRO_UID *prevHopUID, SYNTRO_UID *so
 	multicastMap->prevHopUID = *prevHopUID;					// this is the previous hop UID for the service (i.e. where the data comes from)
 	multicastMap->sourceUID = *sourceUID;					// this is the original source of the stream
 	sprintf(multicastMap->serviceLookup.servicePath, "%s%c%s", componentName, SYNTRO_SERVICEPATH_SEP, serviceName);
-	convertIntToUC2(port, multicastMap->serviceLookup.remotePort);// this is the target port (the service port)
-	convertIntToUC2(i, multicastMap->serviceLookup.localPort);	// this is the index into the MMap array
+	SyntroUtils::convertIntToUC2(port, multicastMap->serviceLookup.remotePort);// this is the target port (the service port)
+	SyntroUtils::convertIntToUC2(i, multicastMap->serviceLookup.localPort);	// this is the index into the MMap array
 	multicastMap->serviceLookup.response = SERVICE_LOOKUP_FAIL;// indicate lookup response not valid
 	multicastMap->serviceLookup.serviceType = SERVICETYPE_MULTICAST;// indicate multicast
 	multicastMap->registered = false;						// indicate not registered
@@ -318,7 +319,7 @@ void MulticastManager::MMFreeMMap(MM_MMAP *multicastMap)
 		registeredComponent = multicastMap->head;
 		TRACE3("Freeing MMap %s, component %s port %d", 
 			multicastMap->serviceLookup.servicePath,
-			qPrintable(displayUID(&registeredComponent->registeredUID)), registeredComponent->port);
+			qPrintable(SyntroUtils::displayUID(&registeredComponent->registeredUID)), registeredComponent->port);
 		multicastMap->head = registeredComponent->next;
 		free(registeredComponent);
 	}
@@ -334,12 +335,12 @@ void	MulticastManager::MMProcessLookupResponse(SYNTRO_SERVICE_LOOKUP *serviceLoo
 		logWarn(QString("Lookup response too short %1").arg(len));
 		return;			
 	}
-	index = convertUC2ToUInt(serviceLookup->localPort);		// get the local port
+	index = SyntroUtils::convertUC2ToUInt(serviceLookup->localPort);		// get the local port
 	if (index >= m_multicastMapSize) {
 		logWarn(QString("Lookup response from %1 port %2 to incorrect local port %3")
-			.arg(displayUID(&serviceLookup->lookupUID))
-			.arg(convertUC2ToInt(serviceLookup->remotePort))
-			.arg(convertUC2ToInt(serviceLookup->localPort)));
+			.arg(SyntroUtils::displayUID(&serviceLookup->lookupUID))
+			.arg(SyntroUtils::convertUC2ToInt(serviceLookup->remotePort))
+			.arg(SyntroUtils::convertUC2ToInt(serviceLookup->localPort)));
 
 		return;
 	}
@@ -363,15 +364,15 @@ void	MulticastManager::MMProcessLookupResponse(SYNTRO_SERVICE_LOOKUP *serviceLoo
 		return;
 	}
 	if (multicastMap->serviceLookup.response == SERVICE_LOOKUP_SUCCEED) {	// we had a previously valid entry
-		if ((convertUC4ToInt(serviceLookup->ID) == convertUC4ToInt(multicastMap->serviceLookup.ID)) 
-			&& (compareUID(&(serviceLookup->lookupUID), &(multicastMap->serviceLookup.lookupUID))) 
-			&& (convertUC2ToInt(serviceLookup->remotePort) == convertUC2ToInt(multicastMap->serviceLookup.remotePort))) {
+		if ((SyntroUtils::convertUC4ToInt(serviceLookup->ID) == SyntroUtils::convertUC4ToInt(multicastMap->serviceLookup.ID)) 
+			&& (SyntroUtils::compareUID(&(serviceLookup->lookupUID), &(multicastMap->serviceLookup.lookupUID))) 
+			&& (SyntroUtils::convertUC2ToInt(serviceLookup->remotePort) == SyntroUtils::convertUC2ToInt(multicastMap->serviceLookup.remotePort))) {
 				TRACE1("Reconfirmed %s", serviceLookup->servicePath);
 		}
 	} else {
 //	If we get here, something changed
 		TRACE3("Service %s mapped to %s port %d", serviceLookup->servicePath, 
-			qPrintable(displayUID(&serviceLookup->lookupUID)), convertUC2ToInt(serviceLookup->remotePort));
+			qPrintable(SyntroUtils::displayUID(&serviceLookup->lookupUID)), SyntroUtils::convertUC2ToInt(serviceLookup->remotePort));
 		multicastMap->serviceLookup = *serviceLookup;		// record data
 	}
 	multicastMap->registered = true;
@@ -386,7 +387,7 @@ void	MulticastManager::MMBackground()
 
 	qint64 now = SyntroClock();
 
-	if (!syntroTimerExpired(now, m_lastBackground, SYNTRO_CLOCKS_PER_SEC))
+	if (!SyntroUtils::syntroTimerExpired(now, m_lastBackground, SYNTRO_CLOCKS_PER_SEC))
 		return;
 
 	m_lastBackground = now;
@@ -396,16 +397,16 @@ void	MulticastManager::MMBackground()
 	for (index = 0; index < m_multicastMapSize; index++, multicastMap++) {
 		if (!multicastMap->valid)
 			continue;
-		if (compareUID(&(multicastMap->sourceUID), &m_myUID))
+		if (SyntroUtils::compareUID(&(multicastMap->sourceUID), &m_myUID))
 			continue;										// don't do anything more for SyntroCOntrol services
 		if (multicastMap->head == NULL)
 			continue;										// no registrations so don't refresh
 		// Note - this timer check is only if there's a stuck registration for some reason - it
 		// stops continual data transfer when nobody really wants it. Hopefully someone will time the
 		// stuck registration out!
-		if (syntroTimerExpired(SyntroClock(), multicastMap->lastLookupRefresh, MULTICAST_REFRESH_TIMEOUT)) {
+		if (SyntroUtils::syntroTimerExpired(SyntroClock(), multicastMap->lastLookupRefresh, MULTICAST_REFRESH_TIMEOUT)) {
 			TRACE2("Too long since last incoming lookup request on %s local port %d",
-					qPrintable(displayUID(&multicastMap->sourceUID)), index);
+					qPrintable(SyntroUtils::displayUID(&multicastMap->sourceUID)), index);
 			continue;										// don't send a lookup request as nobody interested
 		}
 		sendLookupRequest(multicastMap);
@@ -422,30 +423,30 @@ void	MulticastManager::sendLookupRequest(MM_MMAP *multicastMap, bool rightNow)
 	SYNTRO_SERVICE_ACTIVATE *serviceActivate;
 
 	// no messages to ourself
-	if (compareUID(&m_myUID, &multicastMap->prevHopUID))
+	if (SyntroUtils::compareUID(&m_myUID, &multicastMap->prevHopUID))
 		return;
 
 	qint64 now = SyntroClock();
-	if (!rightNow && !syntroTimerExpired(now, multicastMap->lookupSent, SERVICE_LOOKUP_INTERVAL))
+	if (!rightNow && !SyntroUtils::syntroTimerExpired(now, multicastMap->lookupSent, SERVICE_LOOKUP_INTERVAL))
 		return;											// too early to send again
 
-	if (convertUC2ToInt(multicastMap->prevHopUID.instance) < INSTANCE_COMPONENT) {
+	if (SyntroUtils::convertUC2ToInt(multicastMap->prevHopUID.instance) < INSTANCE_COMPONENT) {
 		serviceLookup = (SYNTRO_SERVICE_LOOKUP *)malloc(sizeof(SYNTRO_SERVICE_LOOKUP));
 		*serviceLookup = multicastMap->serviceLookup;
-		TRACE2("Sending lookup request for %s from port %d", serviceLookup->servicePath, convertUC2ToUInt(serviceLookup->localPort));
+		TRACE2("Sending lookup request for %s from port %d", serviceLookup->servicePath, SyntroUtils::convertUC2ToUInt(serviceLookup->localPort));
 
 		if (!m_server->sendSyntroMessage(&(multicastMap->prevHopUID), SYNTROMSG_SERVICE_LOOKUP_REQUEST,
 				(SYNTRO_MESSAGE *)serviceLookup, sizeof(SYNTRO_SERVICE_LOOKUP), SYNTROLINK_MEDHIGHPRI)) {
-			logWarn(QString("Failed sending lookup request to %1").arg(displayUID(&multicastMap->prevHopUID)));
+			logWarn(QString("Failed sending lookup request to %1").arg(SyntroUtils::displayUID(&multicastMap->prevHopUID)));
 		}
 	}
 	else {
 		TRACE2("Sending service activate for %s from port %d", 
-				multicastMap->serviceLookup.servicePath, convertUC2ToUInt(multicastMap->serviceLookup.localPort));
+				multicastMap->serviceLookup.servicePath, SyntroUtils::convertUC2ToUInt(multicastMap->serviceLookup.localPort));
 		serviceActivate = (SYNTRO_SERVICE_ACTIVATE *)malloc(sizeof(SYNTRO_SERVICE_ACTIVATE));
-		copyUC2(serviceActivate->endpointPort, multicastMap->serviceLookup.remotePort);
-		copyUC2(serviceActivate->componentIndex, multicastMap->serviceLookup.componentIndex);
-		copyUC2(serviceActivate->syntroControlPort, multicastMap->serviceLookup.localPort);
+		SyntroUtils::copyUC2(serviceActivate->endpointPort, multicastMap->serviceLookup.remotePort);
+		SyntroUtils::copyUC2(serviceActivate->componentIndex, multicastMap->serviceLookup.componentIndex);
+		SyntroUtils::copyUC2(serviceActivate->syntroControlPort, multicastMap->serviceLookup.localPort);
 		serviceActivate->response = multicastMap->serviceLookup.response;
 		m_server->sendSyntroMessage(&(multicastMap->prevHopUID), 
 				SYNTROMSG_SERVICE_ACTIVATE, (SYNTRO_MESSAGE *)serviceActivate, sizeof(SYNTRO_SERVICE_ACTIVATE), SYNTROLINK_MEDHIGHPRI);

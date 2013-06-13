@@ -32,7 +32,6 @@
 
 // SyntroCFS specific setting keys
 
-#define	SYNTRO_CFS_SERVICE_NAME				"serviceName"
 #define	SYNTRO_CFS_STORE_PATH				"storePath"	
 
 //	The SyntroCFS state information referenced by a stream handle

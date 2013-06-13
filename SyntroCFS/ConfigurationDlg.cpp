@@ -34,10 +34,8 @@ ConfigurationDlg::ConfigurationDlg(QWidget *parent, QSettings *settings)
 
 void ConfigurationDlg::okButtonClick()
 {
-	if ((m_settings->value(SYNTRO_CFS_STORE_PATH).toString() != m_storePath->text()) ||
-		(m_settings->value(SYNTRO_CFS_SERVICE_NAME).toString() != m_serviceName->text())) {
+	if (m_settings->value(SYNTRO_CFS_STORE_PATH).toString() != m_storePath->text()) {
 
-		m_settings->setValue(SYNTRO_CFS_SERVICE_NAME, m_serviceName->text());
 		m_settings->setValue(SYNTRO_CFS_STORE_PATH, m_storePath->text());
 		accept();
 		return;
@@ -52,18 +50,12 @@ void ConfigurationDlg::cancelButtonClick()
 
 void ConfigurationDlg::loadCurrentValues()
 {
-	m_serviceName->setText(m_settings->value(SYNTRO_CFS_SERVICE_NAME).toString());
 	m_storePath->setText(m_settings->value(SYNTRO_CFS_STORE_PATH).toString());
 }
 
 void ConfigurationDlg::layoutWidgets()
 {
 	QFormLayout *formLayout = new QFormLayout;
-
-	m_serviceName = new QLineEdit;
-	m_serviceName->setMinimumWidth(200);
-	m_serviceName->setValidator(&m_validator);
-	formLayout->addRow(new QLabel("Service name"), m_serviceName);
 
 	m_storePath = new CFSLabel("");
 	m_storePath->setMinimumWidth(320);

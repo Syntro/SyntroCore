@@ -90,7 +90,7 @@
 </div>
 <h1 class="title">SyntroThread Class</h1>
 <!-- $$$SyntroThread-brief -->
-<p>SyntroThread is alightweight wrapper for QThread. <a href="#details">More...</a></p>
+<p>SyntroThread is a lightweight wrapper for QThread. <a href="#details">More...</a></p>
 <!-- @@@SyntroThread -->
 <pre class="cpp"><span class="preprocessor">#include &lt;SyntroThread&gt;</span></pre><p><b>Inherited by: </b><a href="endpoint.html">Endpoint</a>.</p>
 <ul>
@@ -115,8 +115,8 @@
 <!-- $$$SyntroThread-description -->
 <div class="descr">
 <h2>Detailed Description</h2>
-<p>SyntroThread is alightweight wrapper for QThread.</p>
-<p>yntroThread is a thin wrapper layer around Qts QThread. It provides a Windows-style message passing queue and associated functions. The normal sequence of events is to create a SyntroThread, perform any external initialization that might be required and then to call <a href="syntrothread.html#resumeThread">resumeThread</a>(). To kill the thread, call <a href="syntrothread.html#exitThread">exitThread</a>().</p>
+<p>SyntroThread is a lightweight wrapper for QThread.</p>
+<p>SyntroThread is a thin wrapper layer around Qts QThread. It provides a Windows-style message passing queue and associated functions. The normal sequence of events is to create a SyntroThread, perform any external initialization that might be required and then to call <a href="syntrothread.html#resumeThread">resumeThread</a>(). To kill the thread, call <a href="syntrothread.html#exitThread">exitThread</a>().</p>
 <p>SyntroThread also processes QThread timer events and maps them to SyntroThread messages with a message code of SYNTROTHREAD_TIMER_MESSAGE. These can be handled in the <a href="syntrothread.html#processMessage">processMessage</a>() function. The timer ID is passed in the intParam of the message to allow multiple timers to be supported.</p>
 <p>SyntroThread would normally be subclassed to provide customized thread functionality.</p>
 </div>

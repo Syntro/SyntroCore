@@ -62,9 +62,6 @@ private:
 	QPushButton *m_cancelButton;
 
 	CFSLabel *m_storePath;
-	QLineEdit *m_serviceName;
-
-	ServiceNameValidator m_validator;
 };
 
 #endif // CONFIGURATIONDLG_H

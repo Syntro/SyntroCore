@@ -51,8 +51,8 @@ void LogClient::appClientReceiveMulticast(int servicePort, SYNTRO_EHEAD *multiCa
 {
 	SYNTRO_RECORD_HEADER *recordHead = reinterpret_cast<SYNTRO_RECORD_HEADER *>(multiCast + 1);
 
-	if (convertUC2ToInt(recordHead->type) == SYNTRO_RECORD_TYPE_LOG) {
-		int dataLength = len - convertUC2ToInt(recordHead->headerLength);
+	if (SyntroUtils::convertUC2ToInt(recordHead->type) == SYNTRO_RECORD_TYPE_LOG) {
+		int dataLength = len - SyntroUtils::convertUC2ToInt(recordHead->headerLength);
 
 		if (dataLength > 0) {
 			QByteArray bulkMsg(reinterpret_cast<const char *>(recordHead + 1), dataLength);

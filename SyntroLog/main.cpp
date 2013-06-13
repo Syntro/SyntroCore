@@ -27,7 +27,7 @@ int main(int argc, char *argv[])
 {
 	QApplication a(argc, argv);
 
-	QSettings *settings = loadStandardSettings(PRODUCT_TYPE, a.arguments());
+	QSettings *settings = SyntroUtils::loadStandardSettings(PRODUCT_TYPE, a.arguments());
 
 	settings->setValue(SYNTRO_PARAMS_COMPTYPE, PRODUCT_TYPE);
 

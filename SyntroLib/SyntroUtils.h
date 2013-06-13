@@ -1,5 +1,5 @@
 //
-//  Copyright (c) 2012 Pansenti, LLC.
+//  Copyright (c) 2012, 2013 Pansenti, LLC.
 //	
 //  This file is part of SyntroLib
 //
@@ -131,69 +131,78 @@ class SyntroSocket;
 #define	SYNTRO_PARAMS_CFS_STORES		"CFSStores"			// SyntroCFS stores array
 #define	SYNTRO_PARAMS_CFS_STORE			"CFSStore"			// the entries
 
-SYNTROLIB_EXPORT const char *syntroLibVersion();			// returns a string containing the SyntroLib version as x.y.z
+class SYNTROLIB_EXPORT SyntroUtils
+{
+public:
+	static const char *syntroLibVersion();			// returns a string containing the SyntroLib version as x.y.z
 
-SYNTROLIB_EXPORT void syntroAppInit(QSettings *settings);
-SYNTROLIB_EXPORT void syntroAppExit();
+	static void syntroAppInit(QSettings *settings);
+	static void syntroAppExit();
 
-SYNTROLIB_EXPORT SYNTRO_IPADDR *getMyIPAddr();
-SYNTROLIB_EXPORT SYNTRO_MACADDR *getMyMacAddr();
+	static SYNTRO_IPADDR *getMyIPAddr();
+	static SYNTRO_MACADDR *getMyMacAddr();
 
-SYNTROLIB_EXPORT bool checkConsoleModeFlag(int argc, char *argv[]);	// checks if console mode
-SYNTROLIB_EXPORT bool checkDaemonModeFlag(int argc, char *argv[]);
-SYNTROLIB_EXPORT void initgMyData(QSettings *settings);	// inits the global structures
-SYNTROLIB_EXPORT bool isReservedNameCharacter(char value);	// returns true if value is not allowed in names (components of paths)
-SYNTROLIB_EXPORT bool isReservedPathCharacter(char value);	// returns true if value is not allowed in paths
-SYNTROLIB_EXPORT bool isSendOK(unsigned char sendSeq, unsigned char ackSeq);
-SYNTROLIB_EXPORT SYNTRO_EHEAD *createEHEAD(SYNTRO_UID *sourceUID, int sourcePort, 
+	static bool checkConsoleModeFlag(int argc, char *argv[]);	// checks if console mode
+	static bool checkDaemonModeFlag(int argc, char *argv[]);
+    static void initgMyData(QSettings *settings);	// inits the global structures
+    static bool isSendOK(unsigned char sendSeq, unsigned char ackSeq);
+    static SYNTRO_EHEAD *createEHEAD(SYNTRO_UID *sourceUID, int sourcePort, 
 					SYNTRO_UID *destUID, int destPort, unsigned char seq, int len); 
-SYNTROLIB_EXPORT void swapEHead(SYNTRO_EHEAD *ehead);		// swaps UIDs and port numbers
-SYNTROLIB_EXPORT bool crackServicePath(QString servicePath, QString &regionName, QString& componentName, QString& serviceName); // breaks a service path into its constituent bits
-SYNTROLIB_EXPORT QSettings *loadStandardSettings(const char *appType, QStringList arglist);
-SYNTROLIB_EXPORT bool syntroTimerExpired(qint64 now, qint64 start, qint64 interval);
+    static void swapEHead(SYNTRO_EHEAD *ehead);		// swaps UIDs and port numbers
+    static bool crackServicePath(QString servicePath, QString &regionName, QString& componentName, QString& serviceName); // breaks a service path into its constituent bits
+    static QSettings *loadStandardSettings(const char *appType, QStringList arglist);
+    static bool syntroTimerExpired(qint64 now, qint64 start, qint64 interval);
+
+//	Service path functions
+
+    static bool isReservedNameCharacter(char value);	// returns true if value is not allowed in names (components of paths)
+    static bool isReservedPathCharacter(char value);	// returns true if value is not allowed in paths
+    static QString insertStreamNameInPath(const QString& streamSource, const QString& streamName); // adds in a stream name before any extension 
 
 //	IP Address functions
 
-SYNTROLIB_EXPORT void getMyIPAddress(QSettings *pSettings);	// gets my IP address from first or known IP adaptor
-SYNTROLIB_EXPORT QString displayIPAddr(SYNTRO_IPADDR addr);	// returns string version of IP
-SYNTROLIB_EXPORT void convertIPStringToIPAddr(char *IPStr, SYNTRO_IPADDR IPAddr);	// converts a string IP address to internal
-SYNTROLIB_EXPORT bool IPZero(SYNTRO_IPADDR addr);			// returns true if address all zeroes
-SYNTROLIB_EXPORT bool IPLoopback(SYNTRO_IPADDR addr);		// returns true if address is 127.0.0.1
+    static void getMyIPAddress(QSettings *pSettings);	// gets my IP address from first or known IP adaptor
+    static QString displayIPAddr(SYNTRO_IPADDR addr);	// returns string version of IP
+    static void convertIPStringToIPAddr(char *IPStr, SYNTRO_IPADDR IPAddr);	// converts a string IP address to internal
+    static bool IPZero(SYNTRO_IPADDR addr);			// returns true if address all zeroes
+    static bool IPLoopback(SYNTRO_IPADDR addr);		// returns true if address is 127.0.0.1
 
 //	UID manipulation functions
 
-SYNTROLIB_EXPORT void UIDSTRtoUID(SYNTRO_UIDSTR sourceStr, SYNTRO_UID *destUID);// converts a string UID to a binary
-SYNTROLIB_EXPORT void UIDtoUIDSTR(SYNTRO_UID *sourceUID, SYNTRO_UIDSTR destStr);// converts a binary UID to a string
-SYNTROLIB_EXPORT void makeUIDSTR(SYNTRO_UIDSTR UIDStr, SYNTRO_MACADDRSTR macAddress, int instance); // Fills in the UID
-SYNTROLIB_EXPORT QString displayUID(SYNTRO_UID *UID);			// return string version of UID
-SYNTROLIB_EXPORT bool compareUID(SYNTRO_UID *a, SYNTRO_UID *b);	// return true if UIDs are equal
-SYNTROLIB_EXPORT bool UIDHigher(SYNTRO_UID *a, SYNTRO_UID *b);	// returns true if a > b numerically
-SYNTROLIB_EXPORT void swapUID(SYNTRO_UID *a, SYNTRO_UID *b);
+    static void UIDSTRtoUID(SYNTRO_UIDSTR sourceStr, SYNTRO_UID *destUID);// converts a string UID to a binary
+    static void UIDtoUIDSTR(SYNTRO_UID *sourceUID, SYNTRO_UIDSTR destStr);// converts a binary UID to a string
+    static void makeUIDSTR(SYNTRO_UIDSTR UIDStr, SYNTRO_MACADDRSTR macAddress, int instance); // Fills in the UID
+    static QString displayUID(SYNTRO_UID *UID);			// return string version of UID
+    static bool compareUID(SYNTRO_UID *a, SYNTRO_UID *b);	// return true if UIDs are equal
+    static bool UIDHigher(SYNTRO_UID *a, SYNTRO_UID *b);	// returns true if a > b numerically
+    static void swapUID(SYNTRO_UID *a, SYNTRO_UID *b);
 
 //	Syntro type conversion functions
 
-SYNTROLIB_EXPORT int convertUC4ToInt(SYNTRO_UC4 uc4);
-SYNTROLIB_EXPORT void convertIntToUC4(int val, SYNTRO_UC4 uc4);
-SYNTROLIB_EXPORT int convertUC2ToInt(SYNTRO_UC2 uc2);
-SYNTROLIB_EXPORT int convertUC2ToUInt(SYNTRO_UC2 uc2);
-SYNTROLIB_EXPORT void convertIntToUC2(int val, SYNTRO_UC2 uc2);
-SYNTROLIB_EXPORT void copyUC2(SYNTRO_UC2 dst, SYNTRO_UC2 src);
+    static int convertUC4ToInt(SYNTRO_UC4 uc4);
+    static void convertIntToUC4(int val, SYNTRO_UC4 uc4);
+    static int convertUC2ToInt(SYNTRO_UC2 uc2);
+    static int convertUC2ToUInt(SYNTRO_UC2 uc2);
+    static void convertIntToUC2(int val, SYNTRO_UC2 uc2);
+    static void copyUC2(SYNTRO_UC2 dst, SYNTRO_UC2 src);
 
 //	Timestamp functions
 
-SYNTROLIB_EXPORT QString timestampToString(SYNTRO_TIMESTAMP *timestamp);	// get a display version of a Syntro timestamp
-SYNTROLIB_EXPORT QString timestampToString(QDateTime *timestamp);// get a display version of a timestamp
-SYNTROLIB_EXPORT void setSyntroTimestamp(SYNTRO_TIMESTAMP *timestamp);	// sets a timestamp value from system time
-SYNTROLIB_EXPORT void getSyntroTimestamp(SYNTRO_TIMESTAMP *timestamp, QDateTime *systemTime); // converts a Syntro timestamp to SYSTEMTIME
-SYNTROLIB_EXPORT QString timestampToDateString(SYNTRO_TIMESTAMP *timestamp);
-SYNTROLIB_EXPORT QString timestampToTimeString(SYNTRO_TIMESTAMP *timestamp);
-SYNTROLIB_EXPORT QDateTime syntroTimestampToQDateTime(SYNTRO_TIMESTAMP *timestamp);
+    static QString timestampToString(SYNTRO_TIMESTAMP *timestamp);	// get a display version of a Syntro timestamp
+    static QString timestampToString(QDateTime *timestamp);// get a display version of a timestamp
+    static void setSyntroTimestamp(SYNTRO_TIMESTAMP *timestamp);	// sets a timestamp value from system time
+    static void getSyntroTimestamp(SYNTRO_TIMESTAMP *timestamp, QDateTime *systemTime); // converts a Syntro timestamp to SYSTEMTIME
+    static QString timestampToDateString(SYNTRO_TIMESTAMP *timestamp);
+    static QString timestampToTimeString(SYNTRO_TIMESTAMP *timestamp);
+    static QDateTime syntroTimestampToQDateTime(SYNTRO_TIMESTAMP *timestamp);
 
 //	Information for the network address in use
 
-SYNTROLIB_EXPORT QHostAddress getMyBroadcastAddress();
-SYNTROLIB_EXPORT QHostAddress getMySubnetAddress();
-SYNTROLIB_EXPORT QHostAddress getMyNetMask();
-SYNTROLIB_EXPORT bool isInMySubnet(SYNTRO_IPADDR IPAddr);
+    static QHostAddress getMyBroadcastAddress();
+    static QHostAddress getMySubnetAddress();
+    static QHostAddress getMyNetMask();
+    static bool isInMySubnet(SYNTRO_IPADDR IPAddr);
+
+};
 
 #endif		//_SYNTROUTILS_H_

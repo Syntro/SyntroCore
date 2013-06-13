@@ -54,13 +54,13 @@ void SyntroComponentData::init(const char *compName, const char *compType, int h
 		m_myInstance = INSTANCE_CONTROL;
 	else
 		createHelloSocket();
-	memcpy(hello->IPAddr, getMyIPAddr(), sizeof(SYNTRO_IPADDR));
-	memcpy(hello->componentUID.macAddr, getMyMacAddr(), sizeof(SYNTRO_MACADDR));
-	convertIntToUC2(m_myInstance, hello->componentUID.instance);
+	memcpy(hello->IPAddr, SyntroUtils::getMyIPAddr(), sizeof(SYNTRO_IPADDR));
+	memcpy(hello->componentUID.macAddr, SyntroUtils::getMyMacAddr(), sizeof(SYNTRO_MACADDR));
+	SyntroUtils::convertIntToUC2(m_myInstance, hello->componentUID.instance);
 
 	memcpy(&(m_myUID), &(hello->componentUID), sizeof(SYNTRO_UID));
 
-	convertIntToUC2(hbInterval, hello->interval);
+	SyntroUtils::convertIntToUC2(hbInterval, hello->interval);
 
 	hello->priority = priority;							
 	hello->unused1 = 1;		
@@ -75,7 +75,7 @@ void SyntroComponentData::DESetup()
 {
 	m_myDE[0] = 0;
 	sprintf(m_myDE + (int)strlen(m_myDE), "<%s>", DETAG_COMP);
-	DEAddValue(DETAG_UID, qPrintable(displayUID(&(m_myUID))));
+	DEAddValue(DETAG_UID, qPrintable(SyntroUtils::displayUID(&(m_myUID))));
 	DEAddValue(DETAG_COMPNAME, (char *)m_myHeartbeat.hello.componentName);
 	DEAddValue(DETAG_COMPTYPE, (char *)m_myHeartbeat.hello.componentType);
 }
