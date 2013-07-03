@@ -1,5 +1,5 @@
 //
-//  Copyright (c) 2012 Pansenti, LLC.
+//  Copyright (c) 2012, 2013 Pansenti, LLC.
 //	
 //  This file is part of Syntro
 //
@@ -26,7 +26,7 @@
 
 int runGuiApp(int argc, char *argv[]);
 int runConsoleApp(int argc, char *argv[]);
-QSettings *loadSettings(QStringList arglist);
+void loadSettings(QStringList arglist);
 
 
 int main(int argc, char *argv[])
@@ -43,9 +43,9 @@ int runGuiApp(int argc, char *argv[])
 {
 	QApplication a(argc, argv);
 
-	QSettings *settings = loadSettings(a.arguments());
+	loadSettings(a.arguments());
 
-	SyntroExec *w = new SyntroExec(settings);
+	SyntroExec *w = new SyntroExec();
 
 	w->show();
 
@@ -56,21 +56,21 @@ int runConsoleApp(int argc, char *argv[])
 {
 	QCoreApplication a(argc, argv);
 
-	QSettings *settings = loadSettings(a.arguments());
+	loadSettings(a.arguments());
 
-	ExecConsole cc(settings, &a);
+	ExecConsole cc(&a);
 
 	return a.exec();
 	return 1;
 }
 
-QSettings *loadSettings(QStringList arglist)
+void loadSettings(QStringList arglist)
 {
-	QSettings *settings = SyntroUtils::loadStandardSettings(PRODUCT_TYPE, arglist);
+	SyntroUtils::loadStandardSettings(APPTYPE_EXEC, arglist);
 
 	// app-specific part
 
-	settings->setValue(SYNTRO_PARAMS_COMPTYPE, COMPTYPE_EXEC);
+	QSettings *settings = SyntroUtils::getSettings();
 
 	int	size = settings->beginReadArray(SYNTROEXEC_PARAMS_COMPONENTS);
 	settings->endArray();
@@ -82,7 +82,7 @@ QSettings *loadSettings(QStringList arglist)
 	// by default, just configure a SyntroControl with default runtime arguments
 
 		settings->setValue(SYNTROEXEC_PARAMS_INUSE, SYNTRO_PARAMS_TRUE);
-		settings->setValue(SYNTROEXEC_PARAMS_APP_NAME, COMPTYPE_CONTROL);
+		settings->setValue(SYNTROEXEC_PARAMS_APP_NAME, APPTYPE_CONTROL);
 		settings->setValue(SYNTROEXEC_PARAMS_EXECUTABLE_DIRECTORY, "");
 		settings->setValue(SYNTROEXEC_PARAMS_WORKING_DIRECTORY, "");
 		settings->setValue(SYNTROEXEC_PARAMS_ADAPTOR, "");
@@ -93,10 +93,13 @@ QSettings *loadSettings(QStringList arglist)
 	// and something for SyntroExec
 
 		settings->setArrayIndex(1);
-		settings->setValue(SYNTROEXEC_PARAMS_APP_NAME, COMPTYPE_EXEC);
+		settings->setValue(SYNTROEXEC_PARAMS_APP_NAME, APPTYPE_EXEC);
 
 		settings->endArray();
 	}
-	return settings;
+
+	delete settings;
+
+	return;
 }
 

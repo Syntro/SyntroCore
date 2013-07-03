@@ -1,5 +1,5 @@
 //
-//  Copyright (c) 2012 Pansenti, LLC.
+//  Copyright (c) 2012, 2013 Pansenti, LLC.
 //	
 //  This file is part of Syntro
 //
@@ -26,8 +26,6 @@
 #include "SyntroLib.h"
 #include "HelloDialog.h"
 #include "ComponentManager.h"
-
-#define	PRODUCT_TYPE		COMPTYPE_EXEC
 
 //		PARAMS keys
 
@@ -115,22 +113,22 @@ class SyntroExec : public QMainWindow
 	Q_OBJECT
 
 public:
-	SyntroExec(QSettings *settings, QWidget *parent = 0);
+	SyntroExec();
 	~SyntroExec() {}
 
 public slots:
 	void onAbout();
 	void onHello();
-	void updateExecStatus(ManagerComponent *component);
+	void updateExecStatus(int index, bool inUse, QStringList list);
 	void boxClicked(bool, int);
 	void buttonClicked(int);
+	void managerRunning();
 
 signals:
 	void loadComponent(int);							// load specified component
 
 protected:
 	HelloDialog *m_helloDlg;
-	QSettings *m_settings;
 
 private:
 	void layoutTable();

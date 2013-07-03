@@ -1,5 +1,5 @@
 //
-//  Copyright (c) 2012 Pansenti, LLC.
+//  Copyright (c) 2012, 2013 Pansenti, LLC.
 //	
 //  This file is part of Syntro
 //
@@ -33,7 +33,7 @@ class ControlSetupDlg : public QDialog
 	Q_OBJECT
 
 public:
-	ControlSetupDlg(QWidget *parent, QSettings *settings);
+	ControlSetupDlg();
 	~ControlSetupDlg();
 
 public slots:
@@ -42,8 +42,6 @@ public slots:
 
 private:
 	void layoutWindow();
-
-	QSettings *m_settings;
 
 	QLineEdit *m_channels;
 	QLineEdit *m_appName;

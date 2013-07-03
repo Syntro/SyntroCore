@@ -1,5 +1,5 @@
 //
-//  Copyright (c) 2012 Pansenti, LLC.
+//  Copyright (c) 2012, 2013 Pansenti, LLC.
 //	
 //  This file is part of Syntro
 //
@@ -27,6 +27,7 @@
 DirectoryDialog::DirectoryDialog(QWidget *parent)
 	: QDialog(parent)
 {
+	m_logTag = "DirectoryDialog";
 	hide();
 	layoutWindow();
 	setWindowTitle("SyntroControl directory");
@@ -174,7 +175,7 @@ QTreeWidgetItem *DirectoryDialog::findTreeItem(DM_COMPONENT *component)
 {
 	QString entryPath;
 
-	entryPath = SyntroUtils::displayUID(&(component->componentUID)) + ", " + QString(component->componentName);
+	entryPath = SyntroUtils::displayUID(&(component->componentUID)) + ", " + QString(component->appName);
 	
 	QList <QTreeWidgetItem *> matchItems = m_tree->findItems(entryPath, Qt::MatchExactly);
 	if (matchItems.count() == 0)
@@ -193,11 +194,11 @@ void DirectoryDialog::addTreeItem(DM_CONNECTEDCOMPONENT *connectedComponent, DM_
 	QString controlName;
 	QString entryPath;
 
-	entryPath = SyntroUtils::displayUID(&(component->componentUID)) + ", " + QString(component->componentName);
+	entryPath = SyntroUtils::displayUID(&(component->componentUID)) + ", " + QString(component->appName);
 
 	control = connectedComponent->connectedComponentUID.instance == INSTANCE_CONTROL;
 	if (control) {
-		controlName = ((SS_COMPONENT *)connectedComponent->data)->heartbeat.hello.componentName;
+		controlName = ((SS_COMPONENT *)connectedComponent->data)->heartbeat.hello.appName;
 	}
 
 	twi = new QTreeWidgetItem((QTreeWidget*)0, QStringList(entryPath));
@@ -220,7 +221,7 @@ void DirectoryDialog::updateTreeItem(QTreeWidgetItem *twi, DM_COMPONENT *compone
 
 QString DirectoryDialog::entryPath(DM_COMPONENT *component)
 {
-	QString path = SyntroUtils::displayUID(&(component->componentUID)) + ", " + QString(component->componentName);
+	QString path = SyntroUtils::displayUID(&(component->componentUID)) + ", " + QString(component->appName);
 	return path;
 }
 

@@ -1,5 +1,5 @@
 //
-//  Copyright (c) 2012 Pansenti, LLC.
+//  Copyright (c) 2012, 2013 Pansenti, LLC.
 //	
 //  This file is part of SyntroLib
 //
@@ -45,7 +45,7 @@ public:
 class SYNTROLIB_EXPORT SyntroLink
 {
 public:
-	SyntroLink(void);
+	SyntroLink(const QString& logTag);
 	~SyntroLink(void);
 
 	void send(int cmd, int len, int priority, SYNTRO_MESSAGE *syntroMessage);
@@ -81,6 +81,8 @@ protected:
 
 	QMutex m_RXLock;
 	QMutex m_TXLock;
+
+	QString m_logTag;
 };
 
 #endif // _SYNTROLINK_H_

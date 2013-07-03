@@ -1,5 +1,5 @@
 //
-//  Copyright (c) 2012 Pansenti, LLC.
+//  Copyright (c) 2012, 2013 Pansenti, LLC.
 //	
 //  This file is part of Syntro
 //
@@ -45,7 +45,7 @@ typedef struct _DM_COMPONENT
 	char *originalDE;										// the original DE (allows for a quick change determination)
 	char *localDE;											// same but with multicast port numbers made into local ports
 	bool seenInDE;											// used when processing a DE to see if this component has vanished
-	char componentName[SYNTRO_MAX_COMPNAME];				// the component's name
+	char appName[SYNTRO_MAX_APPNAME];						// the app's name
 	char componentType[SYNTRO_MAX_COMPTYPE];				// the component's type
 	SYNTRO_UID componentUID;								// the component's UID
 	SYNTRO_UIDSTR UIDStr;									// the string version
@@ -159,6 +159,8 @@ protected:
 	int m_sequenceID;										// used to uniquely identify DEs in case they are updated in place
 	char *m_tagPtr;											// the current pointer into the DE
 	char m_lastError[SYNTRO_MAX_TAG+SYNTRO_MAX_NONTAG];		// a diagnostic string if an error occurs
+
+	QString m_logTag;
 	
 };
 

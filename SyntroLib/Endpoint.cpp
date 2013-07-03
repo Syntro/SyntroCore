@@ -23,6 +23,8 @@
 #include "SyntroClock.h"
 #include "SyntroRecord.h"
 
+//#define ENDPOINT_TRACE
+
 /*!
     \class Endpoint
     \brief Endpoint is the main interface between app clients and Syntro.
@@ -33,8 +35,7 @@
 	a client class that inherits Endpoint. Endpoint itself inherits SyntroThread. 
 	The normal sequence for use involves constructing a new client class that inherits, 
 	performing any initialization that might be require on that object and then calling 
-	the resumeThread() function on the object. exitThread() should be called on the object 
-	when it is necessary to shut the Endpoint down.
+	the resumeThread() function on the object. 
 */
 
 /*!
@@ -63,7 +64,7 @@
 /*!
 	\fn virtual void Endpoint::appClientExit()
 
-	appClientExit() is called during its exitThread execution and the client can use 
+	appClientExit() is called during the Ednpoint destructor execution and the client can use 
 	this to perform any last minute clean up before termination.
 */
 
@@ -107,7 +108,8 @@
 
 bool Endpoint::clientLoadServices(bool enabled, int *serviceCount, int *serviceStart)
 {
-	int count = m_settings->beginReadArray(SYNTRO_PARAMS_CLIENT_SERVICES);
+	QSettings *settings = SyntroUtils::getSettings();
+	int count = settings->beginReadArray(SYNTRO_PARAMS_CLIENT_SERVICES);
 
 	int serviceType;
 	bool local;
@@ -115,26 +117,28 @@ bool Endpoint::clientLoadServices(bool enabled, int *serviceCount, int *serviceS
 	int port;
 	
 	for (int i = 0; i < count; i++) {
-		m_settings->setArrayIndex(i);
-		local = m_settings->value(SYNTRO_PARAMS_CLIENT_SERVICE_LOCATION).toString() == SYNTRO_PARAMS_SERVICE_LOCATION_LOCAL;
-		QString serviceTypeString = m_settings->value(SYNTRO_PARAMS_CLIENT_SERVICE_TYPE).toString();
+		settings->setArrayIndex(i);
+		local = settings->value(SYNTRO_PARAMS_CLIENT_SERVICE_LOCATION).toString() == SYNTRO_PARAMS_SERVICE_LOCATION_LOCAL;
+		QString serviceTypeString = settings->value(SYNTRO_PARAMS_CLIENT_SERVICE_TYPE).toString();
 		if (serviceTypeString == SYNTRO_PARAMS_SERVICE_TYPE_MULTICAST) {
 			serviceType = SERVICETYPE_MULTICAST;
 		} else if (serviceTypeString == SYNTRO_PARAMS_SERVICE_TYPE_E2E) {
 			serviceType = SERVICETYPE_E2E;
 		}
 		else {
-			logWarn(QString("Unrecognized type for service %1").arg(m_settings->value(SYNTRO_PARAMS_CLIENT_SERVICE_NAME).toString()));
+			logWarn(QString("Unrecognized type for service %1").arg(settings->value(SYNTRO_PARAMS_CLIENT_SERVICE_NAME).toString()));
 			serviceType = SERVICETYPE_E2E;			// fall back to this
 		}
-		port = clientAddService(m_settings->value(SYNTRO_PARAMS_CLIENT_SERVICE_NAME).toString(), serviceType, local, enabled);
+		port = clientAddService(settings->value(SYNTRO_PARAMS_CLIENT_SERVICE_NAME).toString(), serviceType, local, enabled);
 		if (first) {
 			*serviceStart = port;
 			first = false;
 		}
 	}
-	m_settings->endArray();
+	settings->endArray();
 	*serviceCount = count;
+
+	delete settings;
 	return true;
 }
 
@@ -170,7 +174,7 @@ int Endpoint::clientAddService(QString servicePath, int serviceType, bool local,
 		logError(QString("Service info array full"));
 		return -1;
 	}
-	if (servicePath.length() > SYNTRO_MAX_SERVNAME - 1) {
+	if (servicePath.length() > SYNTRO_MAX_SERVPATH - 1) {
 		logError(QString("Service path too long (%1) %2").arg(servicePath.length()).arg(servicePath));
 		return -1;
 	}
@@ -962,7 +966,8 @@ void Endpoint::appClientReceiveDirectory(SYNTRO_DIRECTORY_RESPONSE *directory, i
 //----------------------------------------------------------
 
 /*!
-	Constructs a new Endpoint. Typically this would be called with parent set to this. \a settings is a 
+	Constructs a new Endpoint. Typically this would be called with parent set to this. \a parent is the
+	parent object, \a settings is a 
 	pointer to the QSettings object that was generated when the component’s settings file was read in. 
 	\a backgroundInterval is the period in millisconds between executions of Endpoint’s background functions. 
 	Typical values for this are between 10 and 100. Setting value too high may limit the total achievable 
@@ -970,147 +975,38 @@ void Endpoint::appClientReceiveDirectory(SYNTRO_DIRECTORY_RESPONSE *directory, i
 	recommended a it may cause internal timers and timeouts to be processed incorrectly.
 */
 
-Endpoint::Endpoint(QObject *, QSettings *settings, qint64 backgroundInterval)
+Endpoint::Endpoint(qint64 backgroundInterval, const char *compType)
+						: SyntroThread(QString("Endpoint"), QString(compType))
 {
+
 	m_background = SyntroClock();
+	m_compType = compType;
 	m_DETimer = m_background;
 	m_sentDE = false;
 	m_connected = false;
 	m_connectInProgress = false;
 	m_beaconDelay = false;
 	m_backgroundInterval = backgroundInterval;
-	m_logPort = -1;
+	m_logTag = compType;
 
-	m_componentData.init(qPrintable(settings->value(SYNTRO_PARAMS_APPNAME).toString()),
-				qPrintable(settings->value(SYNTRO_PARAMS_COMPTYPE).toString()),
-				settings->value(SYNTRO_PARAMS_HBINTERVAL).toInt());
+	QSettings *settings = SyntroUtils::getSettings();
 
-	serviceInit();
-	CFSInit();
-	m_settings = settings;
-	m_controlRevert = m_settings->value(SYNTRO_PARAMS_CONTROLREVERT).toBool();
+	m_configHeartbeatInterval = settings->value(SYNTRO_PARAMS_HBINTERVAL, SYNTRO_HEARTBEAT_INTERVAL).toInt();
+	m_configHeartbeatTimeout = settings->value(SYNTRO_PARAMS_HBTIMEOUT, SYNTRO_HEARTBEAT_TIMEOUT).toInt();
 }
 
 /*!
 	\internal
 */
+
 Endpoint::~Endpoint(void)
 {
+
 }
 
-/*!
-	\internal
-*/
-
-void Endpoint::initThread()
+void Endpoint::finishThread()
 {
-	m_UID = m_componentData.getMyUID();
-
-	m_state = "...";
-	m_sock = NULL;
-	m_syntroLink = NULL;
-	m_hello = NULL;
-
-	m_heartbeatSendInterval = m_settings->value(SYNTRO_PARAMS_HBINTERVAL).toInt() * SYNTRO_CLOCKS_PER_SEC;
-	m_heartbeatTimeoutPeriod = m_heartbeatSendInterval * m_settings->value(SYNTRO_PARAMS_HBTIMEOUT).toInt();
-	
-	int size = m_settings->beginReadArray(SYNTRO_PARAMS_CONTROL_NAMES);
-
-	for (int control = 0; control < ENDPOINT_MAX_SYNTROCONTROLS; control++)
-		m_controlName[control][0] = 0;
-
-	for (int control = 0; (control < ENDPOINT_MAX_SYNTROCONTROLS) && (control < size); control++) {
-		m_settings->setArrayIndex(control);
-		strcpy(m_controlName[control], qPrintable(m_settings->value(SYNTRO_PARAMS_CONTROL_NAME).toString()));
-	}
-
-	m_settings->endArray();
-
-	m_hello = new Hello(&m_componentData);
-	m_hello->resumeThread();
-
-	m_connWait = SyntroClock();
-	addLogService();
-
-	appClientInit();
-
-	m_timer = startTimer(m_backgroundInterval);
-}
-
-/*!
-	\internal
-*/
-
-void Endpoint::addLogService()
-{
-	m_settings->beginGroup(SYNTRO_PARAMS_LOG_GROUP);
-	m_netLogEnabled = m_settings->value(SYNTRO_PARAMS_NET_LOG).toBool();
-	m_settings->endGroup();
-
-	if (m_netLogEnabled) {
-        m_logServiceName = 	m_settings->value(SYNTRO_PARAMS_COMPTYPE).toString() +
-							SYNTRO_LOG_SERVICE_TAG;
-		m_logPort = clientAddService(m_logServiceName, SERVICETYPE_MULTICAST, true);
-	}
-}
-
-/*!
-	\internal
-*/
-
-void Endpoint::logServiceBackground()
-{
-	QString bulkMsg;
-
-	if (!m_netLogEnabled)
-		return;
-
-	if (!clientIsServiceActive(m_logPort) || !clientClearToSend(m_logPort))
-		return;
-
-	QQueue<LogMessage> *log = activeStreamQueue();
-	if (!log)
-		return;
-
-	int count = log->count();
-	if (count < 1)
-		return;
-
-	for (int i = 0; i < count; i++) {
-		LogMessage m = log->dequeue();
-		bulkMsg += m.m_level + SYNTRO_LOG_COMPONENT_SEP
-			+ m.m_timeStamp + SYNTRO_LOG_COMPONENT_SEP
-			+ SyntroUtils::displayUID(&m_UID) + SYNTRO_LOG_COMPONENT_SEP
-			+ m_logServiceName + SYNTRO_LOG_COMPONENT_SEP
-			+ m.m_msg + "\n";
-	}
-
-	QByteArray data = bulkMsg.toLatin1();
-	int length = sizeof(SYNTRO_RECORD_HEADER) + data.length();
-
-	SYNTRO_EHEAD *multiCast = clientBuildMessage(m_logPort, length);
-
-	if (multiCast) {
-		SYNTRO_RECORD_HEADER *recordHead = (SYNTRO_RECORD_HEADER *)(multiCast + 1);
-		SyntroUtils::convertIntToUC2(SYNTRO_RECORD_TYPE_LOG, recordHead->type);
-		SyntroUtils::convertIntToUC2(0, recordHead->subType);
-		SyntroUtils::convertIntToUC2(0, recordHead->param);
-		SyntroUtils::convertIntToUC2(sizeof(SYNTRO_RECORD_HEADER), recordHead->headerLength);
-		SyntroUtils::setSyntroTimestamp(&recordHead->timestamp);
-		memcpy((char *)(recordHead + 1), data.constData(), data.length());
-		syntroSendMessage(SYNTROMSG_MULTICAST_MESSAGE, (SYNTRO_MESSAGE *)multiCast, sizeof(SYNTRO_EHEAD) + length, SYNTROLINK_LOWPRI);
-	}
-}
-
-/*!
-	exitThread() should be called when the app wishes to shutdown the client prior to exit.
-*/
-
-void Endpoint::exitThread()
-{
-	m_run = false; 
 	killTimer(m_timer);
-	exit();
 
 	appClientExit();
 
@@ -1123,21 +1019,84 @@ void Endpoint::exitThread()
 	\internal
 */
 
+void Endpoint::initThread()
+{
+
+	m_state = "...";
+	m_sock = NULL;
+	m_syntroLink = NULL;
+	m_hello = NULL;
+
+	QSettings *settings = SyntroUtils::getSettings();
+
+	m_componentData.init(qPrintable(m_compType), m_configHeartbeatInterval);
+	m_UID = m_componentData.getMyUID();
+
+	serviceInit();
+	CFSInit();
+	m_controlRevert = settings->value(SYNTRO_PARAMS_CONTROLREVERT).toBool();
+
+	m_heartbeatSendInterval = m_configHeartbeatInterval * SYNTRO_CLOCKS_PER_SEC;
+	m_heartbeatTimeoutPeriod = m_heartbeatSendInterval * m_configHeartbeatTimeout;
+	
+	int size = settings->beginReadArray(SYNTRO_PARAMS_CONTROL_NAMES);
+
+	for (int control = 0; control < ENDPOINT_MAX_SYNTROCONTROLS; control++)
+		m_controlName[control][0] = 0;
+
+	for (int control = 0; (control < ENDPOINT_MAX_SYNTROCONTROLS) && (control < size); control++) {
+		settings->setArrayIndex(control);
+		strcpy(m_controlName[control], qPrintable(settings->value(SYNTRO_PARAMS_CONTROL_NAME).toString()));
+	}
+
+	settings->endArray();
+
+	m_hello = new Hello(&m_componentData, m_logTag);
+	m_hello->resumeThread();
+	m_componentData.getMyHelloSocket()->moveToThread(m_hello->thread());
+
+	m_connWait = SyntroClock();
+	appClientInit();
+
+	m_timer = startTimer(m_backgroundInterval);
+
+	delete settings;
+}
+
+
+/*!
+	This function can be called after the Endpoint-dreived class has been created but before resumeThread()
+	has been called. It allows the heartbeat system rate to be controlled. \a interval is the interval between heartbeats in seconds.
+	\a timout is the number of intervals without a heartbeat response being seen before the Syntro link is timed
+	out.
+*/
+
+void Endpoint::setHeartbeatTimers(int interval, int timeout)
+{
+	m_configHeartbeatInterval = interval;
+	m_configHeartbeatTimeout = timeout;
+}
+
+/*!
+	\internal
+*/
+
+void Endpoint::timerEvent(QTimerEvent *)
+{
+	endpointBackground();
+	appClientBackground();
+}
+
+/*!
+	\internal
+*/
+
 bool Endpoint::processMessage(SyntroThreadMsg* msg)
 {
-	switch (msg->message) {
-		case SYNTROTHREAD_TIMER_MESSAGE:
-			endpointBackground();
-			appClientBackground();
-			logServiceBackground();
+	if (appClientProcessThreadMessage(msg))
 			return true;
 
-	default:
-		if (appClientProcessThreadMessage(msg))
-			return true;
-
-		return endpointSocketMessage(msg);
-	}
+	return endpointSocketMessage(msg);
 }
 
 void Endpoint::updateState(QString msg)
@@ -1278,7 +1237,7 @@ bool Endpoint::endpointSocketMessage(SyntroThreadMsg *msg)
 			logInfo(QString("SyntroLink connected"));
 			forceDE();
 			endpointConnected();
-			updateState(QString("Connected to %1 in %2 mode").arg(m_helloEntry.hello.componentName)
+			updateState(QString("Connected to %1 in %2 mode").arg(m_helloEntry.hello.appName)
 					.arg(m_priorityMode ? "priority" : "list"));
 			return true;
 
@@ -1299,7 +1258,9 @@ bool Endpoint::endpointSocketMessage(SyntroThreadMsg *msg)
 
 		case ENDPOINT_ONRECEIVE_MESSAGE:
 			if (m_sock != NULL) {
+#ifdef ENDPOINT_TRACE
 				TRACE0("Endpoint data received");
+#endif
 				m_syntroLink->tryReceiving(m_sock);
 				processReceivedData();
 				return true;
@@ -1354,7 +1315,9 @@ void Endpoint::processReceivedDataDemux(int cmd, int len, SYNTRO_MESSAGE*syntroM
 	int destPort;
 	qint64 now = SyntroClock();
 
+#ifdef ENDPOINT_TRACE
 	TRACE2("Processing received data %d %d", cmd, len);
+#endif
 	switch (cmd) {
 		case SYNTROMSG_HEARTBEAT:						// Heartbeat received
 			if (len < (int)sizeof(SYNTRO_HEARTBEAT)) {
@@ -1927,7 +1890,7 @@ bool Endpoint::syntroConnect()
 	}
 
 	m_sock = new SyntroSocket(this);
-	m_syntroLink = new SyntroLink();
+	m_syntroLink = new SyntroLink(m_logTag);
 
 	returnValue = m_sock->sockCreate(0, SOCK_STREAM);
 
@@ -1939,7 +1902,7 @@ bool Endpoint::syntroConnect()
 	m_sock->sockSetReceiveMsg(ENDPOINT_ONRECEIVE_MESSAGE);
 	m_sock->sockSetReceiveBufSize(size);
 
-	returnValue = m_sock->sockConnect(m_helloEntry.IPAddr, SYNTRO_PRIMARY_SOCKET_LOCAL);
+	returnValue = m_sock->sockConnect(m_helloEntry.IPAddr, SYNTRO_SOCKET_LOCAL);
 	if (!returnValue) {
 		TRACE0("Connect attempt failed");
 		return false;

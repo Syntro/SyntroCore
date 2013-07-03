@@ -1,5 +1,5 @@
 //
-//  Copyright (c) 2012 Pansenti, LLC.
+//  Copyright (c) 2012, 2013 Pansenti, LLC.
 //	
 //  This file is part of Syntro
 //
@@ -56,7 +56,7 @@ class ConfigureDlg : public QDialog
 friend class StoreLabel;
 
 public:
-	ConfigureDlg(QWidget *parent, QSettings *settings, int index);
+	ConfigureDlg(QWidget *parent, int index);
 
 public slots:
 	void cancelButtonClick();
@@ -71,7 +71,6 @@ private:
 	void populateAdaptors();
 
 	int m_index;
-	QSettings *m_settings;
 
 	QPushButton *m_okButton;
 	QPushButton *m_cancelButton;

@@ -1,5 +1,5 @@
 //
-//  Copyright (c) 2012 Pansenti, LLC.
+//  Copyright (c) 2012, 2013 Pansenti, LLC.
 //	
 //  This file is part of SyntroLib
 //
@@ -45,16 +45,17 @@
 
 //	Syntro constants
 
-#define	SYNTRO_HEARTBEAT_INTERVAL		1					// default heartbeatinterval in seconds 
-#define	SYNTRO_HEARTBEAT_TIMEOUT		5					// default number of missed heartbeats before timeout
+#define	SYNTRO_HEARTBEAT_INTERVAL		2					// default heartbeatinterval in seconds 
+#define	SYNTRO_HEARTBEAT_TIMEOUT		3					// default number of missed heartbeats before timeout
+#define	SYNTRO_LOG_HEARTBEAT_INTERVAL	5					// default log heartbeatinterval in seconds 
+#define	SYNTRO_LOG_HEARTBEAT_TIMEOUT	3					// default number of missed heartbeats before timeout for log
 
 #define	SYNTRO_SERVICE_LOOKUP_INTERVAL		(5 * SYNTRO_CLOCKS_PER_SEC)	// 5 seconds interval between service lookup requests
 
-#define	SYNTRO_PRIMARY_SOCKET_LOCAL		1661				// socket for the primary SyntroControl
-#define	SYNTRO_BACKUP_SOCKET_LOCAL		1662				// socket for the backup SyntroControl
+#define	SYNTRO_SOCKET_LOCAL		1661						// socket for the SyntroControl
 
-#define	SYNTRO_PRIMARY_SOCKET_STATICTUNNEL	1663				// socket for primary static SyntroControl tunnels
-#define	SYNTRO_BACKUP_SOCKET_STATICTUNNEL	1664				// socket for backup static SyntroControl tunnels
+#define	SYNTRO_PRIMARY_SOCKET_STATICTUNNEL	1808			// socket for primary static SyntroControl tunnels
+#define	SYNTRO_BACKUP_SOCKET_STATICTUNNEL	1809			// socket for backup static SyntroControl tunnels
 
 #define	SYNTRO_MAX_CONNECTEDCOMPONENTS	512					// maximum directly connected components to a component
 #define	SYNTRO_MAX_CONNECTIONIDS		(SYNTRO_MAX_CONNECTEDCOMPONENTS * 2) // used to uniquely identify sockets
@@ -143,7 +144,6 @@ typedef char SYNTRO_UIDSTR[SYNTRO_UIDSTR_LEN];				// and for the string version
 
 #define	SYNTRO_MAX_APPNAME		SYNTRO_MAX_NAME				// max length of a zero-terminated app name
 #define	SYNTRO_MAX_APPTYPE		SYNTRO_MAX_NAME				// max length of a zero-terminated app type
-#define	SYNTRO_MAX_COMPNAME		SYNTRO_MAX_NAME				// max length of a zero-terminated component name
 #define	SYNTRO_MAX_COMPTYPE		SYNTRO_MAX_NAME				// max length of a zero-terminated component type
 #define	SYNTRO_MAX_SERVNAME		SYNTRO_MAX_NAME				// max length of a service name
 #define	SYNTRO_MAX_REGIONNAME	SYNTRO_MAX_NAME				// max length of a region name
@@ -153,17 +153,34 @@ typedef	char	SYNTRO_SERVNAME[SYNTRO_MAX_SERVNAME];		// the service type
 typedef	char	SYNTRO_REGIONNAME[SYNTRO_MAX_REGIONNAME];	// the region name type
 typedef	char	SYNTRO_APPNAME[SYNTRO_MAX_APPNAME];			// the app name
 typedef	char	SYNTRO_APPTYPE[SYNTRO_MAX_APPNAME];			// the app type
-typedef	char	SYNTRO_COMPNAME[SYNTRO_MAX_COMPNAME];		// the node name type
 typedef	char	SYNTRO_COMPTYPE[SYNTRO_MAX_COMPTYPE];		// the component type type
 
 typedef char	SYNTRO_SERVPATH[SYNTRO_MAX_SERVPATH];		// the service path type
 
 
 //-------------------------------------------------------------------------------------------
+//	SyntroCore App Type defs
+
+#define	APPTYPE_CONTROL			"SyntroControl"				
+#define	APPTYPE_EXEC			"SyntroExec"				
+#define APPTYPE_DB				"SyntroDB"
+#define APPTYPE_LOG				"SyntroLog"
+#define APPTYPE_FT				"SyntroFT"
+
+//-------------------------------------------------------------------------------------------
 //	SyntroCore Component Type defs
 
-#define	COMPTYPE_CONTROL		"SyntroControl"				// the component name of SyntroControl
-#define	COMPTYPE_EXEC			"SyntroExec"				// the component name for SyntroExec
+#define	COMPTYPE_CONTROL		"Control"				
+#define	COMPTYPE_EXEC			"Exec"				
+#define COMPTYPE_STORE			"Store"
+#define COMPTYPE_CFS			"CFS"
+#define COMPTYPE_DB				"DB"
+#define COMPTYPE_FT				"FT"
+#define COMPTYPE_VIEW			"View"
+#define COMPTYPE_REVIEW			"Review"
+#define COMPTYPE_LOGSOURCE		"LogSource"
+#define COMPTYPE_LOGSINK		"LogSink"
+#define COMPTYPE_CAMERA			"Camera"
 
 //-------------------------------------------------------------------------------------------
 //	SyntroControl Directory Entry Tag Defs
@@ -189,7 +206,7 @@ typedef char	SYNTRO_SERVPATH[SYNTRO_MAX_SERVPATH];		// the service path type
 
 //	Component Directory Entry Tag Defs
 
-#define	DETAG_COMPNAME			"NAM"						// the component name
+#define	DETAG_APPNAME			"NAM"						// the app name
 #define	DETAG_COMPTYPE			"TYP"						// a string identifying the component
 #define	DETAG_UID				"UID"						// the UID
 #define	DETAG_MSERVICE			"MSV"						// a string identifying a multicast service

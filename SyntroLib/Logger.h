@@ -1,5 +1,5 @@
 //
-//  Copyright (c) 2012 Pansenti, LLC.
+//  Copyright (c) 2012, 2013 Pansenti, LLC.
 //	
 //  This file is part of SyntroLib
 //
@@ -21,15 +21,20 @@
 #define LOGGER_H
 
 #include "syntrolib_global.h"
+#include "SyntroUtils.h"
+#include "Endpoint.h"
+
 #include <qthread.h>
 #include <qmutex.h>
 #include <qfile.h>
 #include <qwaitcondition.h>
 #include <qtextstream.h>
 #include <qqueue.h>
-
+#include <qsettings.h>
 
 #define LOG_FLUSH_INTERVAL_SECONDS 1
+
+#define SYNTROLOG_BGND_INTERVAL		100
 
 class SYNTROLIB_EXPORT LogMessage
 {
@@ -44,29 +49,19 @@ public:
     QString m_timeStamp;
 };
 
-class Logger;
-
-class LogThread : public QThread
+class Logger : public Endpoint
 {
 public:
-    LogThread() : m_log(NULL), m_stop(false) {}
-    void run();
-
-    Logger *m_log;
-    bool m_stop;
-};
-
-class Logger
-{
-friend class LogThread;
-
-public:
-	Logger(QString appType, QString appName, int level, bool diskLog, bool netLog, int logKeep);
+	Logger(const QString& appName, int level, bool diskLog, bool netLog, int logKeep);
 
 	~Logger();
 
 	void logWrite(QString level, QString str);
 	QQueue<LogMessage>* streamQueue();
+
+protected:
+	void appClientBackground();
+	void appClientInit();
 
 private:
     bool diskOpen();
@@ -74,13 +69,11 @@ private:
 	bool rotateLogs(QString logName);
 
 	QString m_logName;
-	QString m_appName;
 	bool m_diskLog;
 	bool m_netLog;
 	int m_logKeep;
 	QFile m_file;
 	QTextStream m_stream;
-	LogThread *m_thread;
 	QWaitCondition m_stopCondition;
 	QMutex m_stopMutex;
     QMutex m_flushMutex;
@@ -90,6 +83,9 @@ private:
     int m_logInterval;
     int m_activeDiskQ;
 	int m_activeStreamQ;
+
+	qint64 m_lastFlushTime;
+	int m_logPort;
 };
 
 

@@ -15,7 +15,7 @@ imagedirs   += ../SyntroLib \
 sourcedirs  += ../SyntroLib \
 		./
 
-outputdir = htmldocs
+outputdir = ../SyntroDocs
 
 sources.fileextensions = "*.cpp *.qdoc *.mm *.qml"
 headers.fileextensions = "*.h *.ch *.h++ *.hh *.hpp *.hxx"

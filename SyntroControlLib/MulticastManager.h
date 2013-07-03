@@ -1,5 +1,5 @@
 //
-//  Copyright (c) 2012 Pansenti, LLC.
+//  Copyright (c) 2012, 2013 Pansenti, LLC.
 //	
 //  This file is part of Syntro
 //
@@ -123,5 +123,7 @@ signals:
 protected:
 	void sendLookupRequest(MM_MMAP *multicastMap, bool rightNow = false);	// sends a multicast service lookup request
 	qint64 m_lastBackground;						// keeps track of interval between backgrounds
+
+	QString m_logTag;
 };
 #endif // MULTICASTMANAGER_H

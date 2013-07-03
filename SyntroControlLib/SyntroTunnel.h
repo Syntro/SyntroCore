@@ -1,5 +1,5 @@
 //
-//  Copyright (c) 2012 Pansenti, LLC.
+//  Copyright (c) 2012, 2013 Pansenti, LLC.
 //	
 //  This file is part of Syntro
 //
@@ -49,6 +49,8 @@ protected:
 	SS_COMPONENT *m_comp;									// the component to which this tunnel belongs
 
 	qint64 m_connWait;										// timer between connection attempts
+
+	QString m_logTag;
 };
 
 #endif // SYNTROTUNNEL_H

@@ -1,5 +1,5 @@
 //
-//  Copyright (c) 2012 Pansenti, LLC.
+//  Copyright (c) 2012, 2013 Pansenti, LLC.
 //	
 //  This file is part of Syntro
 //
@@ -26,6 +26,7 @@ DirectoryManager::DirectoryManager(void)
 {
 	int		i;
 
+	m_logTag = "DirectoryManager";
 	for (i = 0; i < SYNTRO_MAX_CONNECTEDCOMPONENTS; i++) {
 		memset(m_directory+1, 0, sizeof(DM_CONNECTEDCOMPONENT));
 		m_directory[i].index = i;
@@ -119,13 +120,13 @@ bool DirectoryManager::DMProcessDE(DM_CONNECTEDCOMPONENT *connectedComponent, ch
 		component = (DM_COMPONENT *)calloc(1, sizeof(DM_COMPONENT));
 		if (!getSimpleValue(DETAG_UID, component->UIDStr, sizeof(SYNTRO_UIDSTR)))
 			goto deerr;
-		if (!getSimpleValue(DETAG_COMPNAME, component->componentName, SYNTRO_MAX_COMPNAME))
+		if (!getSimpleValue(DETAG_APPNAME, component->appName, SYNTRO_MAX_APPNAME))
 			goto deerr;
 		if (!getSimpleValue(DETAG_COMPTYPE, component->componentType))
 			goto deerr;
 		SyntroUtils::UIDSTRtoUID(component->UIDStr, &(component->componentUID));
 		if ((componentLookup = findComponent(connectedComponent, &(component->componentUID), 
-							component->componentName, component->componentType)) != NULL) {	// this component already exists in directory
+							component->appName, component->componentType)) != NULL) {	// this component already exists in directory
 			if(componentLookup->originalDE == NULL) {			// should never happen but just in case
 				logError(QString("DirectoryManager found NULL origde when processing ") + SyntroUtils::displayUID(&(component->componentUID)));
 				free(component);
@@ -208,7 +209,7 @@ deerr:
 				component->services[i].multicastMap = m_server->m_multicastManager.MMAllocateMMap(
 							&(connectedComponent->connectedComponentUID),
 							&(component->componentUID), 
-							component->componentName,
+							component->appName,
 							service->serviceName, 
 							service->port);
 			}
@@ -280,34 +281,6 @@ bool DirectoryManager::DMFindService(SYNTRO_UID *sourceUID, SYNTRO_SERVICE_LOOKU
 		return false;
 	}
 
-	// see if this is destined for this SyntroControl
-
-	if (m_server->m_netLogEnabled && (serviceLookup->serviceType == SERVICETYPE_MULTICAST) && 
-					(serviceName == m_server->m_logServiceName)) {
-		if ((componentName.length() == 0) || (componentName == m_server->m_componentName)) { // destined for log service
-			memcpy(&(serviceLookup->lookupUID), &(m_server->m_myUID), sizeof(SYNTRO_UID));
-			SyntroUtils::convertIntToUC4(0, serviceLookup->ID);
-			SyntroUtils::convertIntToUC2(m_server->m_logMap->index, serviceLookup->remotePort);
-			SyntroUtils::convertIntToUC2(-1, serviceLookup->componentIndex);
-			if (m_server->m_multicastManager.MMCheckRegistered(m_server->m_logMap, sourceUID, 
-					SyntroUtils::convertUC2ToInt(serviceLookup->localPort))) {		// already there - just a refresh
-				TRACE1("Refreshed reg from component %s to log service", 
-					qPrintable(SyntroUtils::displayUID(sourceUID)));
-				serviceLookup->response = SERVICE_LOOKUP_SUCCEED;
-				return true;	
-			}
-			//	Must add as this is a new one
-			m_server->m_multicastManager.MMAddRegistered(m_server->m_logMap, sourceUID, SyntroUtils::convertUC2ToInt(serviceLookup->localPort));
-			logDebug(QString("Added reg request from component %1 to log service")
-				.arg(SyntroUtils::displayUID(sourceUID)));
-
-			serviceLookup->response = SERVICE_LOOKUP_SUCCEED;
-			return true;
-		}
-	}
-
-	// Not for local log service, see if expedited refresh is possible
-
 	if (serviceLookup->response == SERVICE_LOOKUP_SUCCEED) {	// this is a refresh - check all important fields for validity
 		componentIndex = SyntroUtils::convertUC2ToInt(serviceLookup->componentIndex);
 		servicePort = SyntroUtils::convertUC2ToInt(serviceLookup->remotePort);
@@ -319,7 +292,7 @@ bool DirectoryManager::DMFindService(SYNTRO_UID *sourceUID, SYNTRO_SERVICE_LOOKU
 		component = connectedComponent->componentDE;
 		while (component != NULL)
 		{
-			if ((componentName.length() > 0) && (strcmp(qPrintable(componentName), component->componentName) != 0)) {
+			if ((componentName.length() > 0) && (strcmp(qPrintable(componentName), component->appName) != 0)) {
 				component = component->next;
 				continue;									// require a specific component but not this one
 			}
@@ -385,7 +358,7 @@ fullLookup:
 		component = connectedComponent->componentDE;
 		while (component != NULL)
 		{
-			if ((componentName.length() > 0) && (strcmp(qPrintable(componentName), component->componentName) != 0)) {
+			if ((componentName.length() > 0) && (strcmp(qPrintable(componentName), component->appName) != 0)) {
 				component = component->next;
 				continue;							// require a specific component but not this one
 			}
@@ -552,7 +525,7 @@ void	DirectoryManager::buildLocalDE(DM_COMPONENT *component)
 	DE[0] = 0;
 	sprintf(DE, "<%s>", DETAG_COMP);
 	sprintf(DE + (int)strlen(DE), "<%s>%s</%s>", DETAG_UID, qPrintable(SyntroUtils::displayUID(&component->componentUID)), DETAG_UID);
-	sprintf(DE + (int)strlen(DE), "<%s>%s</%s>", DETAG_COMPNAME, component->componentName, DETAG_COMPNAME);
+	sprintf(DE + (int)strlen(DE), "<%s>%s</%s>", DETAG_APPNAME, component->appName, DETAG_APPNAME);
 	sprintf(DE + (int)strlen(DE), "<%s>%s</%s>", DETAG_COMPTYPE, component->componentType, DETAG_COMPTYPE);
 
 	service = component->services;
@@ -591,7 +564,7 @@ DM_COMPONENT *DirectoryManager::findComponent(DM_CONNECTEDCOMPONENT *connectedCo
 	component = connectedComponent->componentDE;
 	while (component != NULL) {
 		if (SyntroUtils::compareUID(UID, &(component->componentUID))) {	// found correct UID
-			if ((strcmp(name, component->componentName) == 0) && (strcmp(type, component->componentType) == 0))
+			if ((strcmp(name, component->appName) == 0) && (strcmp(type, component->componentType) == 0))
 				return component;							// found it
 			//	Correct UID but mismatch on name or type. Implies a new component on same instance.
 			//	Delete this old entry and carry on looking - there can't be two components on the same UID!
@@ -639,7 +612,7 @@ void	DirectoryManager::deleteComponent(DM_CONNECTEDCOMPONENT *connectedComponent
 		previousComponent = connectedComponent->componentDE;
 		while (previousComponent->next != component) {
 			if (previousComponent->next == NULL) {
-				logWarn(QString("deleteComponent not match %1 %2").arg(component->componentName).arg(component->componentType));
+				logWarn(QString("deleteComponent not match %1 %2").arg(component->appName).arg(component->componentType));
 				return;										// this shouldn't really happen
 			}
 			previousComponent = previousComponent->next;
@@ -650,7 +623,7 @@ void	DirectoryManager::deleteComponent(DM_CONNECTEDCOMPONENT *connectedComponent
 //	pDMC is now off the list
 
 	component->componentType[0] = 0;
-	component->componentName[0] = 0;
+	component->appName[0] = 0;
 	component->UIDStr[0] = 0;
 	component->serviceCount = 0;
 	service = component->services;

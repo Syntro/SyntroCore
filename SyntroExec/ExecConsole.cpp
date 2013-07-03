@@ -1,5 +1,5 @@
 //
-//  Copyright (c) 2012 Pansenti, LLC.
+//  Copyright (c) 2012, 2013 Pansenti, LLC.
 //	
 //  This file is part of Syntro
 //
@@ -20,6 +20,7 @@
 #include "ExecConsole.h"
 #include "SyntroLib.h"
 #include "ComponentManager.h"
+#include "SyntroExec.h"
 
 #ifdef WIN32
 #include <conio.h>
@@ -28,37 +29,26 @@
 #endif
 
 
-ExecConsole::ExecConsole(QSettings *settings, QObject *parent)
-	: QThread(parent)
+ExecConsole::ExecConsole(QObject *parent)
+    : QThread(parent)
 {
-	m_settings = settings;
-	SyntroUtils::syntroAppInit(m_settings);
+	SyntroUtils::syntroAppInit();
 
-	connect((QCoreApplication *)parent, SIGNAL(aboutToQuit()), this, SLOT(aboutToQuit()));
+	m_manager = new ComponentManager();
 
-	m_manager = new ComponentManager(m_settings);
+    connect(m_manager, SIGNAL(running()), this, SLOT(managerRunning()));
+    connect(this, SIGNAL(loadComponent(int)), m_manager, SLOT(loadComponent(int)), Qt::QueuedConnection);
+
 	m_manager->resumeThread();
-
-	connect(this, SIGNAL(loadComponent(int)), m_manager, SLOT(loadComponent(int)), Qt::QueuedConnection);
-
-	for (int i = 0; i < SYNTRO_MAX_COMPONENTSPERDEVICE; i++)
-		emit loadComponent(i);
-
-	start();
+    start();
 }
 
-void ExecConsole::aboutToQuit()
+void ExecConsole::managerRunning()
 {
-	m_manager->exitThread();
-	delete m_manager;
-	SyntroUtils::syntroAppExit();
-	for (int i = 0; i < 5; i++) {
-		if (wait(1000))
-			break;
-
-		printf("Waiting for console thread to finish...\n");
-	}
+    for (int i = 0; i < SYNTRO_MAX_COMPONENTSPERDEVICE; i++)
+        emit loadComponent(i);
 }
+
 
 void ExecConsole::displayComponents()
 {
@@ -68,8 +58,8 @@ void ExecConsole::displayComponents()
 	helloObject = m_manager->getHelloObject();
 
 	printf("\n%-20s %-20s %-20s %-16s\n",
+			"App name",
 			"Comp type",
-			"Comp name",
 			"UID",
 			"IP address");
 	printf("%-20s %-20s %-20s %-16s\n",
@@ -82,7 +72,7 @@ void ExecConsole::displayComponents()
 		helloObject->copyHelloEntry(i, &helloEntry);
 		if (!helloEntry.inUse)
 			continue;										// not in use
-		printf("%-20s %-20s %-20s %-16s\n", helloEntry.hello.componentType, helloEntry.hello.componentName,
+		printf("%-20s %-20s %-20s %-16s\n", helloEntry.hello.appName, helloEntry.hello.componentType,
 				qPrintable(SyntroUtils::displayUID(&helloEntry.hello.componentUID)),
 				qPrintable(SyntroUtils::displayIPAddr(helloEntry.hello.IPAddr)));
 	}
@@ -170,6 +160,7 @@ void ExecConsole::run()
 		case 'X':
 			printf("\nExiting\n");
 			mustExit = true;
+            emit m_manager->exitThread();
 			((QCoreApplication *)parent())->exit();
 			break;
 

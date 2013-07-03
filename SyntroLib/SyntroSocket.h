@@ -1,5 +1,5 @@
 //
-//  Copyright (c) 2012 Pansenti, LLC.
+//  Copyright (c) 2012, 2013 Pansenti, LLC.
 //	
 //  This file is part of SyntroLib
 //
@@ -36,7 +36,7 @@ class SYNTROLIB_EXPORT SyntroSocket : public QObject
 	Q_OBJECT
 
 public:
-	SyntroSocket();
+	SyntroSocket(const QString& logTag);
 	SyntroSocket(SyntroThread	*thread);
 	virtual ~SyntroSocket();
 
@@ -88,6 +88,7 @@ protected:
 
 	int m_state;											// last reported socket state
 
+	QString m_logTag;
 };
 
 #endif // _SYNTROSOCKET_H

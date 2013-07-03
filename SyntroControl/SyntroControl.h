@@ -1,5 +1,5 @@
 //
-//  Copyright (c) 2012 Pansenti, LLC.
+//  Copyright (c) 2012, 2013 Pansenti, LLC.
 //	
 //  This file is part of Syntro
 //
@@ -28,15 +28,12 @@
 #include "MulticastDialog.h"
 #include "HelloDialog.h"
 
-#define	PRODUCT_TYPE		COMPTYPE_CONTROL
-
-
 class SyntroControl : public QMainWindow
 {
 	Q_OBJECT
 
 public:
-	SyntroControl(QSettings *settings, QWidget *parent = 0);
+	SyntroControl();
 	~SyntroControl() {}
 
 public slots:
@@ -45,7 +42,8 @@ public slots:
 	void onBasicSetup();
 	void onHello();
 	void onMulticast();
-	void UpdateSyntroStatusBox(SS_COMPONENT *syntroComponent);
+	void UpdateSyntroStatusBox(int, QStringList);
+	void UpdateSyntroDataBox(int, QStringList);
 	void serverMulticastUpdate(qint64 in, unsigned inRate, qint64 out, unsigned outRate);
 	void serverE2EUpdate(qint64 in, unsigned inRate, qint64 out, unsigned outRate);
 
@@ -53,7 +51,6 @@ protected:
 	DirectoryDialog *m_directoryDlg;
 	HelloDialog *m_helloDlg;
 	MulticastDialog *m_multicastDlg;
-	QSettings *m_settings;
 	QLabel *m_serverE2EStatus;
 	QLabel *m_serverMulticastStatus;
 	void timerEvent(QTimerEvent *event);

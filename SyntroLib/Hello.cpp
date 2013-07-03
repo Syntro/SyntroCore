@@ -1,5 +1,5 @@
 //
-//  Copyright (c) 2012 Pansenti, LLC.
+//  Copyright (c) 2012, 2013 Pansenti, LLC.
 //	
 //  This file is part of SyntroLib
 //
@@ -24,12 +24,13 @@
 
 // Hello
 
-Hello::Hello(SyntroComponentData *data) : SyntroThread("HelloThread")
+Hello::Hello(SyntroComponentData *data, const QString& logTag) : SyntroThread(QString("HelloThread"), logTag)
 {
 	int	i;
 	HELLOENTRY	*helloEntry;
 
 	m_componentData = data;
+	m_logTag = logTag;
 	helloEntry = m_helloArray;
 	for (i = 0; i < SYNTRO_MAX_CONNECTEDCOMPONENTS; i++, helloEntry++)
 		helloEntry->inUse = false;
@@ -40,7 +41,10 @@ Hello::Hello(SyntroComponentData *data) : SyntroThread("HelloThread")
 
 Hello::~Hello()
 {
-	qDebug() << "Hello thread deleted";
+	m_parentThread = NULL;
+	killTimer(m_timer);
+	delete m_helloSocket;
+	m_helloSocket = NULL;
 }
 
 void Hello::initThread()
@@ -48,7 +52,7 @@ void Hello::initThread()
 	if (m_componentData->getMyHelloSocket() != NULL) {
 		m_helloSocket = m_componentData->getMyHelloSocket();
 	} else {
-		m_helloSocket = new SyntroSocket();
+		m_helloSocket = new SyntroSocket(m_logTag);
 		if (m_helloSocket->sockCreate(SOCKET_HELLO + m_componentData->getMyInstance(), SOCK_DGRAM, m_socketFlags) == 0)
 		{
 			logError(QString("Failed to open socket on instance %1").arg(m_componentData->getMyInstance()));
@@ -62,16 +66,6 @@ void Hello::initThread()
 	m_timer = startTimer(HELLO_INTERVAL);
 }
 
-
-void Hello::exitThread()
-{
-	m_parentThread = NULL;
-	m_run = false;
-	killTimer(m_timer);
-	delete m_helloSocket;
-	m_helloSocket = NULL;
-	exit();
-}
 
 //	getHelloEntry - returns an entry as a formatted string
 //
@@ -140,7 +134,7 @@ bool Hello::findComponent(HELLOENTRY *foundHelloEntry, SYNTRO_UID *UID)
 	return false;							// not found
 }
 
-bool Hello::findComponent(HELLOENTRY *foundHelloEntry, char *componentName, char *componentType)
+bool Hello::findComponent(HELLOENTRY *foundHelloEntry, char *appName, char *componentType)
 {
 	int i;
 	HELLOENTRY *helloEntry;
@@ -151,8 +145,8 @@ bool Hello::findComponent(HELLOENTRY *foundHelloEntry, char *componentName, char
 	for (i = 0; i < SYNTRO_MAX_CONNECTEDCOMPONENTS; i++, helloEntry++) {
 		if (!helloEntry->inUse)
 			continue;
-		if (strlen(componentName) > 0) {
-			if (strcmp(componentName, (char *)(helloEntry->hello.componentName)) != 0)
+		if (strlen(appName) > 0) {
+			if (strcmp(appName, (char *)(helloEntry->hello.appName)) != 0)
 				continue;							// node names don't match
 		}
 		if (strlen(componentType) > 0) {
@@ -215,7 +209,7 @@ void Hello::processHello()
 	if (!SyntroUtils::isInMySubnet(m_RXHello.IPAddr))
 		return;												// just ignore if not from my subnet
 
-	m_RXHello.componentName[SYNTRO_MAX_COMPNAME-1] = 0;		// make sure zero terminated
+	m_RXHello.appName[SYNTRO_MAX_APPNAME-1] = 0;			// make sure zero terminated
 	m_RXHello.componentType[SYNTRO_MAX_COMPTYPE-1] = 0;		// make sure zero terminated
 	instance = SyntroUtils::convertUC2ToInt(m_RXHello.componentUID.instance);	// get the instance from where the hello came
 	free = -1;
@@ -255,7 +249,7 @@ void Hello::processHello()
 			sprintf(helloEntry->IPAddr, "%d.%d.%d.%d",
 			m_RXHello.IPAddr[0], m_RXHello.IPAddr[1], m_RXHello.IPAddr[2], m_RXHello.IPAddr[3]);
 			TRACE2("Hello added %s, %s", qPrintable(SyntroUtils::displayUID(&helloEntry->hello.componentUID)), 
-				helloEntry->hello.componentName);
+				helloEntry->hello.appName);
 			emit helloDisplayEvent(this);
 		}
 
@@ -355,11 +349,13 @@ bool Hello::processMessage(SyntroThreadMsg* msg)
 				processHello();
 			}
 			return true;
-
-		case SYNTROTHREAD_TIMER_MESSAGE:
-			sendHello();
-			processTimers();
-			return true;
 	}
 	return false;
 }
+
+void Hello::timerEvent(QTimerEvent *)
+{
+	sendHello();
+	processTimers();
+}
+		

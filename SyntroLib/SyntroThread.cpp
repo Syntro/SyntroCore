@@ -1,5 +1,5 @@
 //
-//  Copyright (c) 2012 Pansenti, LLC.
+//  Copyright (c) 2012, 2013 Pansenti, LLC.
 //	
 //  This file is part of SyntroLib
 //
@@ -22,20 +22,18 @@
 
 /*!
     \class SyntroThread
-    \brief SyntroThread is a lightweight wrapper for QThread.
+    \brief SyntroThread is a lightweight wrapper for threading.
 	\inmodule SyntroLib
  
-	SyntroThread is a thin wrapper layer around Qt’s QThread. It provides a 
+	SyntroThread is a thin wrapper layer that simplifies the use of QThread. It provides a 
 	Windows-style message passing queue and associated functions. The 
 	normal sequence of events is to create a SyntroThread, perform any external 
 	initialization that might be required and then to call resumeThread(). 
-	To kill the thread, call exitThread().
+	To kill the thread, call emit finished().
 
-	SyntroThread also processes QThread timer events and maps them to SyntroThread messages with 
-	a message code of SYNTROTHREAD_TIMER_MESSAGE. These can be handled in the processMessage() 
-	function. The timer ID is passed in the intParam of the message to allow multiple timers to be supported.
-
-	SyntroThread would normally be subclassed to provide customized thread functionality.
+	SyntroThread would normally be subclassed to provide customized thread functionality. Apart from 
+	standard Qt type functions, initThread() can be used to perform initialization and finishThread()
+	can be used to perform clean up before the thread is destroyed.
 */
 
 /*!
@@ -51,10 +49,10 @@ SyntroThreadMsg::SyntroThreadMsg(QEvent::Type nEvent) : QEvent(nEvent)
 	name for the thread – this can be useful for debugging.
 */
 
-SyntroThread::SyntroThread(QString threadName) : QThread()
+SyntroThread::SyntroThread(const QString& threadName, const QString& logTag)
 {
-	m_run = false;
 	m_name = threadName;
+	m_logTag = logTag;
 	m_event = QEvent::registerEventType();					// get an event number
 }
 
@@ -69,36 +67,59 @@ SyntroThread::~SyntroThread()
 /*!
 	Calling the constructor for SyntroThread doesn’t actually start the thread 
 	running to allow for the caller to perform any necessary initialization.
-	resumeThread() should be called when everything is ready for the thread to run. 
-	resumeThread() calls initThread() and then start(), to get the threads event loop running.
+	resumeThread() should be called when everything is ready for the thread to initialize and run. 
+	resumeThread() calls initThread() to get the thread started.
 */
 
 void SyntroThread::resumeThread()
 {
-	initThread();
-	start();
+	m_thread = new InternalThread;
+
+	moveToThread(m_thread);
+
+	connect(m_thread, SIGNAL(started()), this, SLOT(internalRunLoop()), Qt::QueuedConnection);
+
+	connect(this, SIGNAL(internalEndThread()), this, SLOT(cleanup()), Qt::QueuedConnection);
+
+	connect(this, SIGNAL(internalKillThread()), m_thread, SLOT(quit()), Qt::QueuedConnection);
+	connect(this, SIGNAL(internalKillThread()), this, SLOT(deleteLater()), Qt::QueuedConnection);
+
+	connect(m_thread, SIGNAL(finished()), this, SLOT(deleteLater()), Qt::QueuedConnection);
+	installEventFilter(this);
+
+	m_thread->start();
+}
+
+/*!
+	cleanup receives the finished signal, calls finishing() and then emits quit to kill everything.
+*/
+
+void SyntroThread::cleanup()
+{
+	finishThread();
+	emit internalKillThread();
+}
+
+/*!
+	This function should be called to terminate and delete the thread. It emits the endThread() signal
+	that initiates the close down and deletion.
+*/
+
+void SyntroThread::exitThread()
+{
+	emit internalEndThread();
 }
 
 /*!
 	\internal
 */
 
-
-void SyntroThread::run()
+void SyntroThread::internalRunLoop()
 {
-	installEventFilter(this);
-	m_run = true;
-	exec();	
+	initThread();
+	emit running();
 }
 
-/*!
-	isRunning() will return true if the thread is still running, false if it has exited the run loop.
-*/
-
-bool SyntroThread::isRunning()
-{
-	return m_run;
-}
 
 /*!
 	intiThread() is called as part of the resumeThread() processing and should be used for 
@@ -107,25 +128,6 @@ bool SyntroThread::isRunning()
 
 void SyntroThread::initThread()
 {
-}
-
-/*!
-	exitThread() should be called when the component wishes to shutdown the thread prior to exit. 
-	This function should be overriden to perform any clean up that the thread requires. 
-	The default exitThread() provided by SyntroThread includes these two lines:
-
-	\list
-    \li m_run = false;
-    \li exit();
-	\endlist
-
-	If this function is overridden, these two lines should be added to the overriding function.
-*/
-
-void SyntroThread::exitThread()
-{
-	m_run = false;
-	exit();
 }
 
 /*!
@@ -155,9 +157,6 @@ bool SyntroThread::processMessage(SyntroThreadMsg* msg)
 
 void SyntroThread::postThreadMessage(int message, int intParam, void *ptrParam)
 {
-	if (!m_run)
-		return;
-
 	SyntroThreadMsg *msg = new SyntroThreadMsg((QEvent::Type)m_event);
 	msg->message = message;
 	msg->intParam = intParam;
@@ -171,20 +170,8 @@ void SyntroThread::postThreadMessage(int message, int intParam, void *ptrParam)
 
 bool SyntroThread::eventFilter(QObject *obj, QEvent *event)
  {
-	 if (!m_run)
-		 return QObject::eventFilter(obj, event);
-
 	 if (event->type() == m_event) {
 		processMessage((SyntroThreadMsg *)event);
-		return true;
-	}
- 
-	if (event->type() == QEvent::Timer) {
-		SyntroThreadMsg *msg = new SyntroThreadMsg((QEvent::Type)m_event);
-		msg->message = SYNTROTHREAD_TIMER_MESSAGE;
-		msg->intParam = ((QTimerEvent *)event)->timerId();
-		processMessage((SyntroThreadMsg *)msg);
-		delete msg;
 		return true;
 	}
 

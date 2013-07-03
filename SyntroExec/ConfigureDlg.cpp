@@ -1,5 +1,5 @@
 //
-//  Copyright (c) 2012 Pansenti, LLC.
+//  Copyright (c) 2012, 2013 Pansenti, LLC.
 //	
 //  This file is part of Syntro
 //
@@ -24,11 +24,10 @@
 #include "SyntroExec.h"
 
 
-ConfigureDlg::ConfigureDlg(QWidget *parent, QSettings *settings, int index)
+ConfigureDlg::ConfigureDlg(QWidget *parent, int index)
 	: QDialog(parent, Qt::WindowSystemMenuHint | Qt::WindowTitleHint)
 {
 	m_index = index;
-	m_settings = settings;
 	layoutWidgets();
 	connect(m_cancelButton, SIGNAL(clicked()), this, SLOT(cancelButtonClick()));
 	connect(m_okButton, SIGNAL(clicked()), this, SLOT(okButtonClick()));
@@ -38,28 +37,33 @@ ConfigureDlg::ConfigureDlg(QWidget *parent, QSettings *settings, int index)
 
 void ConfigureDlg::okButtonClick()
 {
-	m_settings->beginWriteArray(SYNTROEXEC_PARAMS_COMPONENTS);
-	m_settings->setArrayIndex(m_index);
+	QSettings *settings = SyntroUtils::getSettings();
 
-	m_settings->setValue(SYNTROEXEC_PARAMS_APP_NAME, m_appName->text());
-	m_settings->setValue(SYNTROEXEC_PARAMS_EXECUTABLE_DIRECTORY, m_executableDirectory->text());
-	m_settings->setValue(SYNTROEXEC_PARAMS_WORKING_DIRECTORY, m_workingDirectory->text());
+	settings->beginWriteArray(SYNTROEXEC_PARAMS_COMPONENTS);
+	settings->setArrayIndex(m_index);
+
+	settings->setValue(SYNTROEXEC_PARAMS_APP_NAME, m_appName->text());
+	settings->setValue(SYNTROEXEC_PARAMS_EXECUTABLE_DIRECTORY, m_executableDirectory->text());
+	settings->setValue(SYNTROEXEC_PARAMS_WORKING_DIRECTORY, m_workingDirectory->text());
 
 	if (m_adaptor->currentText() == "<any>")
-		m_settings->setValue(SYNTROEXEC_PARAMS_ADAPTOR, "");
+		settings->setValue(SYNTROEXEC_PARAMS_ADAPTOR, "");
 	else
-		m_settings->setValue(SYNTROEXEC_PARAMS_ADAPTOR, m_adaptor->currentText());
+		settings->setValue(SYNTROEXEC_PARAMS_ADAPTOR, m_adaptor->currentText());
 	
-	m_settings->setValue(SYNTROEXEC_PARAMS_INI_PATH, m_iniPath->text());
+	settings->setValue(SYNTROEXEC_PARAMS_INI_PATH, m_iniPath->text());
 
-	m_settings->setValue(SYNTROEXEC_PARAMS_CONSOLE_MODE, 
+	settings->setValue(SYNTROEXEC_PARAMS_CONSOLE_MODE, 
 		m_consoleMode->checkState() == Qt::Checked ? SYNTRO_PARAMS_TRUE : SYNTRO_PARAMS_FALSE);
 
-	m_settings->setValue(SYNTROEXEC_PARAMS_MONITORED, 
+	settings->setValue(SYNTROEXEC_PARAMS_MONITORED, 
 		m_monitorHellos->checkState() == Qt::Checked ? SYNTRO_PARAMS_TRUE : SYNTRO_PARAMS_FALSE);
 
 
-	m_settings->endArray();
+	settings->endArray();
+	
+	delete settings;
+	
 	accept();
 }
 
@@ -70,27 +74,31 @@ void ConfigureDlg::cancelButtonClick()
 
 void ConfigureDlg::loadCurrentValues()
 {
-	m_settings->beginReadArray(SYNTROEXEC_PARAMS_COMPONENTS);
-	m_settings->setArrayIndex(m_index);
+	QSettings *settings = SyntroUtils::getSettings();
 
-	m_appName->setText(m_settings->value(SYNTROEXEC_PARAMS_APP_NAME).toString());
-	m_executableDirectory->setText(m_settings->value(SYNTROEXEC_PARAMS_EXECUTABLE_DIRECTORY).toString());
-	m_workingDirectory->setText(m_settings->value(SYNTROEXEC_PARAMS_WORKING_DIRECTORY).toString());
-	m_iniPath->setText(m_settings->value(SYNTROEXEC_PARAMS_INI_PATH).toString());
+	settings->beginReadArray(SYNTROEXEC_PARAMS_COMPONENTS);
+	settings->setArrayIndex(m_index);
 
-	m_consoleMode->setCheckState(m_settings->value(SYNTROEXEC_PARAMS_CONSOLE_MODE).toString() == 
+	m_appName->setText(settings->value(SYNTROEXEC_PARAMS_APP_NAME).toString());
+	m_executableDirectory->setText(settings->value(SYNTROEXEC_PARAMS_EXECUTABLE_DIRECTORY).toString());
+	m_workingDirectory->setText(settings->value(SYNTROEXEC_PARAMS_WORKING_DIRECTORY).toString());
+	m_iniPath->setText(settings->value(SYNTROEXEC_PARAMS_INI_PATH).toString());
+
+	m_consoleMode->setCheckState(settings->value(SYNTROEXEC_PARAMS_CONSOLE_MODE).toString() == 
 					SYNTRO_PARAMS_TRUE ? Qt::Checked : Qt::Unchecked);
 
-	m_monitorHellos->setCheckState(m_settings->value(SYNTROEXEC_PARAMS_MONITORED).toString() == 
+	m_monitorHellos->setCheckState(settings->value(SYNTROEXEC_PARAMS_MONITORED).toString() == 
 					SYNTRO_PARAMS_TRUE ? Qt::Checked : Qt::Unchecked);
 
-	int findIndex = m_adaptor->findText(m_settings->value(SYNTROEXEC_PARAMS_ADAPTOR).toString());
+	int findIndex = m_adaptor->findText(settings->value(SYNTROEXEC_PARAMS_ADAPTOR).toString());
 	if (findIndex != -1)
 		m_adaptor->setCurrentIndex(findIndex);
 	else
 		m_adaptor->setCurrentIndex(0);
 
-	m_settings->endArray();
+	settings->endArray();
+
+	delete settings;
 }
 
 void ConfigureDlg::layoutWidgets()

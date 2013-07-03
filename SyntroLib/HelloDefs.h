@@ -1,5 +1,5 @@
 //
-//  Copyright (c) 2012 Pansenti, LLC.
+//  Copyright (c) 2012, 2013 Pansenti, LLC.
 //	
 //  This file is part of SyntroLib
 //
@@ -48,7 +48,7 @@ typedef struct
 	unsigned char helloSync[HELLO_SYNC_LEN];				// a 4 byte code to check synchronisation (HELLO_SYNC)
 	SYNTRO_IPADDR IPAddr;									// device IP address
 	SYNTRO_UID componentUID;								// Component UID
-	SYNTRO_COMPNAME componentName;							// the component name of the sender
+	SYNTRO_APPNAME appName;									// the app name of the sender
 	SYNTRO_COMPTYPE componentType;							// the component type of the sender
 	unsigned char priority;									// priority of SyntroControl
 	unsigned char unused1;									// was operating mode

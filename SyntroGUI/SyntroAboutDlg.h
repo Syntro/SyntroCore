@@ -1,5 +1,5 @@
 //
-//  Copyright (c) 2012 Pansenti, LLC.
+//  Copyright (c) 2012, 2013 Pansenti, LLC.
 //	
 //  This file is part of SyntroLib
 //
@@ -31,13 +31,13 @@ class SYNTROGUI_EXPORT SyntroAbout : public QDialog
 	Q_OBJECT
 
 public:
-	SyntroAbout(QWidget *parent, QSettings *settings);
+	SyntroAbout();
 	
 private:
 	void layoutWindow();
 
 	QLabel *m_appName;
-	QLabel *m_componentName;
+	QLabel *m_appType;
 	QLabel *m_buildDate;
 	QLabel *m_syntroLibVersion;
 	QLabel *m_qtRuntime;

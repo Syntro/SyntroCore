@@ -1,5 +1,5 @@
 //
-//  Copyright (c) 2012 Pansenti, LLC.
+//  Copyright (c) 2012, 2013 Pansenti, LLC.
 //	
 //  This file is part of Syntro
 //
@@ -39,7 +39,7 @@ HelloDialog::HelloDialog(QWidget *parent)
     m_table->setColumnWidth(3, 120);
 
     m_table->setHorizontalHeaderLabels(
-                QStringList() << tr("App name") << tr("Component name")
+                QStringList() << tr("App type") << tr("Component name")
                 << tr("Unique ID") << tr("IP Address"));
 
 
@@ -77,8 +77,8 @@ void HelloDialog::helloDisplayEvent(Hello *helloThread)
 	for (int i = 0, nEntry = 0; i < SYNTRO_MAX_CONNECTEDCOMPONENTS; i++, helloEntry++) {
 		helloThread->m_lock.lock();
 		if (helloEntry->inUse) {
-			m_table->item(nEntry, 0)->setText(helloEntry->hello.componentType);
-			m_table->item(nEntry, 1)->setText(helloEntry->hello.componentName);
+			m_table->item(nEntry, 0)->setText(helloEntry->hello.appName);
+			m_table->item(nEntry, 1)->setText(helloEntry->hello.componentType);
 			m_table->item(nEntry, 2)->setText(SyntroUtils::displayUID(&helloEntry->hello.componentUID));
 			m_table->item(nEntry, 3)->setText(SyntroUtils::displayIPAddr(helloEntry->hello.IPAddr));
 			nEntry++;

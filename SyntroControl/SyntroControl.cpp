@@ -1,5 +1,5 @@
 //
-//  Copyright (c) 2012 Pansenti, LLC.
+//  Copyright (c) 2012, 2013 Pansenti, LLC.
 //	
 //  This file is part of Syntro
 //
@@ -24,8 +24,8 @@
 #define DEFAULT_ROW_HEIGHT 20
 
 
-SyntroControl::SyntroControl(QSettings *settings, QWidget *parent)
-	: QMainWindow(parent), m_settings(settings)
+SyntroControl::SyntroControl()
+	: QMainWindow()
 {
 	ui.setupUi(this);
 
@@ -36,17 +36,22 @@ SyntroControl::SyntroControl(QSettings *settings, QWidget *parent)
 	connect(ui.actionAbout, SIGNAL(triggered()), this, SLOT(onAbout()));
 	connect(ui.actionBasicSetup, SIGNAL(triggered()), this, SLOT(onBasicSetup()));
 
-    ui.m_table->setColumnCount(5);
+    ui.m_table->setColumnCount(9);
 
     ui.m_table->setColumnWidth(0, 120);
     ui.m_table->setColumnWidth(1, 120);
      ui.m_table->setColumnWidth(2, 120);
     ui.m_table->setColumnWidth(3, 100);
 	ui.m_table->setColumnWidth(4, 80);
+	ui.m_table->setColumnWidth(5, 100);
+	ui.m_table->setColumnWidth(6, 100);
+	ui.m_table->setColumnWidth(7, 100);
+	ui.m_table->setColumnWidth(8, 100);
 
     ui.m_table->setHorizontalHeaderLabels(
-                QStringList() << tr("App name") << tr("Component name")
-                << tr("Unique ID") << tr("IP Address") << tr("HB interval"));
+                QStringList() << tr("App name") << tr("Component type")
+                << tr("Unique ID") << tr("IP Address") << tr("HB interval")
+				<< tr("RX bytes") << tr("TX bytes") << tr("RX rate") << tr("TX rate"));
 
 
     ui.m_table->setSelectionMode(QAbstractItemView::NoSelection);
@@ -55,7 +60,7 @@ SyntroControl::SyntroControl(QSettings *settings, QWidget *parent)
 		ui.m_table->insertRow(row);
 		ui.m_table->setRowHeight(row, DEFAULT_ROW_HEIGHT);
 
-		for (int col = 0; col < 6; col++) {
+		for (int col = 0; col < 9; col++) {
 			QTableWidgetItem *item = new QTableWidgetItem();
 			item->setTextAlignment(Qt::AlignLeft | Qt::AlignBottom);
 			item->setFlags(Qt::ItemIsEnabled);
@@ -93,17 +98,22 @@ SyntroControl::SyntroControl(QSettings *settings, QWidget *parent)
 	m_multicastDlg = new MulticastDialog(this);
 	m_multicastDlg->setModal(false);
 
-	setWindowTitle(QString("%1 - %2")
-		.arg(m_settings->value(SYNTRO_PARAMS_APPNAME).toString())
-		.arg(m_settings->value(SYNTRO_PARAMS_APPTYPE).toString()));
 
-	SyntroUtils::syntroAppInit(m_settings);
-	m_server = new SyntroServer(settings);
+	SyntroUtils::syntroAppInit();
+
+	setWindowTitle(QString("%1 - %2")
+		.arg(SyntroUtils::getAppType())
+		.arg(SyntroUtils::getAppName()));
+
+	m_server = new SyntroServer();
 
 	m_multicastDlg->m_multicastMgr = &(m_server->m_multicastManager);
 	m_directoryDlg->m_directoryMgr = &(m_server->m_dirManager);
 
-	connect(m_server, SIGNAL(UpdateSyntroStatusBox(SS_COMPONENT *)), this, SLOT(UpdateSyntroStatusBox(SS_COMPONENT *)), Qt::DirectConnection);
+    connect(m_server, SIGNAL(UpdateSyntroStatusBox(int, QStringList)), 
+		this, SLOT(UpdateSyntroStatusBox(int, QStringList)), Qt::QueuedConnection);
+    connect(m_server, SIGNAL(UpdateSyntroDataBox(int, QStringList)), 
+		this, SLOT(UpdateSyntroDataBox(int, QStringList)), Qt::QueuedConnection);
 
 	connect(&(m_server->m_multicastManager), SIGNAL(MMDisplay()), 
 		m_multicastDlg, SLOT(MMDisplay()), Qt::QueuedConnection);
@@ -171,81 +181,79 @@ void SyntroControl::onMulticast()
 	m_multicastDlg->show();
 }
 
-void SyntroControl::UpdateSyntroStatusBox(SS_COMPONENT *syntroComponent)
+void SyntroControl::UpdateSyntroStatusBox(int index, QStringList list)
 {
-	HELLO *hello = &(syntroComponent->heartbeat.hello);
+	if (index >= ui.m_table->rowCount())
+		return;
+	ui.m_table->item(index, 0)->setText(list.at(0));
+	ui.m_table->item(index, 1)->setText(list.at(1));
+	ui.m_table->item(index, 2)->setText(list.at(2));
+	ui.m_table->item(index, 3)->setText(list.at(3));
+	ui.m_table->item(index, 4)->setText(list.at(4));
+}
 
-	if (syntroComponent->inUse && (syntroComponent->state == ConnNormal) && (hello != NULL)) {
-		QString heartbeatInterval = QString ("%1") .arg(syntroComponent->heartbeatInterval / SYNTRO_CLOCKS_PER_SEC);
-		ui.m_table->item(syntroComponent->index, 0)->setText(hello->componentType);
-		ui.m_table->item(syntroComponent->index, 1)->setText(hello->componentName);
-		ui.m_table->item(syntroComponent->index, 2)->setText(SyntroUtils::displayUID(&hello->componentUID));
-		ui.m_table->item(syntroComponent->index, 3)->setText(SyntroUtils::displayIPAddr(hello->IPAddr));
-		if (syntroComponent->tunnelSource)					// if I am a tunnel source...
-            ui.m_table->item(syntroComponent->index, 4)->setText("Tunnel dest");	// ...indicate other end is a tunnel dest
-		else
-            ui.m_table->item(syntroComponent->index, 4)->setText(heartbeatInterval);
-	}
-	else {
-		if (syntroComponent->tunnelStatic)
-			(ui.m_table->item(syntroComponent->index, 0))->setText(syntroComponent->tunnelStaticName);
-		else
-			(ui.m_table->item(syntroComponent->index, 0))->setText("...");
-		(ui.m_table->item(syntroComponent->index, 1))->setText("");
-		(ui.m_table->item(syntroComponent->index, 2))->setText("");
-		(ui.m_table->item(syntroComponent->index, 3))->setText("");
-		(ui.m_table->item(syntroComponent->index, 4))->setText("");
-	}
+void SyntroControl::UpdateSyntroDataBox(int index, QStringList list)
+{
+	if (index >= ui.m_table->rowCount())
+		return;
+	ui.m_table->item(index, 5)->setText(list.at(0));
+	ui.m_table->item(index, 6)->setText(list.at(1));
+	ui.m_table->item(index, 7)->setText(list.at(2));
+	ui.m_table->item(index, 8)->setText(list.at(3));
 }
 
 void SyntroControl::saveWindowState()
 {
-	if (m_settings) {
-		m_settings->beginGroup("ControlWindow");
-		m_settings->setValue("Geometry", saveGeometry());
-		m_settings->setValue("State", saveState());
+	QSettings *settings = SyntroUtils::getSettings();
 
-		m_settings->beginWriteArray("Grid");
-		for (int i = 0; i < ui.m_table->columnCount(); i++) {
-			m_settings->setArrayIndex(i);
-			m_settings->setValue("columnWidth", ui.m_table->columnWidth(i));
-		}
-		m_settings->endArray();
+	settings->beginGroup("ControlWindow");
+	settings->setValue("Geometry", saveGeometry());
+	settings->setValue("State", saveState());
 
-		m_settings->endGroup();
+	settings->beginWriteArray("Grid");
+	for (int i = 0; i < ui.m_table->columnCount(); i++) {
+		settings->setArrayIndex(i);
+		settings->setValue("columnWidth", ui.m_table->columnWidth(i));
 	}
+	settings->endArray();
+
+	settings->endGroup();
+
+	delete settings;
 }
 
 void SyntroControl::restoreWindowState()
 {
-	if (m_settings) {
-		m_settings->beginGroup("ControlWindow");
-		restoreGeometry(m_settings->value("Geometry").toByteArray());
-		restoreState(m_settings->value("State").toByteArray());
+	QSettings *settings = SyntroUtils::getSettings();
+	
+	settings->beginGroup("ControlWindow");
+	restoreGeometry(settings->value("Geometry").toByteArray());
+	restoreState(settings->value("State").toByteArray());
 
-		int count = m_settings->beginReadArray("Grid");
-		for (int i = 0; i < count && i < ui.m_table->columnCount(); i++) {
-			m_settings->setArrayIndex(i);
-			int width = m_settings->value("columnWidth").toInt();
+	int count = settings->beginReadArray("Grid");
+	for (int i = 0; i < count && i < ui.m_table->columnCount(); i++) {
+		settings->setArrayIndex(i);
+		int width = settings->value("columnWidth").toInt();
 
-			if (width > 0)
-				ui.m_table->setColumnWidth(i, width);
-		}
-		m_settings->endArray();
-
-		m_settings->endGroup();
+		if (width > 0)
+			ui.m_table->setColumnWidth(i, width);
 	}
+	settings->endArray();
+
+	settings->endGroup();
+
+	delete settings;
 }
 
 void SyntroControl::onAbout()
 {
-	SyntroAbout *dlg = new SyntroAbout(this, m_settings);
+	SyntroAbout *dlg = new SyntroAbout();
 	dlg->show();
 }
 
 void SyntroControl::onBasicSetup()
 {
-	ControlSetupDlg *dlg = new ControlSetupDlg(this, m_settings);
+	ControlSetupDlg *dlg = new ControlSetupDlg();
 	dlg->show();
 }
 

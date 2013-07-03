@@ -1,15 +1,13 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 11.00
 # Visual Studio 2010
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "SyntroCFS", "..\SyntroCFS\SyntroCFS.vcxproj", "{3AAF0153-41E6-4D52-83C0-898844101885}"
-EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "SyntroControl", "..\SyntroControl\SyntroControl.vcxproj", "{31915F3F-EAF6-46E6-AAA1-B133B921FE25}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "SyntroExec", "..\SyntroExec\SyntroExec.vcxproj", "{F0C95CCD-1CDE-4B9C-9603-F695146589F7}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "SyntroStore", "..\SyntroStore\SyntroStore.vcxproj", "{2423B4AF-8A72-4D3A-8164-583784BEB2E5}"
-EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "SyntroLog", "..\SyntroLog\SyntroLog.vcxproj", "{94B56E89-0AE3-4C47-96F9-897D2A437300}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "SyntroDB", "..\SyntroDB\SyntroDB.vcxproj", "{21B5C482-CD24-452E-A4CD-E1CB06E7DAB8}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -19,14 +17,6 @@ Global
 		StaticRelease|Win32 = StaticRelease|Win32
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{3AAF0153-41E6-4D52-83C0-898844101885}.Debug|Win32.ActiveCfg = Debug|Win32
-		{3AAF0153-41E6-4D52-83C0-898844101885}.Debug|Win32.Build.0 = Debug|Win32
-		{3AAF0153-41E6-4D52-83C0-898844101885}.Release|Win32.ActiveCfg = Release|Win32
-		{3AAF0153-41E6-4D52-83C0-898844101885}.Release|Win32.Build.0 = Release|Win32
-		{3AAF0153-41E6-4D52-83C0-898844101885}.StaticDebug|Win32.ActiveCfg = StaticDebug|Win32
-		{3AAF0153-41E6-4D52-83C0-898844101885}.StaticDebug|Win32.Build.0 = StaticDebug|Win32
-		{3AAF0153-41E6-4D52-83C0-898844101885}.StaticRelease|Win32.ActiveCfg = StaticRelease|Win32
-		{3AAF0153-41E6-4D52-83C0-898844101885}.StaticRelease|Win32.Build.0 = StaticRelease|Win32
 		{31915F3F-EAF6-46E6-AAA1-B133B921FE25}.Debug|Win32.ActiveCfg = Debug|Win32
 		{31915F3F-EAF6-46E6-AAA1-B133B921FE25}.Debug|Win32.Build.0 = Debug|Win32
 		{31915F3F-EAF6-46E6-AAA1-B133B921FE25}.Release|Win32.ActiveCfg = Release|Win32
@@ -43,14 +33,6 @@ Global
 		{F0C95CCD-1CDE-4B9C-9603-F695146589F7}.StaticDebug|Win32.Build.0 = StaticDebug|Win32
 		{F0C95CCD-1CDE-4B9C-9603-F695146589F7}.StaticRelease|Win32.ActiveCfg = StaticRelease|Win32
 		{F0C95CCD-1CDE-4B9C-9603-F695146589F7}.StaticRelease|Win32.Build.0 = StaticRelease|Win32
-		{2423B4AF-8A72-4D3A-8164-583784BEB2E5}.Debug|Win32.ActiveCfg = Debug|Win32
-		{2423B4AF-8A72-4D3A-8164-583784BEB2E5}.Debug|Win32.Build.0 = Debug|Win32
-		{2423B4AF-8A72-4D3A-8164-583784BEB2E5}.Release|Win32.ActiveCfg = Release|Win32
-		{2423B4AF-8A72-4D3A-8164-583784BEB2E5}.Release|Win32.Build.0 = Release|Win32
-		{2423B4AF-8A72-4D3A-8164-583784BEB2E5}.StaticDebug|Win32.ActiveCfg = StaticDebug|Win32
-		{2423B4AF-8A72-4D3A-8164-583784BEB2E5}.StaticDebug|Win32.Build.0 = StaticDebug|Win32
-		{2423B4AF-8A72-4D3A-8164-583784BEB2E5}.StaticRelease|Win32.ActiveCfg = StaticRelease|Win32
-		{2423B4AF-8A72-4D3A-8164-583784BEB2E5}.StaticRelease|Win32.Build.0 = StaticRelease|Win32
 		{94B56E89-0AE3-4C47-96F9-897D2A437300}.Debug|Win32.ActiveCfg = Debug|Win32
 		{94B56E89-0AE3-4C47-96F9-897D2A437300}.Debug|Win32.Build.0 = Debug|Win32
 		{94B56E89-0AE3-4C47-96F9-897D2A437300}.Release|Win32.ActiveCfg = Release|Win32
@@ -59,8 +41,19 @@ Global
 		{94B56E89-0AE3-4C47-96F9-897D2A437300}.StaticDebug|Win32.Build.0 = StaticDebug|Win32
 		{94B56E89-0AE3-4C47-96F9-897D2A437300}.StaticRelease|Win32.ActiveCfg = StaticRelease|Win32
 		{94B56E89-0AE3-4C47-96F9-897D2A437300}.StaticRelease|Win32.Build.0 = StaticRelease|Win32
+		{21B5C482-CD24-452E-A4CD-E1CB06E7DAB8}.Debug|Win32.ActiveCfg = Debug|Win32
+		{21B5C482-CD24-452E-A4CD-E1CB06E7DAB8}.Debug|Win32.Build.0 = Debug|Win32
+		{21B5C482-CD24-452E-A4CD-E1CB06E7DAB8}.Release|Win32.ActiveCfg = Release|Win32
+		{21B5C482-CD24-452E-A4CD-E1CB06E7DAB8}.Release|Win32.Build.0 = Release|Win32
+		{21B5C482-CD24-452E-A4CD-E1CB06E7DAB8}.StaticDebug|Win32.ActiveCfg = StaticDebug|Win32
+		{21B5C482-CD24-452E-A4CD-E1CB06E7DAB8}.StaticDebug|Win32.Build.0 = StaticDebug|Win32
+		{21B5C482-CD24-452E-A4CD-E1CB06E7DAB8}.StaticRelease|Win32.ActiveCfg = StaticRelease|Win32
+		{21B5C482-CD24-452E-A4CD-E1CB06E7DAB8}.StaticRelease|Win32.Build.0 = StaticRelease|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		Qt5Version = $(DefaultQtVersion)
 	EndGlobalSection
 EndGlobal

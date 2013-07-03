@@ -1,5 +1,5 @@
 //
-//  Copyright (c) 2012 Pansenti, LLC.
+//  Copyright (c) 2012, 2013 Pansenti, LLC.
 //	
 //  This file is part of SyntroLib
 //
@@ -41,7 +41,7 @@ class SYNTROLIB_EXPORT Hello : public SyntroThread
 	Q_OBJECT
 
 public:
-	Hello(SyntroComponentData *data);
+	Hello(SyntroComponentData *data, const QString& logTag);
 	~Hello();
 
 	void sendHelloBeacon();									// sends a hello to SyntroControls to elicit a response
@@ -67,16 +67,16 @@ public:
 
 
 	void initThread();
-	void exitThread();
 	bool processMessage(SyntroThreadMsg* msg);
 	bool findComponent(HELLOENTRY *foundHelloEntry, SYNTRO_UID *UID);
-	bool findComponent(HELLOENTRY *foundHelloEntry, char *componentName, char *componentType);
+	bool findComponent(HELLOENTRY *foundHelloEntry, char *appName, char *componentType);
 	bool findBestControl(HELLOENTRY *foundHelloEntry);
 
 signals:
 	void helloDisplayEvent(Hello *hello);
 
 protected:
+	void timerEvent(QTimerEvent *event);
 	void processHello();
 	void deleteEntry(HELLOENTRY *pH);
 	bool matchHello(HELLO *a, HELLO *b);
@@ -91,6 +91,7 @@ protected:
 
 private:
 	int m_timer;
+	QString m_logTag;
 };
 
 #endif // _HELLO_H_

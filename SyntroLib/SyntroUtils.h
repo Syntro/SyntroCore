@@ -42,6 +42,7 @@
 #include <qlabel.h>
 
 class SyntroSocket;
+class SyntroClockObject;
 
 //	Debug message and error display macros
 
@@ -72,12 +73,13 @@ class SyntroSocket;
 
 #define	SYNTRO_PARAMS_APPNAME			"appName"			// name of the application
 #define	SYNTRO_PARAMS_APPTYPE			"appType"			// type of the application
-#define	SYNTRO_PARAMS_COMPTYPE			"componentType"		// app type of the component
 #define SYNTRO_PARAMS_CONTROLREVERT		"controlRevert"		// true if implement control priority with active connection
 #define SYNTRO_PARAMS_LOCALCONTROL		"localControl"		// true if want to run a local SyntroControl
 #define SYNTRO_PARAMS_LOCALCONTROL_PRI	"localControlPriority"	// local SyntroControl priority
 #define	SYNTRO_PARAMS_HBINTERVAL		"heartbeatInterval"	// time between sent heartbeats
 #define	SYNTRO_PARAMS_HBTIMEOUT			"heartbeatTimeout"	// number of hb intervals without hb before timeout
+#define	SYNTRO_PARAMS_LOG_HBINTERVAL	"logHeartbeatInterval"	// time between sent heartbeats for log
+#define	SYNTRO_PARAMS_LOG_HBTIMEOUT		"logHeartbeatTimeout"	// number of hb intervals without hb before timeout for log
 
 #define	SYNTRO_PARAMS_CONTROL_NAMES		"controlNames"		// ordered list of SyntroControls as an array
 #define	SYNTRO_PARAMS_CONTROL_NAME		"controlName"		// an entry in the array
@@ -136,22 +138,31 @@ class SYNTROLIB_EXPORT SyntroUtils
 public:
 	static const char *syntroLibVersion();			// returns a string containing the SyntroLib version as x.y.z
 
-	static void syntroAppInit(QSettings *settings);
+//	Settings functions
+	
+	static void loadStandardSettings(const char *appType, QStringList arglist);
+	static QSettings *getSettings();
+
+//	app init and exit
+
+	static void syntroAppInit();
 	static void syntroAppExit();
+
+	static const QString& getAppName();
+	static const QString& getAppType();
 
 	static SYNTRO_IPADDR *getMyIPAddr();
 	static SYNTRO_MACADDR *getMyMacAddr();
 
 	static bool checkConsoleModeFlag(int argc, char *argv[]);	// checks if console mode
 	static bool checkDaemonModeFlag(int argc, char *argv[]);
-    static void initgMyData(QSettings *settings);	// inits the global structures
     static bool isSendOK(unsigned char sendSeq, unsigned char ackSeq);
     static SYNTRO_EHEAD *createEHEAD(SYNTRO_UID *sourceUID, int sourcePort, 
 					SYNTRO_UID *destUID, int destPort, unsigned char seq, int len); 
     static void swapEHead(SYNTRO_EHEAD *ehead);		// swaps UIDs and port numbers
     static bool crackServicePath(QString servicePath, QString &regionName, QString& componentName, QString& serviceName); // breaks a service path into its constituent bits
-    static QSettings *loadStandardSettings(const char *appType, QStringList arglist);
     static bool syntroTimerExpired(qint64 now, qint64 start, qint64 interval);
+
 
 //	Service path functions
 
@@ -161,7 +172,7 @@ public:
 
 //	IP Address functions
 
-    static void getMyIPAddress(QSettings *pSettings);	// gets my IP address from first or known IP adaptor
+    static void getMyIPAddress();						// gets my IP address from first or known IP adaptor
     static QString displayIPAddr(SYNTRO_IPADDR addr);	// returns string version of IP
     static void convertIPStringToIPAddr(char *IPStr, SYNTRO_IPADDR IPAddr);	// converts a string IP address to internal
     static bool IPZero(SYNTRO_IPADDR addr);			// returns true if address all zeroes
@@ -203,6 +214,22 @@ public:
     static QHostAddress getMyNetMask();
     static bool isInMySubnet(SYNTRO_IPADDR IPAddr);
 
+private:
+	static QString m_logTag;
+	static SYNTRO_IPADDR m_myIPAddr;						
+	static SYNTRO_MACADDR m_myMacAddr;						
+
+	static QString m_iniPath;								
+	static QString m_appName;
+	static QString m_appType;
+
+	static SyntroClockObject *m_syntroClockGen;			
+
+	//	The address info for the adaptor being used
+
+	static QHostAddress m_platformBroadcastAddress;					
+	static QHostAddress m_platformSubnetAddress;					
+	static QHostAddress m_platformNetMask;	
 };
 
 #endif		//_SYNTROUTILS_H_

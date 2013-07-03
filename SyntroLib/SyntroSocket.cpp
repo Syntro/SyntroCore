@@ -1,5 +1,5 @@
 //
-//  Copyright (c) 2012 Pansenti, LLC.
+//  Copyright (c) 2012, 2013 Pansenti, LLC.
 //	
 //  This file is part of SyntroLib
 //
@@ -24,8 +24,9 @@ QMutex nextConnectionIDLock;									// to control access to the unique ID gener
 
 // SyntroSocket
 
-SyntroSocket::SyntroSocket()
+SyntroSocket::SyntroSocket(const QString& logTag)
 {
+	m_logTag = logTag;
 	clearSocket();
 }
 

@@ -127,10 +127,8 @@ class SYNTROLIB_EXPORT Endpoint : public SyntroThread
 {
 
 public:
-	Endpoint(QObject *parent, QSettings *settings, qint64 backgroundInterval);
+	Endpoint(qint64 backgroundInterval, const char *compType);
 	virtual ~Endpoint();
-
-	void exitThread();
 
 //	This routine returns a QString with the status of the SyntroLink
 
@@ -144,11 +142,14 @@ public:
 
 	void requestDirectory();
 
+//	setHeartbeatTimers allows control over the default heartbeat system parameters
+
+	void setHeartbeatTimers(int interval, int timeout);
 
 protected:
 
-	QSettings *m_settings;									// local pointer to the QSettings
 	SYNTRO_UID m_UID;										// a convenient local copy of this component's UID
+	void timerEvent(QTimerEvent *event);
 
 
 	//----------------------------------------------------------
@@ -407,12 +408,15 @@ protected:
 
 	virtual void CFSWriteAtIndexResponse(int serviceEP, int handle, unsigned int index, unsigned int responseCode);
 
+	QString m_logTag;										// to to be prepended to any log messages
 
 //-------------------------------------------------------------------------------------------
 
 private:
 	SyntroComponentData m_componentData;					// the component data for this component
 
+	QString m_compType;										// type of the component
+	
 	Hello *m_hello;											// Hello task (only used in local mode)
 
 	bool m_sentDE;											// if a DE has been sent yet on this connection
@@ -426,7 +430,7 @@ private:
 
 	char m_IPAddr[SYNTRO_IPSTR_LEN];						// the IP address string for the target SyntroControl
 	int m_port;												// the port to use for the connection
-	char m_controlName[ENDPOINT_MAX_SYNTROCONTROLS][SYNTRO_MAX_COMPNAME];	// component names for the target SyntroControls
+	char m_controlName[ENDPOINT_MAX_SYNTROCONTROLS][SYNTRO_MAX_APPNAME];	// app names for the target SyntroControls
 	HELLOENTRY m_helloEntry;								// the HelloEntry we are using
 
 	// heartbeat system defs
@@ -451,13 +455,12 @@ private:
 	bool m_priorityMode;									// true if in priority mode
 	int m_controlIndex;										// index in SyntroControl list if not in priority mode
 
-	bool m_netLogEnabled;
-	int m_logPort;
-	QString m_logServiceName;
+	int m_configHeartbeatInterval;							// the configured heartbeat interval in seconds
+	int m_configHeartbeatTimeout;							// the number of intervals before a timeout
 
 	void initThread();
 	bool processMessage(SyntroThreadMsg *msg);
-
+	void finishThread();
 	void updateState(QString msg);							// sets the new state message
 	bool syntroConnect();
 	void syntroClose();
@@ -487,9 +490,6 @@ private:
 	void sendE2EAck(SYNTRO_EHEAD *originalEhead);			// sends an E2E ack back
 
 	bool syntroSendMessage(int cmd, SYNTRO_MESSAGE *syntroMessage, int len, int priority); 
-
-	void addLogService();
-	void logServiceBackground();
 
 	void linkCloseCleanup();								// do what needs to be done when the SyntroLink goes down
 

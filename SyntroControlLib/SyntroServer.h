@@ -1,5 +1,5 @@
 //
-//  Copyright (c) 2012 Pansenti, LLC.
+//  Copyright (c) 2012, 2013 Pansenti, LLC.
 //	
 //  This file is part of Syntro
 //
@@ -27,13 +27,16 @@
 #include "syntrocontrollib_global.h"
 #include "SyntroComponentData.h"
 
-#define	SYNTROCONTROL_LOG_PORT		0						// log port is always zero for SyntroControl
+#include <qstringlist.h>
 
 //	SyntroServer settings
 
 #define SYNTROCONTROL_PARAMS_GROUP						"SyntroControl" // group name for SyntroControl-specific settings
 #define	SYNTROCONTROL_PARAMS_LISTEN_LOCAL_SOCKET		"LocalSocket"	// port number for local links
 #define	SYNTROCONTROL_PARAMS_LISTEN_STATICTUNNEL_SOCKET	"StaticTunnelSocket"	// port number for static tunnels
+
+#define SYNTROCONTROL_PARAMS_HBINTERVAL					"controlHeartbeatInterval"	// interval between heartbeats in seconds
+#define SYNTROCONTROL_PARAMS_HBTIMEOUT					"controlHeartbeatTimeout"	// heartbeat intervals before timeout
 
 //	Static tunnel settings defs
 
@@ -52,6 +55,7 @@
 #define	SYNTROSERVER_ONACCEPT_STATICTUNNEL_MESSAGE (SYNTRO_MSTART+5)
 
 #define	SYNTROSERVER_SOCKET_RETRY			(2 * SYNTRO_CLOCKS_PER_SEC)
+#define	SYNTROSERVER_STATS_INTERVAL			(2 * SYNTRO_CLOCKS_PER_SEC)
 
 class SyntroTunnel;
 
@@ -97,6 +101,23 @@ typedef struct
 	char *dirEntry;											// this is the currently in use DE
 	int dirEntryLength;										// and its length (can't use strlen as may have multiple components)
 	DM_CONNECTEDCOMPONENT *dirManagerConnComp;				// this is the directory manager entry for this connection
+
+	quint64 tempRXByteCount;								// for receive byte rate calculation
+	quint64 tempTXByteCount;								// for transmit byte rate calculation
+	quint64 RXByteCount;									// receive byte count
+	quint64 TXByteCount;									// transmit byte count
+	quint64 RXByteRate;										// receive byte rate
+	quint64 TXByteRate;										// transmit byte rate
+
+	quint32 tempRXPacketCount;								// for receive byte rate calculation
+	quint32 tempTXPacketCount;								// for transmit byte rate calculation
+	quint32 RXPacketCount;									// receive byte count
+	quint32 TXPacketCount;									// transmit byte count
+	quint32 RXPacketRate;									// receive byte rate
+	quint32 TXPacketRate;									// transmit byte rate
+
+	qint64 lastStatsTime;									// last time stats were updated
+
 } SS_COMPONENT;
 
 // SyntroServer
@@ -106,20 +127,15 @@ class SYNTROCONTROLLIB_EXPORT SyntroServer : public SyntroThread
 	Q_OBJECT
 
 public:
-	SyntroServer(QSettings *settings);						
+	SyntroServer();						
 	virtual ~SyntroServer();
-
-	void exitThread();
 
 	Hello *getHelloObject();								// returns the hello object
 
 	int m_socketNumber;										// the socket to listen on - defaults to SYNTRO_ACTIVE_SOCKET_LOCAL
 	int m_staticTunnelSocketNumber;							// the socket for static tunnels - defaults to SYNTRO_ACTIVE_SOCKET_TUNNEL
 	bool m_netLogEnabled;									// true if network logging enabled
-	QString m_logServiceName;								// service name for log service
-	QString m_componentName;								// this SyntroControl's component name
-
-	MM_MMAP *m_logMap;										// the log service multicast map
+	QString m_appName;										// this SyntroControl's app name
 
 	SYNTRO_UID m_myUID;										// my UID - used for local service processing
 
@@ -139,11 +155,14 @@ public:
 
 	SyntroComponentData m_componentData;
 
+	QString m_logTag;
+
 //------------------------------------------------------------------
 
 signals:
 	void DMDisplay(DirectoryManager *dirManager);
-	void UpdateSyntroStatusBox(SS_COMPONENT *syntroComponent);
+	void UpdateSyntroStatusBox(int, QStringList);
+	void UpdateSyntroDataBox(int, QStringList);
 	void serverMulticastUpdate(qint64 in, unsigned inRate, qint64 out, unsigned outRate);
 	void serverE2EUpdate(qint64 in, unsigned inRate, qint64 out, unsigned outRate);
 
@@ -151,13 +170,11 @@ signals:
 protected:
 
 	void initThread();
-	void loadStaticTunnels();
+	void finishThread();
+	void timerEvent(QTimerEvent *event);
+	void loadStaticTunnels(QSettings *settings);
 	bool processMessage(SyntroThreadMsg* msg);
-	void addLogService();									// add network logging service if necessary
-	void logServiceBackground();							// handle background processing
 	bool openSockets();										// open the sockets SyntroControl needs
-
-	QSettings *m_settings;
 
 	bool syConnected(SS_COMPONENT *syntroComponent);
 	bool syAccept(bool staticTunnel);
@@ -175,6 +192,8 @@ protected:
 
 	void setComponentDE(char *pDE, int nLen, SS_COMPONENT *pComp);
 	void syCleanup(SS_COMPONENT *pSC);
+	void updateSyntroStatus(SS_COMPONENT *syntroComponent);
+	void updateSyntroData(SS_COMPONENT *syntroComponent);
 
 
 //	forwardE2EMessage - forward an endpoint to endpoint message
@@ -212,7 +231,16 @@ protected:
 	qint64 m_lastOpenSocketsTime;							// last time open sockets failed
 
 private:
+
+	inline void updateTXStats(SS_COMPONENT *syntroComponent, int length) {
+				syntroComponent->tempTXPacketCount++;
+				syntroComponent->TXPacketCount++;
+				syntroComponent->tempTXByteCount += length;
+				syntroComponent->TXByteCount += length;
+	}
+
 	int m_timer;
+
 };
 
 #endif // SYNTROSERVER_H

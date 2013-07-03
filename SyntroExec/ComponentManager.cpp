@@ -1,5 +1,5 @@
 //
-//  Copyright (c) 2012 Pansenti, LLC.
+//  Copyright (c) 2012, 2013 Pansenti, LLC.
 //	
 //  This file is part of Syntro
 //
@@ -20,28 +20,42 @@
 #include "SyntroExec.h"
 #include "ComponentManager.h"
 
-ComponentManager::ComponentManager(QSettings *settings)
+ComponentManager::ComponentManager() 
+	: SyntroThread(QString("ComponentManager"), QString(APPTYPE_EXEC))
 {
-	m_settings = settings;
 
 #if defined(Q_OS_WIN64) || defined(Q_OS_WIN32)
 	m_extension = ".exe";									// Windows needs the extension
 #endif
 
-	m_componentData.init(qPrintable(settings->value(SYNTRO_PARAMS_APPNAME).toString()),
-			qPrintable(settings->value(SYNTRO_PARAMS_COMPTYPE).toString()),
-			settings->value(SYNTRO_PARAMS_HBINTERVAL).toInt());
+}
+
+ComponentManager::~ComponentManager()
+{
+	killTimer(m_timer);
+	m_hello->exitThread();
+
+	killComponents();
+
+	for (int i = 0; i < SYNTRO_MAX_COMPONENTSPERDEVICE; i++) {
+		delete m_components[i];
+	}
 }
 
 void ComponentManager::initThread()
 {
+	QSettings *settings = SyntroUtils::getSettings();
+	m_componentData.init(COMPTYPE_EXEC, settings->value(SYNTRO_PARAMS_HBINTERVAL).toInt());
+	delete settings;
+
 	for (int i = 0; i < SYNTRO_MAX_COMPONENTSPERDEVICE; i++) {
-		m_components[i].inUse = false;
-		m_components[i].instance = i;
-		m_components[i].monitored = false;
-		m_components[i].processState = "Unused";
+		m_components[i] = new ManagerComponent;
+		m_components[i]->inUse = false;
+		m_components[i]->instance = i;
+		m_components[i]->monitored = false;
+		m_components[i]->processState = "Unused";
 	}
-	m_hello = new Hello(&m_componentData);
+	m_hello = new Hello(&m_componentData, QString(COMPTYPE_EXEC));
 	m_hello->m_parentThread = this;
 	m_hello->m_socketFlags = 1;							// set for port reuse
 	m_hello->resumeThread();
@@ -51,23 +65,12 @@ void ComponentManager::initThread()
 
 	m_timer = startTimer(SYNTROEXEC_INTERVAL);
 
-	m_components[INSTANCE_EXEC].inUse = true;
-	m_components[INSTANCE_EXEC].appName = COMPTYPE_EXEC;
-	m_components[INSTANCE_EXEC].processState = "Execing";
-	m_components[INSTANCE_EXEC].UID = m_componentData.getMyUID();		// form SyntroExec's UID
-	SyntroUtils::convertIntToUC2(INSTANCE_EXEC, m_components[INSTANCE_EXEC].UID.instance);
-	emit updateExecStatus(m_components + INSTANCE_EXEC);
-}
-
-void ComponentManager::exitThread()
-{
-	killTimer(m_timer);
-	m_run = false;
-	exit();
-
-	m_hello->exitThread();
-
-	killComponents();
+	m_components[INSTANCE_EXEC]->inUse = true;
+	m_components[INSTANCE_EXEC]->appName = APPTYPE_EXEC;
+	m_components[INSTANCE_EXEC]->processState = "Execing";
+	m_components[INSTANCE_EXEC]->UID = m_componentData.getMyUID();		// form SyntroExec's UID
+	SyntroUtils::convertIntToUC2(INSTANCE_EXEC, m_components[INSTANCE_EXEC]->UID.instance);
+	updateStatus(m_components[INSTANCE_EXEC]);
 }
 
 void ComponentManager::killComponents()
@@ -79,10 +82,10 @@ void ComponentManager::killComponents()
 	for (i = 0; i < SYNTRO_MAX_COMPONENTSPERDEVICE; i++) {
 		if (i == INSTANCE_EXEC)
 			continue;
-		if (!m_components[i].inUse)
+		if (!m_components[i]->inUse)
 			continue;
-		logInfo(QString("Terminating ") + m_components[i].appName);
-		m_components[i].process.terminate();
+		logInfo(QString("Terminating ") + m_components[i]->appName);
+		m_components[i]->process.terminate();
 	}
 
 	qint64 startTime = SyntroClock();
@@ -93,16 +96,16 @@ void ComponentManager::killComponents()
 		for (i = 0; i < SYNTRO_MAX_COMPONENTSPERDEVICE; i++) {
 			if (i == INSTANCE_EXEC)
 				continue;
-			if (!m_components[i].inUse)
+			if (!m_components[i]->inUse)
 				continue;
-			TRACE2("Component %s state %d", qPrintable(m_components[i].appName), 
-							m_components[i].process.waitForFinished(0));
-			if (!m_components[i].process.waitForFinished(0))
+			TRACE2("Component %s state %d", qPrintable(m_components[i]->appName), 
+							m_components[i]->process.waitForFinished(0));
+			if (!m_components[i]->process.waitForFinished(0))
 				break;									// at least one still running
 		}
 		if (i == SYNTRO_MAX_COMPONENTSPERDEVICE)
 			return;										// none are running so exit
-		wait(100);										// give the components a chnace to terminate and test again
+		thread()->msleep(100);							// give the components a chance to terminate and test again
 	}
 
 	// kill off anything still running
@@ -110,11 +113,11 @@ void ComponentManager::killComponents()
 	for (i = 0; i < SYNTRO_MAX_COMPONENTSPERDEVICE; i++) {
 		if (i == INSTANCE_EXEC)
 			continue;
-		if (!m_components[i].inUse)
+		if (!m_components[i]->inUse)
 			continue;
-		if (!m_components[i].process.waitForFinished(0)) {
-			logInfo(QString("Killing ") + m_components[i].appName);
-			m_components[i].process.kill();
+		if (!m_components[i]->process.waitForFinished(0)) {
+			logInfo(QString("Killing ") + m_components[i]->appName);
+			m_components[i]->process.kill();
 		}
 	}
 }
@@ -123,44 +126,48 @@ void ComponentManager::loadComponent(int index)
 {
 	ManagerComponent *component;
 	
-	m_settings->beginReadArray(SYNTROEXEC_PARAMS_COMPONENTS);
-	m_settings->setArrayIndex(index);
-	component = m_components + index;
+	QSettings *settings = SyntroUtils::getSettings();
+
+	settings->beginReadArray(SYNTROEXEC_PARAMS_COMPONENTS);
+	settings->setArrayIndex(index);
+	component = m_components[index];
 
 	//	Instances 0 and 1 are special  so force values if that's what is being dealt with
 
 	if (index == INSTANCE_CONTROL) {
-		m_settings->setValue(SYNTROEXEC_PARAMS_APP_NAME, COMPTYPE_CONTROL);
+		settings->setValue(SYNTROEXEC_PARAMS_APP_NAME, APPTYPE_CONTROL);
 	}
 
 	if (index == INSTANCE_EXEC) {
-		m_settings->setValue(SYNTROEXEC_PARAMS_APP_NAME, COMPTYPE_EXEC);
-		m_settings->endArray();			
-		emit updateExecStatus(component);				
+		settings->setValue(SYNTROEXEC_PARAMS_APP_NAME, COMPTYPE_EXEC);
+		settings->endArray();			
+		updateStatus(component);				
+		delete settings;
 		return;
 	}
 
 	if (component->inUse) {									// if in use, need to check if something critcal has changed
-		if ((m_settings->value(SYNTROEXEC_PARAMS_INUSE).toString() == SYNTRO_PARAMS_FALSE) ||
-			(m_settings->value(SYNTROEXEC_PARAMS_APP_NAME).toString() != component->appName) ||
-			(m_settings->value(SYNTROEXEC_PARAMS_EXECUTABLE_DIRECTORY).toString() != component->executableDirectory) ||
-			(m_settings->value(SYNTROEXEC_PARAMS_WORKING_DIRECTORY).toString() != component->workingDirectory) ||
-			(m_settings->value(SYNTROEXEC_PARAMS_ADAPTOR).toString() != component->adaptor) ||
-			(m_settings->value(SYNTROEXEC_PARAMS_INI_PATH).toString() != component->iniPath) ||
-			((m_settings->value(SYNTROEXEC_PARAMS_CONSOLE_MODE).toString() == SYNTRO_PARAMS_TRUE) != component->consoleMode)) {
+		if ((settings->value(SYNTROEXEC_PARAMS_INUSE).toString() == SYNTRO_PARAMS_FALSE) ||
+			(settings->value(SYNTROEXEC_PARAMS_APP_NAME).toString() != component->appName) ||
+			(settings->value(SYNTROEXEC_PARAMS_EXECUTABLE_DIRECTORY).toString() != component->executableDirectory) ||
+			(settings->value(SYNTROEXEC_PARAMS_WORKING_DIRECTORY).toString() != component->workingDirectory) ||
+			(settings->value(SYNTROEXEC_PARAMS_ADAPTOR).toString() != component->adaptor) ||
+			(settings->value(SYNTROEXEC_PARAMS_INI_PATH).toString() != component->iniPath) ||
+			((settings->value(SYNTROEXEC_PARAMS_CONSOLE_MODE).toString() == SYNTRO_PARAMS_TRUE) != component->consoleMode)) {
 
 		// something critical changed - must kill existing.
 
 			logInfo(QString("Killing app %1 by user command").arg(component->appName));
 			component->process.terminate();
-			wait(1000);										// ugly but it gives the app a chance
+			thread()->msleep(1000);							// ugly but it gives the app a chance
 			component->process.kill();
 			component->inUse = false;
 		} else {											// everything ok - maybe monitor hellos changed?
-			component->monitored = m_settings->value(SYNTROEXEC_PARAMS_MONITORED).toString() == SYNTRO_PARAMS_TRUE;
+			component->monitored = settings->value(SYNTROEXEC_PARAMS_MONITORED).toString() == SYNTRO_PARAMS_TRUE;
 			component->lastHelloTime = SyntroClock();		// important if monitored now true
-			m_settings->endArray();			
-			emit updateExecStatus(component);				// make sure display updated
+			settings->endArray();			
+			updateStatus(component);				// make sure display updated
+			delete settings;
 			return;
 		}
 	}
@@ -168,15 +175,15 @@ void ComponentManager::loadComponent(int index)
 	// Safe to read new data in now
 
 	memset(&(component->UID), 0, sizeof(SYNTRO_UID));
-	component->appName = m_settings->value(SYNTROEXEC_PARAMS_APP_NAME).toString();
+	component->appName = settings->value(SYNTROEXEC_PARAMS_APP_NAME).toString();
 
-	component->executableDirectory = m_settings->value(SYNTROEXEC_PARAMS_EXECUTABLE_DIRECTORY, "").toString();
-	component->workingDirectory = m_settings->value(SYNTROEXEC_PARAMS_WORKING_DIRECTORY, "").toString();
-	component->adaptor = m_settings->value(SYNTROEXEC_PARAMS_ADAPTOR, "").toString(); // first adaptor with valid address
-	component->iniPath = m_settings->value(SYNTROEXEC_PARAMS_INI_PATH, "").toString(); // default .ini in working directory
-	component->consoleMode =  m_settings->value(SYNTROEXEC_PARAMS_CONSOLE_MODE, "").toString() == 
+	component->executableDirectory = settings->value(SYNTROEXEC_PARAMS_EXECUTABLE_DIRECTORY, "").toString();
+	component->workingDirectory = settings->value(SYNTROEXEC_PARAMS_WORKING_DIRECTORY, "").toString();
+	component->adaptor = settings->value(SYNTROEXEC_PARAMS_ADAPTOR, "").toString(); // first adaptor with valid address
+	component->iniPath = settings->value(SYNTROEXEC_PARAMS_INI_PATH, "").toString(); // default .ini in working directory
+	component->consoleMode =  settings->value(SYNTROEXEC_PARAMS_CONSOLE_MODE, "").toString() == 
 								SYNTRO_PARAMS_TRUE;
-	component->monitored =  m_settings->value(SYNTROEXEC_PARAMS_MONITORED, "").toString() == 
+	component->monitored =  settings->value(SYNTROEXEC_PARAMS_MONITORED, "").toString() == 
 								SYNTRO_PARAMS_TRUE;
 	component->timeStarted = SyntroClock() - SYNTROEXEC_RESTART_INTERVAL; // force immediate attempt
 
@@ -186,11 +193,12 @@ void ComponentManager::loadComponent(int index)
 	component->UID = m_componentData.getMyUID();			// form the component's UID
 	SyntroUtils::convertIntToUC2(component->instance, component->UID.instance);
 
-	if ((m_settings->value(SYNTROEXEC_PARAMS_INUSE).toString() == SYNTRO_PARAMS_FALSE) ||
-		(m_settings->value(SYNTROEXEC_PARAMS_APP_NAME).toString()) == "") {
-		m_settings->endArray();		
+	if ((settings->value(SYNTROEXEC_PARAMS_INUSE).toString() == SYNTRO_PARAMS_FALSE) ||
+		(settings->value(SYNTROEXEC_PARAMS_APP_NAME).toString()) == "") {
+		settings->endArray();		
 		component->processState = "unused";
-		emit updateExecStatus(component);					// make sure display updated
+		updateStatus(component);					// make sure display updated
+		delete settings;
 		return;
 	}
 
@@ -205,14 +213,15 @@ void ComponentManager::loadComponent(int index)
 	}
 	component->processState = "Starting...";
 	component->inUse = true;
-	m_settings->endArray();
-	emit updateExecStatus(component);
+	settings->endArray();
+	updateStatus(component);
+	delete settings;
 }
 
 ManagerComponent *ComponentManager::getComponent(int index)
 {
 	if (index >= 0 && index < SYNTRO_MAX_COMPONENTSPERDEVICE)
-		return m_components + index;
+		return m_components[index];
 
 	return NULL;
 }
@@ -231,13 +240,13 @@ void ComponentManager::managerBackground()
 		// now exiting start mode - kill anything from this machine generating hellos
 		m_startMode = false;
 		startModeKillAll();
-		m_components[INSTANCE_EXEC].processState = "Execing";
-		emit updateExecStatus(m_components + INSTANCE_EXEC);
+		m_components[INSTANCE_EXEC]->processState = "Execing";
+		updateStatus(m_components[INSTANCE_EXEC]);
 		return;
 	}
 
 	for (i = 0; i < SYNTRO_MAX_COMPONENTSPERDEVICE; i++) {
-		component = m_components + i;
+		component = m_components[i];
 		if (component->instance == INSTANCE_EXEC)
 			continue;										// don't process SyntroExec's dummy entry
 		if (!component->inUse)
@@ -261,7 +270,7 @@ void ComponentManager::managerBackground()
 				break;
 		}
 		m_lock.unlock();
-		emit updateExecStatus(component);
+		updateStatus(component);
 	}
 }
 
@@ -308,7 +317,7 @@ void ComponentManager::checkHello(ManagerComponent *component)
 	HELLOENTRY helloEntry;
 
 	if (m_hello->findComponent(&helloEntry, &(component->UID))) {
-		component->componentName = helloEntry.hello.componentName;	// record component name
+		component->componentName = helloEntry.hello.appName;	// record component name
 		component->IPAddressString = helloEntry.IPAddr;		// and its IP address
 		component->lastHelloTime = SyntroClock();
 		component->helloStateString = "Hello rcvd";
@@ -332,13 +341,13 @@ void ComponentManager::startModeKillAll()
 	//	make sure no instances of apps named in the .ini are running
 
 	for (i = 0; i < SYNTRO_MAX_COMPONENTSPERDEVICE; i++) {
-		if (!m_components[i].inUse)
+		if (!m_components[i]->inUse)
 			continue;
 		if (i == INSTANCE_EXEC)
 			continue;										// don't kill SyntroExec!
-		if (m_components[i].appName.length() == 0)
+		if (m_components[i]->appName.length() == 0)
 			continue;
-		findAndKillProcess(m_components[i].appName + m_extension);
+		findAndKillProcess(m_components[i]->appName + m_extension);
 	}
 
 	//	now make sure nobody is generating hellos in the instance range Syntroexec needs
@@ -354,19 +363,48 @@ void ComponentManager::startModeKillAll()
 	}
 }
 
-
-bool ComponentManager::processMessage(SyntroThreadMsg* msg)
+void ComponentManager::timerEvent(QTimerEvent *event)
 {
-	if (msg->message == SYNTROTHREAD_TIMER_MESSAGE)
-		managerBackground();
-
-	return true;
+	managerBackground();
 }
 
 
 Hello *ComponentManager::getHelloObject()
 {
 	return m_hello;
+}
+
+
+void ComponentManager:: updateStatus(ManagerComponent *component)
+{
+	QMutexLocker locker(&m_lock);
+
+	QStringList list;
+	QString appName;
+	QString compName;
+	QString uid;
+	QString execState;
+	QString helloState;
+
+	if (component->inUse) {
+		appName = component->appName;
+		if (component->monitored) 
+			compName = component->componentName;
+		else
+			compName = "...";
+		uid = SyntroUtils::displayUID(&component->UID);
+		execState = component->processState;
+		if (component->monitored) 
+			helloState = component->helloStateString;
+		else
+			helloState = "...";
+	}
+	list.append(appName);
+	list.append(compName);
+	list.append(uid);
+	list.append(execState);
+	list.append(helloState);
+	emit updateExecStatus(component->instance, component->inUse, list);
 }
 
 //----------------------------------------------------------

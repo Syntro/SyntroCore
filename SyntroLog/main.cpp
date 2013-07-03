@@ -1,5 +1,5 @@
 //
-//  Copyright (c) 2012 Pansenti, LLC.
+//  Copyright (c) 2012, 2013 Pansenti, LLC.
 //
 //  This file is part of Syntro
 //
@@ -27,11 +27,9 @@ int main(int argc, char *argv[])
 {
 	QApplication a(argc, argv);
 
-	QSettings *settings = SyntroUtils::loadStandardSettings(PRODUCT_TYPE, a.arguments());
+	SyntroUtils::loadStandardSettings(APPTYPE_LOG, a.arguments());
 
-	settings->setValue(SYNTRO_PARAMS_COMPTYPE, PRODUCT_TYPE);
-
-	SyntroLog *w = new SyntroLog(settings);
+	SyntroLog *w = new SyntroLog();
 
 	w->show();
 

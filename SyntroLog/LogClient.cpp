@@ -1,5 +1,5 @@
 //
-//  Copyright (c) 2012 Pansenti, LLC.
+//  Copyright (c) 2012, 2013 Pansenti, LLC.
 //	
 //  This file is part of Syntro
 //
@@ -25,8 +25,8 @@
 // in LOGCLIENT_BACKGROUND_INTERVAL units, so 5 seconds
 #define LOGCLIENT_DIR_REFRESH_INTERVAL 50
 
-LogClient::LogClient(QObject *parent, QSettings *settings)
-	: Endpoint(parent, settings, LOGCLIENT_BACKGROUND_INTERVAL)
+LogClient::LogClient(QObject *parent)
+	: Endpoint(LOGCLIENT_BACKGROUND_INTERVAL, COMPTYPE_LOGSINK)
 {
 	// force a dir refresh as soon as we connect
 	m_dirRefreshCounter = LOGCLIENT_DIR_REFRESH_INTERVAL;
@@ -124,20 +124,41 @@ void LogClient::appClientReceiveDirectory(SYNTRO_DIRECTORY_RESPONSE *directory, 
 
 void LogClient::handleDirEntry(QString dirEntry)
 {
-	int start = dirEntry.indexOf("<MSV>");
+	QString appNameStart = QString("<") + DETAG_APPNAME + ">";
+	QString appNameEnd = QString("</") + DETAG_APPNAME + ">";
+	QString msvStart = QString("<") + DETAG_MSERVICE + ">";
+	QString msvEnd = QString("</") + DETAG_MSERVICE + ">";
+
+	int start, end;
+
+	start = dirEntry.indexOf(appNameStart);
+	if (start == -1) {
+		logError("Failed to find app name in dir entry");
+		return;
+	}
+		
+	end = dirEntry.indexOf(appNameEnd);
+	if (end == -1) {
+		logError("Failed to find end of app name in dir entry");
+		return;
+	}
+	QString appName = dirEntry.mid(start + 5, end - (start + 5));
+		
+	start = dirEntry.indexOf(msvStart);
+	if (start == -1)
+		return;
 
 	while (start >= 0) {
-		int end = dirEntry.indexOf("</MSV>");
+		end = dirEntry.indexOf(msvEnd);
 
-		QString entry = dirEntry.mid(start + 5, end - (start + 5));
+		QString entry = appName + SYNTRO_SERVICEPATH_SEP + dirEntry.mid(start + 5, end - (start + 5));
 
 		if (entry.endsWith(SYNTRO_LOG_SERVICE_TAG)) {
 			int i = findEntry(entry);
 		
 			if (i >= 0) {
 				m_sources[i].m_active = true;
-			}
-			else {
+			} else {
 				int port = clientAddService(entry, SERVICETYPE_MULTICAST, false, true);
 
 				if (port >= 0) {

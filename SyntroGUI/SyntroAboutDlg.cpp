@@ -1,5 +1,5 @@
 //
-//  Copyright (c) 2012 Pansenti, LLC.
+//  Copyright (c) 2012, 2013 Pansenti, LLC.
 //	
 //  This file is part of SyntroLib
 //
@@ -23,18 +23,14 @@
 #include "SyntroAboutDlg.h"
 #include "SyntroUtils.h"
 
-SyntroAbout::SyntroAbout(QWidget *parent, QSettings *settings)
-	: QDialog(parent, Qt::WindowCloseButtonHint | Qt::WindowTitleHint)
+SyntroAbout::SyntroAbout()
+	: QDialog(0, Qt::WindowCloseButtonHint | Qt::WindowTitleHint)
 {
-	//ui.setupUi(this);
 	layoutWindow();
 
-	QString appName = settings->value(SYNTRO_PARAMS_APPNAME).toString();
-	QString appType = settings->value(SYNTRO_PARAMS_APPTYPE).toString();
-
-	setWindowTitle("About " + appType);
-	m_appName->setText(appType);
-	m_componentName->setText(appName);
+	setWindowTitle("About " + SyntroUtils::getAppType());
+	m_appType->setText(SyntroUtils::getAppType());
+	m_appName->setText(SyntroUtils::getAppName());
 	m_buildDate->setText(QString("%1 %2").arg(__DATE__).arg(__TIME__));
 	m_syntroLibVersion->setText(SyntroUtils::syntroLibVersion());
 	m_qtRuntime->setText(qVersion());
@@ -54,13 +50,13 @@ void SyntroAbout::layoutWindow()
 	QVBoxLayout *verticalLayout = new QVBoxLayout();
 	verticalLayout->setSpacing(6);
 	
-	m_appName = new QLabel(this);
+	m_appType = new QLabel(this);
 	QFont font;
 	font.setPointSize(12);
-	m_appName->setFont(font);
-	m_appName->setAlignment(Qt::AlignCenter);
+	m_appType->setFont(font);
+	m_appType->setAlignment(Qt::AlignCenter);
 
-	verticalLayout->addWidget(m_appName);
+	verticalLayout->addWidget(m_appType);
 
 	QLabel *label_1 = new QLabel("A Syntro Application", this);
 	QFont font1;
@@ -95,8 +91,8 @@ void SyntroAbout::layoutWindow()
 	
 	QLabel *label_3 = new QLabel("Name:", this);
 	formLayout->setWidget(0, QFormLayout::LabelRole, label_3);
-	m_componentName = new QLabel(this);
-	formLayout->setWidget(0, QFormLayout::FieldRole, m_componentName);
+	m_appName = new QLabel(this);
+	formLayout->setWidget(0, QFormLayout::FieldRole, m_appName);
 
 	QLabel *label_5 = new QLabel("Build Date:", this);
 	formLayout->setWidget(2, QFormLayout::LabelRole, label_5);

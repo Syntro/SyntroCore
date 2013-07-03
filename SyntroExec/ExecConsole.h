@@ -1,5 +1,5 @@
 //
-//  Copyright (c) 2012 Pansenti, LLC.
+//  Copyright (c) 2012, 2013 Pansenti, LLC.
 //	
 //  This file is part of Syntro
 //
@@ -20,7 +20,7 @@
 #ifndef EXECCONSOLE_H
 #define EXECCONSOLE_H
 
-#include <QThread>
+#include <qthread.h>
 #include <QSettings>
 
 class	ComponentManager;
@@ -30,11 +30,11 @@ class ExecConsole : public QThread
 	Q_OBJECT
 
 public:
-	ExecConsole(QSettings *settings, QObject *parent);
+	ExecConsole(QObject *parent);
 	~ExecConsole() {}
 
 public slots:
-	void aboutToQuit();
+	void managerRunning();
 
 signals:
 	void loadComponent(int);								// load specified component
@@ -47,7 +47,6 @@ private:
 	void displayManagedComponents();
 	void showHelp();
 
-	QSettings *m_settings;
 	ComponentManager *m_manager;
 };
 

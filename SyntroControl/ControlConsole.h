@@ -1,5 +1,5 @@
 //
-//  Copyright (c) 2012 Pansenti, LLC.
+//  Copyright (c) 2012, 2013 Pansenti, LLC.
 //	
 //  This file is part of Syntro
 //
@@ -21,7 +21,6 @@
 #define CONTROLCONSOLE_H
 
 #include <QThread>
-#include <QSettings>
 
 class	SyntroServer;
 
@@ -30,7 +29,7 @@ class ControlConsole : public QThread
 	Q_OBJECT
 
 public:
-	ControlConsole(QSettings *pSettings, QObject *parent);
+	ControlConsole(QObject *parent);
 	~ControlConsole() {}
 
 public slots:
@@ -45,7 +44,6 @@ private:
 	void displayMulticast();
 	void showHelp();
 
-	QSettings *m_settings;
 	SyntroServer *m_client;
 };
 

@@ -36,7 +36,7 @@ public:
 
 	// sets up the initial data
 
-	void init(const char *compName, const char *compType, int hbInterval, int priority = 0);
+	void init(const char *compType, int hbInterval, int priority = 0);
 
 	// returns a pointer to the DE
 
@@ -84,6 +84,8 @@ private:
 	char m_myDE[SYNTRO_MAX_DELENGTH];	
 	SyntroSocket *m_myHelloSocket;									
 	unsigned char m_myInstance;
+
+	QString m_logTag;
 };
 
 #endif		//_SYNTROCOMPONENTDATA_H_

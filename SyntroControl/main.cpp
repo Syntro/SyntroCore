@@ -23,11 +23,8 @@
 #include "SyntroUtils.h"
 #include "ControlConsole.h"
 
-
 int runGuiApp(int argc, char *argv[]);
 int runConsoleApp(int argc, char *argv[]);
-QSettings *loadSettings(QStringList arglist);
-
 
 int main(int argc, char *argv[])
 {
@@ -43,12 +40,9 @@ int runGuiApp(int argc, char *argv[])
 {
 	QApplication a(argc, argv);
 
-	QSettings *settings = loadSettings(a.arguments());
-
-	SyntroControl *w = new SyntroControl(settings);
-
+	SyntroUtils::loadStandardSettings(APPTYPE_CONTROL, a.arguments());
+	SyntroControl *w = new SyntroControl();
 	w->show();
-
 	return a.exec();
 }
 
@@ -56,21 +50,7 @@ int runConsoleApp(int argc, char *argv[])
 {
 	QCoreApplication a(argc, argv);
 
-	QSettings *settings = loadSettings(a.arguments());
-
-	ControlConsole cc(settings, &a);
-
+	SyntroUtils::loadStandardSettings(APPTYPE_CONTROL, a.arguments());
+	ControlConsole cc(&a);
 	return a.exec();
 }
-
-QSettings *loadSettings(QStringList arglist)
-{
-	QSettings *settings = SyntroUtils::loadStandardSettings(PRODUCT_TYPE, arglist);
-
-	// app-specific part
-
-	settings->setValue(SYNTRO_PARAMS_COMPTYPE, PRODUCT_TYPE);
-
-	return settings;
-}
-

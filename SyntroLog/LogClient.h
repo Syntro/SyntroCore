@@ -1,5 +1,5 @@
 //
-//  Copyright (c) 2012 Pansenti, LLC.
+//  Copyright (c) 2012, 2013 Pansenti, LLC.
 //	
 //  This file is part of Syntro
 //
@@ -36,7 +36,7 @@ class LogClient : public Endpoint
 	Q_OBJECT
 
 public:
-	LogClient(QObject *parent, QSettings *settings);
+	LogClient(QObject *parent);
 
 signals:
 	void newLogMsg(QByteArray bulkMsg);

@@ -1,5 +1,5 @@
 //
-//  Copyright (c) 2012 Pansenti, LLC.
+//  Copyright (c) 2012, 2013 Pansenti, LLC.
 //	
 //  This file is part of Syntro
 //
@@ -61,6 +61,8 @@ private:
 	QList <QTreeWidgetItem *> m_treeItems;
 	QTreeWidgetItem *m_currentItem;							// this is the list index of the current selected entry	
 	int m_currentDirIndex;									// the currently selected directory index
+
+	QString m_logTag;
 };
 
 #endif // DIRECTORYDIALOG_H

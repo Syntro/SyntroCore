@@ -21,66 +21,126 @@
 #include "SyntroDefs.h"
 #include "SyntroUtils.h"
 #include "SyntroSocket.h"
-#include "SyntroClock.h"
 #include "Endpoint.h"
+#include "SyntroClock.h"
+
 #include <qfileinfo.h>
 #include <qdir.h>
 #include <qhostinfo.h>
+#include <qthread.h>
 
-//	globals
-	
-SYNTRO_IPADDR g_myIPAddr;								// the IP address
-SYNTRO_MACADDR g_myMacAddr;								// the mac address
+/*!
+    \class SyntroUtils
+    \brief SyntroUtils provides a set of utility functions for Syntro apps.
+	\inmodule SyntroLib
+ 
+    SyntroUtils implements a range of static functions that simplify
+	the task of writing Syntro apps.
+*/
 
-//	The actual SyntroClock generator
+QString SyntroUtils::m_logTag = "Utils";
+QString SyntroUtils::m_appName = "appName";
+QString SyntroUtils::m_appType = "appType";
+SYNTRO_IPADDR SyntroUtils::m_myIPAddr;						
+SYNTRO_MACADDR SyntroUtils::m_myMacAddr;						
 
-SyntroClockObject *g_syntroClockGen;					// the actual clock generator
+QString SyntroUtils::m_iniPath;								
+
+SyntroClockObject *SyntroUtils::m_syntroClockGen;			
 
 //	The address info for the adaptor being used
 
-QHostAddress g_platformBroadcastAddress;					
-QHostAddress g_platformSubnetAddress;					
-QHostAddress g_platformNetMask;					
+QHostAddress SyntroUtils::m_platformBroadcastAddress;					
+QHostAddress SyntroUtils::m_platformSubnetAddress;					
+QHostAddress SyntroUtils::m_platformNetMask;					
 
+/*!
+	Returns the IP address associated with the selected network interface.
+*/
 
 SYNTRO_IPADDR *SyntroUtils::getMyIPAddr()
 {
-	return &g_myIPAddr;
+	return &m_myIPAddr;
 }
+
+/*!
+	Returns the MAC address associated with the selected network interface.
+*/
 
 SYNTRO_MACADDR *SyntroUtils::getMyMacAddr()
 {
-	return &g_myMacAddr;
+	return &m_myMacAddr;
 }
 
+/*!
+	Returns the SyntroLib version string.
+*/
 
 const char *SyntroUtils::syntroLibVersion()
 {
 	return SYNTROLIB_VERSION;
 }
 
+/*!
+	This function performs essential initialization required by all Syntro apps. In the
+	case of windowed apps, it should be called in the constructor of the class derived from QMainWindow.
+	Console or daemon apps should call this function in the constructor fo the class derived from QThread.
 
-void SyntroUtils::syntroAppInit(QSettings *settings)
+	Note that it assumes that loadStandardSettings() has been called.
+*/
+
+void SyntroUtils::syntroAppInit()
 {
-	g_syntroClockGen = new SyntroClockObject();
-	g_syntroClockGen->start();
-	logCreate(settings);
-	getMyIPAddress(settings);
+	m_logTag = "Utils";
+	m_syntroClockGen = new SyntroClockObject();
+	m_syntroClockGen->start();
+	getMyIPAddress();
+	logCreate();
 }
+
+/*!
+	This function should be called whent he Syntro app is exiting. In a windowed app, this is normally
+	the last thing called in the closeEvent() event handler. In a console app, this should be called before exiting the 
+	app.
+*/
 
 void SyntroUtils::syntroAppExit()
 {
 	logDestroy();
-	if (g_syntroClockGen) {
-		g_syntroClockGen->m_run = false;
-		g_syntroClockGen->wait(200);							// should never take more than this
-		delete g_syntroClockGen;
-		g_syntroClockGen = NULL;
+	if (m_syntroClockGen) {
+		m_syntroClockGen->m_run = false;
+		m_syntroClockGen->wait(200);							// should never take more than this
+		delete m_syntroClockGen;
+		m_syntroClockGen = NULL;
 	}
 }
 
+/*!
+	Returns the name of the app. Default is the hostname unless it has been overridden in 
+	the app's .ini file.
+*/
 
-//	checkConsoleModeFlag check for "-c" in the runtime args and returns true if found
+const QString& SyntroUtils::getAppName()
+{
+	return m_appName;
+}
+
+/*!
+	Returns the type of the app. This is hard-coded for any particular app.
+*/
+
+const QString& SyntroUtils::getAppType()
+{
+	return m_appType;
+}
+
+
+/*!
+	Checks to see if the console mode flag "-c" is present in the runtime arguments supplied to the app
+	on startup. \a argc and \a argv are the traditional argument count and string array form of the arguments.
+
+	Returns true if it is, false otherwise.
+*/
 
 bool SyntroUtils::checkConsoleModeFlag(int argc, char *argv[])
 {
@@ -92,6 +152,14 @@ bool SyntroUtils::checkConsoleModeFlag(int argc, char *argv[])
 	return false;
 }
 
+/*!
+	Checks to see if the daemon mode flag "-d" is present in the runtime arguments supplied to the app
+	on startup. \a argc and \a argv are the traditional argument count and string array form of the arguments.
+
+	Returns true if it is, false otherwise.
+*/
+
+
 bool SyntroUtils::checkDaemonModeFlag(int argc, char *argv[])
 {
     for (int i = 1; i < argc; i++) {
@@ -102,18 +170,31 @@ bool SyntroUtils::checkDaemonModeFlag(int argc, char *argv[])
     return false;
 }
 
+/*!
+	This function, typically called in the app's client thread, can be used to determine if the multicast
+	service send window is currently open. \a seq is the current send sequence number, \a ack is the last received ack sequence
+	number. Returns true if the window is open, false otherwise.
+*/
+
 bool SyntroUtils::isSendOK(unsigned char seq, unsigned char ack)
 {
 	return (seq - ack) < SYNTRO_MAX_WINDOW;
 }
 
+/*!
+	Converts a string form of the current MAC address (in \a macAddress) and the app's current \a instance
+	number into a UID string in \a UIDStr. This is in a form that can be displayed easily.
+*/
 
 void SyntroUtils::makeUIDSTR(SYNTRO_UIDSTR UIDStr, SYNTRO_MACADDRSTR macAddress, int instance)
 {
 	sprintf(UIDStr, "%s%04x", macAddress, instance);
 }
 
-//	UIDSTRtoUID converts a string UID to a binary one
+/*!
+	Converts a string form UID into a binary form UID as is actually used in Syntro messages.
+	\a sourceStr is the string form UID, \a destUID is the binary UID.
+*/
 
 void SyntroUtils::UIDSTRtoUID(SYNTRO_UIDSTR sourceStr, SYNTRO_UID *destUID)
 {
@@ -128,7 +209,11 @@ void SyntroUtils::UIDSTRtoUID(SYNTRO_UIDSTR sourceStr, SYNTRO_UID *destUID)
 	convertIntToUC2(byteTemp, destUID->instance);
 }
 
-//	UIDtoUIDSTR converts a binary UID to a string one
+/*!
+	Converts a binary form UID into a string form UID suitable for display.
+	\a sourceUID is the binary form UID, \a destStr is the string form UID.
+*/
+
 
 void SyntroUtils::UIDtoUIDSTR(SYNTRO_UID *sourceUID, SYNTRO_UIDSTR destStr)
 {
@@ -138,14 +223,19 @@ void SyntroUtils::UIDtoUIDSTR(SYNTRO_UID *sourceUID, SYNTRO_UIDSTR destStr)
 	sprintf(destStr + SYNTRO_MACADDR_LEN * 2, "%04x", convertUC2ToUInt(sourceUID->instance));
 }
 
-//	displayIPAddr - returns a string version of UP address for displaying
+/*!
+	Returns a QString with the supplied binary form IP address in \a address. The QString is in the
+	traditional dotted format - "xx.xx.xx.xx".
+*/
 
 QString SyntroUtils::displayIPAddr(SYNTRO_IPADDR address)
 {
 	return QString("%1.%2.%3.%4").arg(address[0]).arg(address[1]).arg(address[2]).arg(address[3]);
 }
 
-//	convertIPStringToIPAddr converts a string form IP address (with dots) to the internal form
+/*!
+	Converts a dotted string form IP address in \a IPStr to a binary form IP address in \a IPAddr.
+*/
 
 void SyntroUtils::convertIPStringToIPAddr(char *IPStr, SYNTRO_IPADDR IPAddr)
 {
@@ -157,10 +247,22 @@ void SyntroUtils::convertIPStringToIPAddr(char *IPStr, SYNTRO_IPADDR IPAddr)
 		IPAddr[i] = (unsigned char)a[i];
 }
 
+/*!
+	Checks to see if the binary form IP address in \a addr is actually "0.0.0.0".
+
+	Returns true if so, false otherwise.
+*/
+
 bool SyntroUtils::IPZero(SYNTRO_IPADDR addr)
 {
 	return (addr[0] == 0) && (addr[1] == 0) && (addr[2] == 0) && (addr[3] == 0);
 }
+
+/*!
+	Checks to see if the binary form IP address in \a addr is actually "127.0.0.1".
+
+	Returns true if so, false otherwise.
+*/
 
 bool SyntroUtils::IPLoopback(SYNTRO_IPADDR addr)
 {
@@ -168,7 +270,9 @@ bool SyntroUtils::IPLoopback(SYNTRO_IPADDR addr)
 }
 
 
-//	displayUID - returns a string version of UID for displaying
+/*!
+	Returns a QString with a printable version of the UID in \a uid.
+*/
 
 QString SyntroUtils::displayUID(SYNTRO_UID *uid)
 {
@@ -179,17 +283,28 @@ QString SyntroUtils::displayUID(SYNTRO_UID *uid)
 	return QString(temp);
 }
 
+/*!
+	Returns true if the binary form UIDs in \a a and \a b are equal, false otherwise.
+*/
+
 bool SyntroUtils::compareUID(SYNTRO_UID *a, SYNTRO_UID *b)
 {
 	return memcmp(a, b, sizeof(SYNTRO_UID)) == 0;
 }
+
+/*!
+	Returns true if the binary form UID in \a a is numerically higher than the one in \a b, false otherwise.
+*/
 
 bool SyntroUtils::UIDHigher(SYNTRO_UID *a, SYNTRO_UID *b)
 {
 	return memcmp(a, b, sizeof(SYNTRO_UID)) > 0;
 }
 
-//	swapEHead swaps UIDs and ports in a SYNTRO_EHEAD
+/*!
+	This function swaps the source and destination UIDs and ports in the SYNTRO_EHEAD structure in \a ehead. Often used
+	to return a Syntro message to its origin.
+*/
 
 void SyntroUtils::swapEHead(SYNTRO_EHEAD *ehead)
 {
@@ -201,6 +316,10 @@ void SyntroUtils::swapEHead(SYNTRO_EHEAD *ehead)
 
 	convertIntToUC2(i, ehead->destPort);
 }
+
+/*!
+	This function swaps the contents of the twp binary form UIDs \a a and \a b.
+*/
 
 void SyntroUtils::swapUID(SYNTRO_UID *a, SYNTRO_UID *b)
 {
@@ -216,10 +335,18 @@ void SyntroUtils::swapUID(SYNTRO_UID *a, SYNTRO_UID *b)
 //	*** Note: 32 bit int assumed ***
 //
 
+/*!
+	Returns the integer value of the SYNTRO_UC4 variable \a uc4.
+*/
+
 int	SyntroUtils::convertUC4ToInt(SYNTRO_UC4 uc4)
 {
 	return ((int)uc4[0] << 24) | ((int)uc4[1] << 16) | ((int)uc4[2] << 8) | uc4[3];
 }
+
+/*!
+	Converts an integer value in \a val into a SYNTRO_UC4 variable \a uc4.
+*/
 
 void SyntroUtils::convertIntToUC4(int val, SYNTRO_UC4 uc4)
 {
@@ -228,6 +355,10 @@ void SyntroUtils::convertIntToUC4(int val, SYNTRO_UC4 uc4)
 	uc4[1] = (val >> 16) & 0xff;
 	uc4[0] = (val >> 24) & 0xff;
 }
+
+/*!
+	Returns the integer value of the SYNTRO_UC2 variable \a uc2.
+*/
 
 int	SyntroUtils::convertUC2ToInt(SYNTRO_UC2 uc2)
 {
@@ -239,10 +370,18 @@ int	SyntroUtils::convertUC2ToInt(SYNTRO_UC2 uc2)
 	return val;
 }
 
+/*!
+	Returns the unsigned integer value of the SYNTRO_UC2 variable \a uc2.
+*/
+
 int SyntroUtils::convertUC2ToUInt(SYNTRO_UC2 uc2)
 {
 	return ((int)uc2[0] << 8) | uc2[1];
 }
+
+/*!
+	Converts an integer value in \a val into a SYNTRO_UC2 variable \a uc2.
+*/
 
 void SyntroUtils::convertIntToUC2(int val, SYNTRO_UC2 uc2)
 {
@@ -250,12 +389,29 @@ void SyntroUtils::convertIntToUC2(int val, SYNTRO_UC2 uc2)
 	uc2[0] = (val >> 8) & 0xff;
 }
 
+/*!
+	Copies the contents of the SYNTRO_UC2 variable \a src into \a dst.
+*/
+
+
 void SyntroUtils::copyUC2(SYNTRO_UC2 dst, SYNTRO_UC2 src)
 {
 	dst[0] = src[0];
 	dst[1] = src[1];
 }
 
+/*!
+	Generates and returns a pointer to a SYNTRO_EHEAD structure with anough space for appended data. 
+	\a sourceUID is the binary form
+	UID source address, \a sourcePort is the source service port number, \a destUID is the binary
+	form destination UID, \a destPort is the destination service port number, \a seq is the send
+	sequence number to use and \a len is the length of the extra data to be allocated after the 
+	SYNTRO_EHEAD structure.
+
+	The length of extra allocated data can be 0 if just the SYNTRO_EHEAD structure itself is needed.
+
+	The memory for the SYNTRO_EHEAD is malloced and therefore needs to be freed at some later date.
+*/
 
 SYNTRO_EHEAD *SyntroUtils::createEHEAD(SYNTRO_UID *sourceUID, int sourcePort, SYNTRO_UID *destUID, int destPort, 
 										unsigned char seq, int len)
@@ -272,6 +428,12 @@ SYNTRO_EHEAD *SyntroUtils::createEHEAD(SYNTRO_UID *sourceUID, int sourcePort, SY
 	return ehead;
 }
 
+/*!
+	This function takes a service path in \a servicePath and breaks it up into its constituent components,
+	\a regionName, \a componentName and \a serviceName.
+
+	It returns true if the service path is valid, false otherwise.
+*/
 
 bool SyntroUtils::crackServicePath(QString servicePath, QString& regionName, QString& componentName, QString& serviceName)
 {
@@ -303,19 +465,32 @@ bool SyntroUtils::crackServicePath(QString servicePath, QString& regionName, QSt
 	return true;
 }
 
-//	loadStandardSettings looks for the following command line parameters in any order
-//
-//		-s<settings-file-path>		- default is ./<COMPONENT_TYPE>.ini
-//		-a<network-adapter>			- default is first with valid IP address
+/*!
+	This function is normally called from within main.cpp of a Syntro app before the main code begins.
+	It makes sure that settings common to all applications are set up correctly in the .ini file and
+	processes the runtime arguments. 
 
-QSettings *SyntroUtils::loadStandardSettings(const char *appType, QStringList arglist)
+	Supported runtime arguments are:
+
+	\list
+	\li -a<adaptor>: adaptor. Can be used to specify a particular network adaptor for use. an example would be
+	-aeth0.
+	\li -c: console mode. If present, the app should run in console mode rather than windowed mode.
+	\li -d: daemon mode. If present, the app should run in daemon mode
+	\li -s<path>: settings file path. By default, the app will use the file <apptype>.ini in the working directory.
+	The -s option can be used to override that and specify a path to anywhere in the file system.
+	\endlist
+
+	\a appType is the application type string, \a arglist is the list of arguments supplied to the app.
+*/
+
+void SyntroUtils::loadStandardSettings(const char *appType, QStringList arglist)
 {
 	QString args;
 	QString adapter;									// IP adaptor name
-	QString settingsPath;								// the settings file path
 	QSettings *settings = NULL;
 
-	settingsPath = "";
+	m_iniPath = "";
 	adapter = "";
 
 	for (int i = 1; i < arglist.size(); i++) {			// skip the first string as that is the program name
@@ -329,7 +504,7 @@ QSettings *SyntroUtils::loadStandardSettings(const char *appType, QStringList ar
 
 		switch (optCode) {
 		case 's':
-			settingsPath = opt;
+			m_iniPath = opt;
 			break;
 
 		case 'a':
@@ -351,14 +526,14 @@ QSettings *SyntroUtils::loadStandardSettings(const char *appType, QStringList ar
 
 	// user can override the default location for the ini file
 
-    if (settingsPath.size() != 0)
-		settings = new QSettings(settingsPath, QSettings::IniFormat);
-    else
-		settings = new QSettings(QDir::currentPath() + "/" + appType + ".ini", QSettings::IniFormat);
+    if (m_iniPath.size() == 0)
+		m_iniPath = QDir::currentPath() + "/" + appType + ".ini";
+
+	settings = new QSettings(m_iniPath, QSettings::IniFormat);
 
 	// Save settings generated from command line arguments
 
-	settings->setValue(SYNTRO_RUNTIME_PATH, settingsPath);
+	settings->setValue(SYNTRO_RUNTIME_PATH, m_iniPath);
 
 	if (adapter.length() > 0) {
 		settings->setValue(SYNTRO_RUNTIME_ADAPTER, adapter);
@@ -375,9 +550,13 @@ QSettings *SyntroUtils::loadStandardSettings(const char *appType, QStringList ar
 
 	if (!settings->contains(SYNTRO_PARAMS_APPNAME))
 		settings->setValue(SYNTRO_PARAMS_APPNAME, QHostInfo::localHostName());		// use hostname for app name
+
+	m_appName = settings->value(SYNTRO_PARAMS_APPNAME).toString();
+
 	//	Force type to be mine always
 
 	settings->setValue(SYNTRO_PARAMS_APPTYPE, appType);
+	m_appType = appType;
 
 	//	Add in SyntroControl array
 
@@ -409,8 +588,28 @@ QSettings *SyntroUtils::loadStandardSettings(const char *appType, QStringList ar
 	if (!settings->contains(SYNTRO_PARAMS_HBTIMEOUT))
 		settings->setValue(SYNTRO_PARAMS_HBTIMEOUT, SYNTRO_HEARTBEAT_TIMEOUT);
 
-	return settings;
+	if (!settings->contains(SYNTRO_PARAMS_LOG_HBINTERVAL))
+		settings->setValue(SYNTRO_PARAMS_LOG_HBINTERVAL, SYNTRO_LOG_HEARTBEAT_INTERVAL);
+
+	if (!settings->contains(SYNTRO_PARAMS_LOG_HBTIMEOUT))
+		settings->setValue(SYNTRO_PARAMS_LOG_HBTIMEOUT, SYNTRO_LOG_HEARTBEAT_TIMEOUT);
+
+	delete settings;
 }
+
+/*!
+	Returns a pointer to QSettings object for the app's .ini file. Note: the caller must
+	delete the QSettiongs object at some point and must not pass it to another thread.
+*/
+
+QSettings *SyntroUtils::getSettings()
+{
+	return new QSettings(m_iniPath, QSettings::IniFormat);
+}
+
+/*!
+	Returns true if the character in \a value is a character that is not permitted in service names, false otherwise.
+*/
 
 bool SyntroUtils::isReservedNameCharacter(char value)
 {
@@ -427,6 +626,10 @@ bool SyntroUtils::isReservedNameCharacter(char value)
 	}
 }
 
+/*!
+	Returns true if the character in \a value is a character that is not permitted in service paths, false otherwise.
+*/
+
 bool SyntroUtils::isReservedPathCharacter(char value)
 {
 	switch (value) {
@@ -441,8 +644,20 @@ bool SyntroUtils::isReservedPathCharacter(char value)
 	}
 }
 
- QString SyntroUtils::insertStreamNameInPath(const QString& streamSource, const QString& streamName)
- {
+
+/*!
+	This funtion takes \a streamSource, a QString containing the app name of a stream source possibly with
+	a concententated type qualifier (eg :lr for low rate video) and inserts the \a streamName at the
+	coorrect point and returns the result as a new QString.
+
+	For example "Ubuntu:lr" with a stream name of "video" would result in "Ubuntu/video:lr".
+
+	In many apps, users may specify the app name and type qualifier but the stream name is fixed. This
+	function provides a convenient way of integrating the two ready to activate a remote stream for example.
+*/
+
+QString SyntroUtils::insertStreamNameInPath(const QString& streamSource, const QString& streamName)
+{
 	 int index;
 	 QString result;
 
@@ -456,22 +671,39 @@ bool SyntroUtils::isReservedPathCharacter(char value)
 		 result.insert(index, QString("/") + streamName);
 	 }
 	 return result;
- }
+}
+
+/*!
+	Returns the broadcast address of the selected network interface.
+*/
 
 QHostAddress SyntroUtils::getMyBroadcastAddress()
 {
-	return g_platformBroadcastAddress;
+	return m_platformBroadcastAddress;
 }
+
+
+/*!
+	Returns the subnet address of the selected network interface.
+*/
 
 QHostAddress SyntroUtils::getMySubnetAddress()
 {
-	return g_platformSubnetAddress;
+	return m_platformSubnetAddress;
 }
+
+/*!
+	Returns the netmask of the selected network interface.
+*/
 
 QHostAddress SyntroUtils::getMyNetMask()
 {
-	return g_platformNetMask;
+	return m_platformNetMask;
 }
+
+/*!
+	Returns true if the supplied binary form IP address \a IPAddr is in the same subnet as this app.
+*/
 
 bool SyntroUtils::isInMySubnet(SYNTRO_IPADDR IPAddr)
 {
@@ -482,9 +714,18 @@ bool SyntroUtils::isInMySubnet(SYNTRO_IPADDR IPAddr)
 	if ((IPAddr[0] == 0xff) && (IPAddr[1] == 0xff) && (IPAddr[2] == 0xff) && (IPAddr[3] == 0xff))
 		return true;
 	intaddr = (IPAddr[0] << 24) + (IPAddr[1] << 16) + (IPAddr[2] << 8) + IPAddr[3];
-	return (intaddr & g_platformNetMask.toIPv4Address()) == g_platformSubnetAddress.toIPv4Address(); 
+	return (intaddr & m_platformNetMask.toIPv4Address()) == m_platformSubnetAddress.toIPv4Address(); 
 }
 
+
+/*!
+	Provides a convenient way of checking to see if a timer has expired. \a now is the current
+	time, usually the output of SyntroClock(). \a start is the start time of the timer, usually
+	the value of SyntroClock when the timer was started. \a interval is the length of the timer.
+
+	Returns true if the timer has expired, false otherwise. If \a interval is 0, the function always returns false,
+	providing an easy way of disabling timers.
+*/
 
 bool SyntroUtils::syntroTimerExpired(qint64 now, qint64 start, qint64 interval)
 {
@@ -493,7 +734,11 @@ bool SyntroUtils::syntroTimerExpired(qint64 now, qint64 start, qint64 interval)
 	return ((now - start) >= interval);
 }
 
-void SyntroUtils::getMyIPAddress(QSettings *settings)
+/*!
+	\internal
+*/
+
+void SyntroUtils::getMyIPAddress()
 {
 	QNetworkInterface		cInterface;
 	QNetworkAddressEntry	cEntry;
@@ -502,6 +747,8 @@ void SyntroUtils::getMyIPAddress(QSettings *settings)
 	quint32 intaddr;
 	quint32 intmask;
 	int addr[SYNTRO_MACADDR_LEN];
+
+	QSettings *settings = SyntroUtils::getSettings();
 
 	while (1) {
 		QList<QNetworkInterface> ani = QNetworkInterface::allInterfaces();
@@ -519,31 +766,33 @@ void SyntroUtils::getMyIPAddress(QSettings *settings)
 						if (intaddr == 0)
 							continue;								// not real
 	
-						g_myIPAddr[0] = intaddr >> 24;
-						g_myIPAddr[1] = intaddr >> 16;
-						g_myIPAddr[2] = intaddr >> 8;
-						g_myIPAddr[3] = intaddr;
-						if (IPLoopback(g_myIPAddr) || IPZero(g_myIPAddr))
+						m_myIPAddr[0] = intaddr >> 24;
+						m_myIPAddr[1] = intaddr >> 16;
+						m_myIPAddr[2] = intaddr >> 8;
+						m_myIPAddr[3] = intaddr;
+						if (IPLoopback(m_myIPAddr) || IPZero(m_myIPAddr))
 							continue;
 						QString macaddr = cInterface.hardwareAddress();					// get the MAC address
 						sscanf(macaddr.toLocal8Bit().constData(), "%x:%x:%x:%x:%x:%x", 
 							addr, addr+1, addr+2, addr+3, addr+4, addr+5);
 
 						for (int i = 0; i < SYNTRO_MACADDR_LEN; i++)
-							g_myMacAddr[i] = addr[i];
+							m_myMacAddr[i] = addr[i];
 
-						logInfo(QString("Using IP adaptor %1").arg(displayIPAddr(g_myIPAddr)));
+						logInfo(QString("Using IP adaptor %1").arg(displayIPAddr(m_myIPAddr)));
 
-						g_platformNetMask = cEntry.netmask();
-						intmask = g_platformNetMask.toIPv4Address();
+						m_platformNetMask = cEntry.netmask();
+						intmask = m_platformNetMask.toIPv4Address();
 						intaddr &= intmask;
-						g_platformSubnetAddress = QHostAddress(intaddr);
+						m_platformSubnetAddress = QHostAddress(intaddr);
 						intaddr |= ~intmask;
-						g_platformBroadcastAddress = QHostAddress(intaddr);
+						m_platformBroadcastAddress = QHostAddress(intaddr);
 						logInfo(QString("Subnet = %1, netmask = %2, bcast = %3")
-							.arg(g_platformSubnetAddress.toString())
-							.arg(g_platformNetMask.toString())
-							.arg(g_platformBroadcastAddress.toString()));
+							.arg(m_platformSubnetAddress.toString())
+							.arg(m_platformNetMask.toString())
+							.arg(m_platformBroadcastAddress.toString()));
+
+						delete settings;
 
 						return;
 					}
@@ -554,7 +803,12 @@ void SyntroUtils::getMyIPAddress(QSettings *settings)
 		TRACE1("Waiting for adapter %s", qPrintable(settings->value(SYNTRO_RUNTIME_ADAPTER).toString()));
 		QThread::yieldCurrentThread();
 	}
+	delete settings;
 }
+
+/*!
+	Fills a SYNTRO_TIMESTAMP structure \a timestamp with the current date and time.
+*/
 
 void SyntroUtils::setSyntroTimestamp(SYNTRO_TIMESTAMP *timestamp)
 {
@@ -572,6 +826,12 @@ void SyntroUtils::setSyntroTimestamp(SYNTRO_TIMESTAMP *timestamp)
 	convertIntToUC2(tmt.msec(), timestamp->milliseconds);
 }
 
+/*!
+	Returns a QString containing a string form of the SYNTRO_TIMESTAMP \a timestamp.
+	
+	The string is in the form "year/month/day hour:min:sec.millisec"
+*/
+
 QString SyntroUtils::timestampToString(SYNTRO_TIMESTAMP *timestamp)
 {
 	QString str;
@@ -586,6 +846,14 @@ QString SyntroUtils::timestampToString(SYNTRO_TIMESTAMP *timestamp)
 		convertUC2ToInt(timestamp->milliseconds));
 	return str;
 }
+
+/*!
+	Returns a QString containing a string form of the QDateTime \a timestamp.
+
+	The string is in the form "year/month/day hour:min:sec.millisec"
+
+*/
+
 
 QString SyntroUtils::timestampToString(QDateTime *timestamp)
 {
@@ -605,6 +873,12 @@ QString SyntroUtils::timestampToString(QDateTime *timestamp)
 	return str;
 }
 
+/*!
+	Returns a QString containing a string form of the SYNTRO_TIMESTAMP \a timestamp.
+	
+	The string is in the form "year/month/day"
+*/
+
 QString SyntroUtils::timestampToDateString(SYNTRO_TIMESTAMP *timestamp)
 {
 	QString str;
@@ -616,6 +890,12 @@ QString SyntroUtils::timestampToDateString(SYNTRO_TIMESTAMP *timestamp)
 
 	return str;
 }
+
+/*!
+	Returns a QString containing a string form of the SYNTRO_TIMESTAMP \a timestamp.
+	
+	The string is in the form "hour:min:sec.millisec"
+*/
 
 QString SyntroUtils::timestampToTimeString(SYNTRO_TIMESTAMP *timestamp)
 {
@@ -630,6 +910,9 @@ QString SyntroUtils::timestampToTimeString(SYNTRO_TIMESTAMP *timestamp)
 	return str;
 }
 
+/*!
+	Converts a SYNTRO_TIMESTAMP \a timestamp into a QDateTime \a time.
+*/
 
 void SyntroUtils::getSyntroTimestamp(SYNTRO_TIMESTAMP *timestamp, QDateTime *time)
 {
@@ -639,6 +922,10 @@ void SyntroUtils::getSyntroTimestamp(SYNTRO_TIMESTAMP *timestamp, QDateTime *tim
 	time->setDate(QDate(convertUC2ToUInt(timestamp->year), convertUC2ToUInt(timestamp->month),
 		convertUC2ToUInt(timestamp->milliseconds)));
 }
+
+/*!
+	Returns a QDateTime constructed from the SYNTRO_TIMESTAMP \a timestamp.
+*/
 
 QDateTime SyntroUtils::syntroTimestampToQDateTime(SYNTRO_TIMESTAMP *timestamp)
 {
@@ -650,3 +937,4 @@ QDateTime SyntroUtils::syntroTimestampToQDateTime(SYNTRO_TIMESTAMP *timestamp)
 
 	return QDateTime(d, t);
 }
+

@@ -1,5 +1,5 @@
 //
-//  Copyright (c) 2012 Pansenti, LLC.
+//  Copyright (c) 2012, 2013 Pansenti, LLC.
 //	
 //  This file is part of Syntro
 //
@@ -20,8 +20,8 @@
 #include "ControlSetupDlg.h"
 #include "SyntroControl.h"
 
-ControlSetupDlg::ControlSetupDlg(QWidget *parent, QSettings *settings)
-	: QDialog(parent), m_settings(settings)
+ControlSetupDlg::ControlSetupDlg()
+	: QDialog()
 {
 	layoutWindow();
 	setWindowTitle("Basic setup");
@@ -43,8 +43,10 @@ void ControlSetupDlg::onOk()
 
 	// check to see if any setting has changed
 
-	changed = m_appName->text() != m_settings->value(SYNTRO_PARAMS_APPNAME).toString();
-	changed |= m_priority->text() != m_settings->value(SYNTRO_PARAMS_LOCALCONTROL_PRI).toString();
+	QSettings *settings = SyntroUtils::getSettings();
+
+	changed = m_appName->text() != settings->value(SYNTRO_PARAMS_APPNAME).toString();
+	changed |= m_priority->text() != settings->value(SYNTRO_PARAMS_LOCALCONTROL_PRI).toString();
 
 	if (!changed)
 		reject();
@@ -54,8 +56,10 @@ void ControlSetupDlg::onOk()
 
 		// save changes to settings
 
-		m_settings->setValue(SYNTRO_PARAMS_APPNAME, m_appName->text());
-		m_settings->setValue(SYNTRO_PARAMS_LOCALCONTROL_PRI, m_priority->text());
+		settings->setValue(SYNTRO_PARAMS_APPNAME, m_appName->text());
+		settings->setValue(SYNTRO_PARAMS_LOCALCONTROL_PRI, m_priority->text());
+		
+		delete settings;
 
 		accept();
 	}
@@ -70,6 +74,8 @@ void ControlSetupDlg::layoutWindow()
 {
     setModal(true);
 
+	QSettings *settings = SyntroUtils::getSettings();
+
 	QVBoxLayout *centralLayout = new QVBoxLayout(this);
 	centralLayout->setSpacing(20);
 	centralLayout->setContentsMargins(11, 11, 11, 11);
@@ -81,7 +87,7 @@ void ControlSetupDlg::layoutWindow()
 	m_appName = new QLineEdit(this);
 	m_appName->setMinimumWidth(200);
 	formLayout->addRow(tr("App name:"), m_appName);
-	m_appName->setText(m_settings->value(SYNTRO_PARAMS_APPNAME).toString());
+	m_appName->setText(settings->value(SYNTRO_PARAMS_APPNAME).toString());
 
 	m_validator = new ServiceNameValidator();
 	m_appName->setValidator(m_validator);
@@ -90,7 +96,7 @@ void ControlSetupDlg::layoutWindow()
 
 	m_priority = new QLineEdit();
 	formLayout->addRow(tr("Priority (0 (lowest) - 255):"), m_priority);
-	m_priority->setText(m_settings->value(SYNTRO_PARAMS_LOCALCONTROL_PRI).toString());
+	m_priority->setText(settings->value(SYNTRO_PARAMS_LOCALCONTROL_PRI).toString());
 	m_priority->setValidator(new QIntValidator(0, 255));
 
 	m_buttons = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel, Qt::Horizontal, this);

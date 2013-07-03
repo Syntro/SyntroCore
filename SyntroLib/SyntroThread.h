@@ -1,5 +1,5 @@
 //
-//  Copyright (c) 2012 Pansenti, LLC.
+//  Copyright (c) 2012, 2013 Pansenti, LLC.
 //	
 //  This file is part of SyntroLib
 //
@@ -34,7 +34,7 @@
 #define	ENDPOINT_MESSAGE_START			ENDPOINT_ONCONNECT_MESSAGE	// start of endpoint message range
 #define	ENDPOINT_MESSAGE_END			ENDPOINT_ONSEND_MESSAGE		// end of endpoint message range
 
-#define	SYNTROTHREAD_TIMER_MESSAGE		(5)					// message used by the SyntroThread timer
+//#define	SYNTROTHREAD_TIMER_MESSAGE		(5)					// message used by the SyntroThread timer
 #define	HELLO_ONRECEIVE_MESSAGE			(6)					// used for received hello messages
 #define	HELLO_STATUS_CHANGE_MESSAGE		(7)					// send to owner when hello status changes for a device
 
@@ -53,33 +53,55 @@ public:
 	void	*ptrParam;
 };
 
-
-class SYNTROLIB_EXPORT SyntroThread : public QThread
+class InternalThread : public QThread
 {
 	Q_OBJECT
 
 public:
-	SyntroThread(QString threadName = "Thread");
-	virtual ~SyntroThread();
+	inline void msleep(unsigned long msecs) { QThread::msleep(msecs); }
+};
 
-	virtual void exitThread();
+class SYNTROLIB_EXPORT SyntroThread : public QObject
+{
+	Q_OBJECT
+
+public:
+	SyntroThread(const QString& threadName, const QString& logTag);
+	virtual ~SyntroThread();
 
 	virtual void postThreadMessage(int message, int intParam, void *ptrParam);	// post a message to the thread
 	virtual void resumeThread();							// this must be called to get thread going
+	
+	void exitThread();										// called to close thread down
+
 	bool isRunning();										// returns true if task no exiting
 
+	InternalThread *thread() { return m_thread; }
+
+public slots:
+	void internalRunLoop();
+	void cleanup();
+
+signals:
+	void running();											// emitted when everything set up and thread active
+	void internalEndThread();								// this to end thread
+	void internalKillThread();								// tells the QThread to quit
+	
 protected:
 	virtual	bool processMessage(SyntroThreadMsg* msg);
 	virtual void initThread();								// called by resume thread internally
-	virtual void run();										// this is the real thread routine
+	virtual void finishThread() {}							// called just before thread is destroyed
+
+    inline void msleep(unsigned long msecs) { thread()->msleep(msecs); }
 	bool eventFilter(QObject *obj, QEvent *event);
 
-	bool m_run;												// true if time to execute run
 	int m_event;											// the event used for Syntro thread message
+
+	QString m_logTag;
 
 private:
 	QString m_name;											// the task name - for debugging mostly
-
+	InternalThread *m_thread;								// the underlying thread
 };
 
 #endif		//_SYNTROTHREAD_H_

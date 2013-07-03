@@ -1,5 +1,5 @@
 //
-//  Copyright (c) 2012 Pansenti, LLC.
+//  Copyright (c) 2012, 2013 Pansenti, LLC.
 //	
 //  This file is part of Syntro
 //
@@ -26,6 +26,7 @@ MulticastManager::MulticastManager(void)
 {
 	int		i;
 
+	m_logTag = "MulticastManager";
 	for (i = 0; i < SYNTROSERVER_MAX_MMAPS; i++) {
 		memset(m_multicastMap+i, 0, sizeof(MM_MMAP));
 		m_multicastMap[i].index = i;

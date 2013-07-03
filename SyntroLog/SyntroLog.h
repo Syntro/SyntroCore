@@ -1,5 +1,5 @@
 //
-//  Copyright (c) 2012 Pansenti, LLC.
+//  Copyright (c) 2012, 2013 Pansenti, LLC.
 //	
 //  This file is part of Syntro
 //
@@ -24,14 +24,12 @@
 #include "ui_syntrolog.h"
 #include "LogClient.h"
 
-#define PRODUCT_TYPE "SyntroLog"
-
 class SyntroLog : public QMainWindow
 {
 	Q_OBJECT
 
 public:
-	SyntroLog(QSettings *settings, QWidget *parent = 0);
+	SyntroLog(QWidget *parent = 0);
 	
 public slots:
 	void newLogMsg(QByteArray bulkMsg);
@@ -55,7 +53,6 @@ private:
 
 	Ui::SyntroLogClass ui;
 
-	QSettings *m_settings;
 	LogClient *m_client;
 	int m_timer;
 	QQueue<QByteArray> m_logQ;

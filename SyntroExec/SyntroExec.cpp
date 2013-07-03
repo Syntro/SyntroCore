@@ -1,5 +1,5 @@
 //
-//  Copyright (c) 2012 Pansenti, LLC.
+//  Copyright (c) 2012, 2013 Pansenti, LLC.
 //	
 //  This file is part of Syntro
 //
@@ -24,8 +24,8 @@
 #define DEFAULT_ROW_HEIGHT 20
 
 
-SyntroExec::SyntroExec(QSettings *settings, QWidget *parent)
-	: QMainWindow(parent), m_settings(settings)
+SyntroExec::SyntroExec()
+	: QMainWindow()
 {
 	m_suppressSignals = true;
 	ui.setupUi(this);
@@ -41,23 +41,29 @@ SyntroExec::SyntroExec(QSettings *settings, QWidget *parent)
 	m_helloDlg = new HelloDialog(this);
 	m_helloDlg->setModal(false);
 
+	SyntroUtils::syntroAppInit();
+
 	setWindowTitle(QString("%1 - %2")
-		.arg(m_settings->value(SYNTRO_PARAMS_APPNAME).toString())
-		.arg(m_settings->value(SYNTRO_PARAMS_COMPTYPE).toString()));
+		.arg(SyntroUtils::getAppType())
+		.arg(SyntroUtils::getAppName()));
 
-	SyntroUtils::syntroAppInit(m_settings);
 
-	m_manager = new ComponentManager(settings);
-	connect(m_manager, SIGNAL(updateExecStatus(ManagerComponent *)), this, SLOT(updateExecStatus(ManagerComponent *)), Qt::DirectConnection);
+	m_manager = new ComponentManager();
+	connect(m_manager, SIGNAL(updateExecStatus(int, bool, QStringList)), 
+		this, SLOT(updateExecStatus(int, bool, QStringList)), Qt::QueuedConnection);
 	connect(this, SIGNAL(loadComponent(int)), m_manager, SLOT(loadComponent(int)), Qt::QueuedConnection);
+	connect(m_manager, SIGNAL(running()), this, SLOT(managerRunning()));
 	m_manager->resumeThread();
+
+	m_suppressSignals = false;
+}
+
+void SyntroExec::managerRunning()
+{
+	connect(m_manager->getHelloObject(), SIGNAL(helloDisplayEvent(Hello *)), m_helloDlg, SLOT(helloDisplayEvent(Hello *)), Qt::QueuedConnection); 
 
 	for (int i = 0; i < SYNTRO_MAX_COMPONENTSPERDEVICE; i++)
 		emit loadComponent(i);
-
-	connect(m_manager->getHelloObject(), SIGNAL(helloDisplayEvent(Hello *)), m_helloDlg, SLOT(helloDisplayEvent(Hello *)), Qt::QueuedConnection); 
-
-	m_suppressSignals = false;
 }
 
 void SyntroExec::layoutTable()
@@ -129,75 +135,64 @@ void SyntroExec::onHello()
 	m_helloDlg->show();
 }
 
-void SyntroExec:: updateExecStatus(ManagerComponent *component)
+void SyntroExec:: updateExecStatus(int index, bool inUse, QStringList list)
 {
-	QMutexLocker locker(&(m_manager->m_lock));
-
 	m_suppressSignals = true;
 
-	m_table->item(component->instance, SYNTROEXEC_COL_APPNAME)->setText(component->appName);
-	m_table->item(component->instance, SYNTROEXEC_COL_STATE)->setText(component->processState);
-	m_useBox[component->instance]->setCheckState(component->inUse ? Qt::Checked : Qt::Unchecked);
-
-	if (component->inUse) {
-		m_table->item(component->instance, SYNTROEXEC_COL_UID)->setText(SyntroUtils::displayUID(&component->UID));
-		if (component->monitored) {
-			m_table->item(component->instance, SYNTROEXEC_COL_HELLOSTATE)->setText(component->helloStateString);
-			m_table->item(component->instance, SYNTROEXEC_COL_COMPNAME)->setText(component->componentName);
-		} else {
-			m_table->item(component->instance, SYNTROEXEC_COL_HELLOSTATE)->setText("...");
-			m_table->item(component->instance, SYNTROEXEC_COL_COMPNAME)->setText("...");
-		}
-	} else {
-		m_table->item(component->instance, SYNTROEXEC_COL_UID)->setText("");
-		m_table->item(component->instance, SYNTROEXEC_COL_HELLOSTATE)->setText("");
-		m_table->item(component->instance, SYNTROEXEC_COL_COMPNAME)->setText("");
-	}
-
+	m_table->item(index, SYNTROEXEC_COL_APPNAME)->setText(list.at(0));
+	m_useBox[index]->setCheckState(inUse ? Qt::Checked : Qt::Unchecked);
+	m_table->item(index, SYNTROEXEC_COL_COMPNAME)->setText(list.at(1));
+	m_table->item(index, SYNTROEXEC_COL_UID)->setText(list.at(2));
+	m_table->item(index, SYNTROEXEC_COL_STATE)->setText(list.at(3));
+	m_table->item(index, SYNTROEXEC_COL_HELLOSTATE)->setText(list.at(4));
 
 	m_suppressSignals = false;
 }
 
 void SyntroExec::saveWindowState()
 {
-	if (m_settings) {
-		m_settings->beginGroup("ControlWindow");
-		m_settings->setValue("Geometry", saveGeometry());
-		m_settings->setValue("State", saveState());
+	QSettings *settings = SyntroUtils::getSettings();
 
-		m_settings->beginWriteArray("Grid");
-		for (int i = 0; i < m_table->columnCount(); i++) {
-			m_settings->setArrayIndex(i);
-			m_settings->setValue("columnWidth", m_table->columnWidth(i));
-		}
-		m_settings->endArray();
-		m_settings->endGroup();
+	settings->beginGroup("ControlWindow");
+	settings->setValue("Geometry", saveGeometry());
+	settings->setValue("State", saveState());
+
+	settings->beginWriteArray("Grid");
+	for (int i = 0; i < m_table->columnCount(); i++) {
+		settings->setArrayIndex(i);
+		settings->setValue("columnWidth", m_table->columnWidth(i));
 	}
+	settings->endArray();
+	settings->endGroup();
+	
+	delete settings;
 }
 
 void SyntroExec::restoreWindowState()
 {
-	if (m_settings) {
-		m_settings->beginGroup("ControlWindow");
-		restoreGeometry(m_settings->value("Geometry").toByteArray());
-		restoreState(m_settings->value("State").toByteArray());
+	QSettings *settings = SyntroUtils::getSettings();
 
-		int count = m_settings->beginReadArray("Grid");
-		for (int i = 0; i < count && i < m_table->columnCount(); i++) {
-			m_settings->setArrayIndex(i);
-			int width = m_settings->value("columnWidth").toInt();
+	settings->beginGroup("ControlWindow");
+	restoreGeometry(settings->value("Geometry").toByteArray());
+	restoreState(settings->value("State").toByteArray());
 
-			if (width > 0)
-				m_table->setColumnWidth(i, width);
-		}
-		m_settings->endArray();
-		m_settings->endGroup();
+	int count = settings->beginReadArray("Grid");
+	for (int i = 0; i < count && i < m_table->columnCount(); i++) {
+		settings->setArrayIndex(i);
+		int width = settings->value("columnWidth").toInt();
+
+		if (width > 0)
+			m_table->setColumnWidth(i, width);
 	}
+	settings->endArray();
+	settings->endGroup();
+	
+	delete settings;
 }
 
 void SyntroExec::onAbout()
 {
-	SyntroAbout *dlg = new SyntroAbout(this, m_settings);
+	SyntroAbout *dlg = new SyntroAbout();
 	dlg->show();
 }
 
@@ -208,7 +203,7 @@ void SyntroExec::buttonClicked(int buttonId)
 
 	if (buttonId == INSTANCE_EXEC)
 		return;												// cannot configure Exec
-	ConfigureDlg *dlg = new ConfigureDlg(this, m_settings, buttonId);
+	ConfigureDlg *dlg = new ConfigureDlg(this, buttonId);
 	if (dlg->exec()) {										// need to update client with changes
 		emit loadComponent(buttonId);
 	}
@@ -216,17 +211,20 @@ void SyntroExec::buttonClicked(int buttonId)
 
 void SyntroExec::boxClicked(bool, int boxId)
 {
+	QSettings *settings = SyntroUtils::getSettings();
+
 	if (m_suppressSignals)
 		return;												// avoids thrashing when loading config
-	m_settings->beginWriteArray(SYNTROEXEC_PARAMS_COMPONENTS);
-	m_settings->setArrayIndex(boxId);
+	settings->beginWriteArray(SYNTROEXEC_PARAMS_COMPONENTS);
+	settings->setArrayIndex(boxId);
 
 	if (m_useBox[boxId]->checkState() == Qt::Checked)
-		m_settings->setValue(SYNTROEXEC_PARAMS_INUSE, SYNTRO_PARAMS_TRUE);
+		settings->setValue(SYNTROEXEC_PARAMS_INUSE, SYNTRO_PARAMS_TRUE);
 	else
-		m_settings->setValue(SYNTROEXEC_PARAMS_INUSE, SYNTRO_PARAMS_FALSE);
-	m_settings->endArray();
+		settings->setValue(SYNTROEXEC_PARAMS_INUSE, SYNTRO_PARAMS_FALSE);
+	settings->endArray();
 	emit loadComponent(boxId);
+	delete settings;
 }
 
 

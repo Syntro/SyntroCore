@@ -27,9 +27,12 @@
 typedef enum
 {
     SYNTRO_RECORDHEADER_PARAM_NOOP = 0,                     // indicates a filler record
+    SYNTRO_RECORDHEADER_PARAM_NORMAL_START,                 // indicates a start normal record
     SYNTRO_RECORDHEADER_PARAM_NORMAL,                       // indicates a normal record
+    SYNTRO_RECORDHEADER_PARAM_PREROLL_START,                // indicates start preroll frame
     SYNTRO_RECORDHEADER_PARAM_PREROLL,                      // indicates a preroll frame
-    SYNTRO_RECORDHEADER_PARAM_POSTROLL                      // indicates a postroll frame
+    SYNTRO_RECORDHEADER_PARAM_POSTROLL_START,               // indicates a start postroll frame
+    SYNTRO_RECORDHEADER_PARAM_POSTROLL,                     // indicates a postroll frame
  } SYNTROAV_RECORDHEADER_PARAM;
 
 //	Video subType codes

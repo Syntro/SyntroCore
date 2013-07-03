@@ -1,5 +1,5 @@
 //
-//  Copyright (c) 2012 Pansenti, LLC.
+//  Copyright (c) 2012, 2013 Pansenti, LLC.
 //	
 //  This file is part of Syntro
 //
@@ -27,6 +27,7 @@
 SyntroTunnel::SyntroTunnel(SyntroServer *server, SS_COMPONENT *syntroComponent, Hello *helloTask, HELLOENTRY *helloEntry)
 {
 	m_server = server;										// the server task
+	m_logTag = m_server->m_logTag;
 	m_comp = syntroComponent;								// the component to which this tunnel belongs
 	if (helloEntry != NULL)
 		m_helloEntry = *helloEntry;
@@ -60,8 +61,8 @@ bool SyntroTunnel::connect()
 
 		//	try to find a SyntroControl in the appropriate state
 
-		if (!m_helloTask->findComponent(&m_helloEntry, m_helloEntry.hello.componentName, (char *)COMPTYPE_CONTROL)) {// no SyntroControl 
-			sprintf(str, "Waiting for SyntroControl %s in this run mode...", m_helloEntry.hello.componentName);
+		if (!m_helloTask->findComponent(&m_helloEntry, m_helloEntry.hello.appName, (char *)COMPTYPE_CONTROL)) {// no SyntroControl 
+			sprintf(str, "Waiting for SyntroControl %s in this run mode...", m_helloEntry.hello.appName);
 			TRACE0(str);
 			return false;
 		}
@@ -75,7 +76,7 @@ bool SyntroTunnel::connect()
 
 	m_comp->sock = new SyntroSocket(m_server);
 	m_server->setComponentSocket(m_comp, m_comp->sock);
-	m_comp->syntroLink = new SyntroLink();
+	m_comp->syntroLink = new SyntroLink(m_logTag);
 	returnValue = m_comp->sock->sockCreate(0, SOCK_STREAM);
 
 	m_comp->sock->sockSetConnectMsg(SYNTROSERVER_ONCONNECT_MESSAGE);
@@ -102,7 +103,7 @@ void	SyntroTunnel::connected()
 	m_connected = true;
 	m_connectInProgress = false;
 	if (!m_comp->tunnelStatic) {
-		TRACE1("Tunnel to %s connected", m_helloEntry.hello.componentName);
+		TRACE1("Tunnel to %s connected", m_helloEntry.hello.appName);
 	} else {
 		TRACE1("Tunnel %s connected", m_comp->tunnelStaticName);
 	}

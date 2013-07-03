@@ -1,5 +1,5 @@
 //
-//  Copyright (c) 2012 Pansenti, LLC.
+//  Copyright (c) 2012, 2013 Pansenti, LLC.
 //	
 //  This file is part of Syntro
 //
@@ -28,15 +28,14 @@
 #endif
 
 
-ControlConsole::ControlConsole(QSettings *settings, QObject *parent)
+ControlConsole::ControlConsole(QObject *parent)
 	: QThread(parent)
 {
-	m_settings = settings;
-	SyntroUtils::syntroAppInit(m_settings);
+	SyntroUtils::syntroAppInit();
 
 	connect((QCoreApplication *)parent, SIGNAL(aboutToQuit()), this, SLOT(aboutToQuit()));
 
-	m_client = new SyntroServer(m_settings);
+	m_client = new SyntroServer();
 	m_client->resumeThread();
 	start();
 }
@@ -70,7 +69,7 @@ void ControlConsole::displayComponents()
 
 		HELLO *hello = &(syntroComponent->heartbeat.hello);
 
-		printf("%-16s %-16s %-16s %-15s\n", hello->componentType, hello->componentName,
+		printf("%-16s %-16s %-16s %-15s\n", hello->componentType, hello->appName,
 				qPrintable(SyntroUtils::displayUID(&hello->componentUID)),
 				qPrintable(SyntroUtils::displayIPAddr(hello->IPAddr)));
 	}
@@ -99,7 +98,7 @@ void ControlConsole::displayDirectory()
 
 			first = false;
 
-			printf("\n\nComp name: %s\n", component->componentName);
+			printf("\n\nApp name: %s\n", component->appName);
 			printf("Comp type: %s\n", component->componentType);
 			printf("UID: %s\n", component->UIDStr);
 			printf("Sequence ID: %d\n", component->sequenceID);

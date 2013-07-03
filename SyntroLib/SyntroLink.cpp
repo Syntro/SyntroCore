@@ -1,5 +1,5 @@
 //
-//  Copyright (c) 2012 Pansenti, LLC.
+//  Copyright (c) 2012, 2013 Pansenti, LLC.
 //	
 //  This file is part of SyntroLib
 //
@@ -19,6 +19,8 @@
 
 
 #include "SyntroLib.h"
+
+//#define SYNTROLINK_TRACE
 
 //	CSyntroMessage
 //
@@ -48,7 +50,9 @@ void SyntroLink::send(int cmd, int len, int priority, SYNTRO_MESSAGE *syntroMess
 {
 	SyntroMessageWrapper *wrapper;
 
+#ifdef SYNTROLINK_TRACE
 	TRACE3("Send - cmd = %d, len = %d, priority= %d", cmd, len, priority);
+#endif
 
 	QMutexLocker locker(&m_TXLock);
 
@@ -80,8 +84,9 @@ bool SyntroLink::receive(int priority, int *cmd, int *len, SYNTRO_MESSAGE **synt
 		*len = wrapper->m_len;
 		*syntroMessage = wrapper->m_msg;
 		wrapper->m_msg = NULL;
+#ifdef SYNTROLINK_TRACE
 		TRACE3("Receive - cmd = %d, len = %d, priority = %d", *cmd, *len, priority);
-
+#endif
 		delete wrapper;
 		return true;
 	}
@@ -109,7 +114,9 @@ int SyntroLink::tryReceiving(SyntroSocket *sock)
 					resetReceive(m_RXIPPriority);
 					continue;
 				}
+#ifdef SYNTROLINK_TRACE
 				TRACE2("Received hdr %d %d", m_syntroMessage.cmd, SyntroUtils::convertUC4ToInt(m_syntroMessage.len));
+#endif
 				m_RXIPPriority = m_syntroMessage.flags & SYNTROLINK_PRI;
 				len = SyntroUtils::convertUC4ToInt(m_syntroMessage.len);
 				if (m_RXIP[m_RXIPPriority] == NULL) {		// nothing in progress at this priority
@@ -208,8 +215,9 @@ int SyntroLink::trySending(SyntroSocket *sock)
 }
 
 
-SyntroLink::SyntroLink(void)
+SyntroLink::SyntroLink(const QString& logTag)
 {
+	m_logTag = logTag;
 	for (int i = 0; i < SYNTROLINK_PRIORITIES; i++) {
 		m_TXHead[i] = NULL;
 		m_TXTail[i] = NULL;

@@ -1,5 +1,5 @@
 //
-//  Copyright (c) 2012 Pansenti, LLC.
+//  Copyright (c) 2012, 2013 Pansenti, LLC.
 //	
 //  This file is part of SyntroLib
 //
@@ -20,6 +20,7 @@
 #include <qsettings.h>
 #include "SyntroDefs.h"
 #include "SyntroUtils.h"
+#include "Logger.h"
 
 #include "LogWrapper.h"
 
@@ -27,13 +28,14 @@ Logger *logSingleton = NULL;
 int logLevel = SYNTRO_LOG_LEVEL_INFO;
 
 
-bool logCreate(QSettings *settings)
+bool logCreate()
 {
 	if (logSingleton)
 		return false;
 
+	QSettings *settings = SyntroUtils::getSettings();
+
 	QString appName = settings->value(SYNTRO_PARAMS_APPNAME).toString();
-	QString appType = settings->value(SYNTRO_PARAMS_APPTYPE).toString();
 
 	settings->beginGroup(SYNTRO_PARAMS_LOG_GROUP);
 
@@ -70,15 +72,22 @@ bool logCreate(QSettings *settings)
 
 	settings->endGroup();
 
-	logSingleton = new Logger(appType, appName, logLevel, diskLog, netLog, logKeep);
+	logSingleton = new Logger(appName, logLevel, diskLog, netLog, logKeep);
+	logSingleton->setHeartbeatTimers(
+			settings->value(SYNTRO_PARAMS_LOG_HBINTERVAL, SYNTRO_LOG_HEARTBEAT_INTERVAL).toInt(),
+			settings->value(SYNTRO_PARAMS_LOG_HBTIMEOUT, SYNTRO_LOG_HEARTBEAT_TIMEOUT).toInt());
 
-	return (logSingleton != NULL);
+	logSingleton->resumeThread();
+
+	delete settings;
+
+	return true;
 }
 
 void logDestroy()
 {
 	if (logSingleton) {
-		delete logSingleton;
+		logSingleton->exitThread();
 		logSingleton = NULL;
 	}
 }
@@ -89,7 +98,7 @@ void logAny(QString level, QString str)
 		logSingleton->logWrite(level, str);
 }
 
-void logDebug(QString str)
+void _logDebug(QString str)
 {
 	if (logLevel < SYNTRO_LOG_LEVEL_DEBUG)
 		return;
@@ -99,7 +108,7 @@ void logDebug(QString str)
 	qDebug() << qPrintable(str);
 }
 
-void logInfo(QString str)
+void _logInfo(QString str)
 {
 	if (logLevel < SYNTRO_LOG_LEVEL_INFO)
 		return;
@@ -110,7 +119,7 @@ void logInfo(QString str)
 		qDebug() << qPrintable(str);
 }
 
-void logWarn(QString str)
+void _logWarn(QString str)
 {
 	if (logLevel < SYNTRO_LOG_LEVEL_WARN)
 		return;
@@ -120,7 +129,7 @@ void logWarn(QString str)
 	qWarning() << qPrintable(str);
 }
 
-void logError(QString str)
+void _logError(QString str)
 {
 	if (logLevel < SYNTRO_LOG_LEVEL_ERROR)
 		return;

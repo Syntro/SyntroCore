@@ -1,5 +1,5 @@
 //
-//  Copyright (c) 2012 Pansenti, LLC.
+//  Copyright (c) 2012, 2013 Pansenti, LLC.
 //	
 //  This file is part of SyntroLib
 //
@@ -32,9 +32,11 @@ SyntroComponentData::~SyntroComponentData()
 {
 }
 
-void SyntroComponentData::init(const char *compName, const char *compType, int hbInterval, int priority)
+void SyntroComponentData::init(const char *compType, int hbInterval, int priority)
 {
 	HELLO *hello;
+
+	m_logTag = compType;
 
 	hello = &(m_myHeartbeat.hello);
 	hello->helloSync[0] = HELLO_SYNC0;
@@ -42,7 +44,7 @@ void SyntroComponentData::init(const char *compName, const char *compType, int h
 	hello->helloSync[2] = HELLO_SYNC2;
 	hello->helloSync[3] = HELLO_SYNC3;
 
-	strncpy(hello->componentName, compName, SYNTRO_MAX_COMPNAME - 1);
+	strncpy(hello->appName, qPrintable(SyntroUtils::getAppName()), SYNTRO_MAX_APPNAME - 1);
 	strncpy(hello->componentType, compType, SYNTRO_MAX_COMPTYPE - 1);
 
 	strcpy(m_myComponentType, compType);
@@ -76,7 +78,7 @@ void SyntroComponentData::DESetup()
 	m_myDE[0] = 0;
 	sprintf(m_myDE + (int)strlen(m_myDE), "<%s>", DETAG_COMP);
 	DEAddValue(DETAG_UID, qPrintable(SyntroUtils::displayUID(&(m_myUID))));
-	DEAddValue(DETAG_COMPNAME, (char *)m_myHeartbeat.hello.componentName);
+	DEAddValue(DETAG_APPNAME, (char *)m_myHeartbeat.hello.appName);
 	DEAddValue(DETAG_COMPTYPE, (char *)m_myHeartbeat.hello.componentType);
 }
 
@@ -104,7 +106,7 @@ bool SyntroComponentData::createHelloSocket()
 {
 	int i;
 
-	m_myHelloSocket = new SyntroSocket();
+	m_myHelloSocket = new SyntroSocket(m_logTag);
 
 	if (!m_myHelloSocket) {
 		logError(QString("Failed to create socket got %s").arg(m_myComponentType));

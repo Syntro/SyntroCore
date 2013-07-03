@@ -1,5 +1,5 @@
 //
-//  Copyright (c) 2012 Pansenti, LLC.
+//  Copyright (c) 2012, 2013 Pansenti, LLC.
 //	
 //  This file is part of Syntro
 //
@@ -62,9 +62,8 @@ class ComponentManager : public SyntroThread
 	Q_OBJECT
 
 public:
-	ComponentManager(QSettings *settings);
-	~ComponentManager() {}
-	void exitThread();
+	ComponentManager();
+	~ComponentManager();
 
 	Hello *getHelloObject();								// returns the hello object
 	ManagerComponent *getComponent(int index);				// gets a component object or null if out of range
@@ -77,18 +76,18 @@ public slots:
 	void loadComponent(int index);							// load specified component
 
 signals:
-	void updateExecStatus(ManagerComponent *managerComponent);
+	void updateExecStatus(int index, bool inUse, QStringList list);
 
 protected:
 	void initThread();
-	bool processMessage(SyntroThreadMsg* pMsg);
+	void timerEvent(QTimerEvent *event);
 
 private:
-	QSettings *m_settings;
+	void updateStatus(ManagerComponent *managerComponent);
 	Hello *m_hello;
 	int m_timer;
 
-	ManagerComponent m_components[SYNTRO_MAX_COMPONENTSPERDEVICE]; // the component array		
+	ManagerComponent *m_components[SYNTRO_MAX_COMPONENTSPERDEVICE]; // the component array		
 	QString m_extension;									// OS-dependent executable extension
 	qint64 m_startTime;										// used to time the period looking for old apps
 	bool m_startMode;										// if in start mode

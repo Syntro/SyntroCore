@@ -1,5 +1,5 @@
 //
-//  Copyright (c) 2012 Pansenti, LLC.
+//  Copyright (c) 2012, 2013 Pansenti, LLC.
 //	
 //  This file is part of SyntroLib
 //
@@ -38,7 +38,7 @@ class SYNTROGUI_EXPORT BasicSetupDlg : public QDialog
 	Q_OBJECT
 
 public:
-	BasicSetupDlg(QWidget *parent, QSettings *settings);
+	BasicSetupDlg(QWidget *parent);
 	~BasicSetupDlg();
 
 public slots:
@@ -49,10 +49,8 @@ private:
 	void layoutWindow();
 	void populateAdaptors();
 
-	QSettings *m_settings;
-
 	QLineEdit *m_controlName[ENDPOINT_MAX_SYNTROCONTROLS];
-	QLineEdit *m_componentName;
+	QLineEdit *m_appName;
 	QDialogButtonBox *m_buttons;
 	ServiceNameValidator *m_validator;
 

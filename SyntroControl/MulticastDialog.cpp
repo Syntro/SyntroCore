@@ -1,5 +1,5 @@
 //
-//  Copyright (c) 2012 Pansenti, LLC.
+//  Copyright (c) 2012, 2013 Pansenti, LLC.
 //	
 //  This file is part of Syntro
 //
@@ -27,6 +27,7 @@
 MulticastDialog::MulticastDialog(QWidget *parent)
 	: QDialog(parent)
 {
+	m_logTag = "MulticastDialog";
 	hide();
 	layoutWindow();
 	setWindowTitle("SyntroControl multicast maps");

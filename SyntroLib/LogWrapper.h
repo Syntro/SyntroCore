@@ -1,5 +1,5 @@
 //
-//  Copyright (c) 2012 Pansenti, LLC.
+//  Copyright (c) 2012, 2013 Pansenti, LLC.
 //	
 //  This file is part of SyntroLib
 //
@@ -23,16 +23,17 @@
 #include <qsettings.h>
 
 #include "syntrolib_global.h"
-#include "Logger.h"
 
+#define logDebug(msg)	_logDebug(m_logTag + "--> " + msg);
+#define logInfo(msg)	_logInfo(m_logTag + "--> " + msg);
+#define logWarn(msg)	_logWarn(m_logTag + "--> " + msg);
+#define logError(msg)	_logError(m_logTag + "--> " + msg);
 
-SYNTROLIB_EXPORT bool logCreate(QSettings *settings);
+SYNTROLIB_EXPORT bool logCreate();
 SYNTROLIB_EXPORT void logDestroy();
-SYNTROLIB_EXPORT void logDebug(QString str);
-SYNTROLIB_EXPORT void logInfo(QString str);
-SYNTROLIB_EXPORT void logWarn(QString str);
-SYNTROLIB_EXPORT void logError(QString str);
-SYNTROLIB_EXPORT QQueue<LogMessage>* activeStreamQueue();
-
+SYNTROLIB_EXPORT void _logDebug(QString str);
+SYNTROLIB_EXPORT void _logInfo(QString str);
+SYNTROLIB_EXPORT void _logWarn(QString str);
+SYNTROLIB_EXPORT void _logError(QString str);
 
 #endif // LOGWRAPPER_H

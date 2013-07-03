@@ -1,5 +1,5 @@
 //
-//  Copyright (c) 2012 Pansenti, LLC.
+//  Copyright (c) 2012, 2013 Pansenti, LLC.
 //	
 //  This file is part of SyntroLib
 //
@@ -22,41 +22,30 @@
 #include <qfileinfo.h>
 #include <qdebug.h>
 
-#include "SyntroDefs.h"
-#include "SyntroUtils.h"
 #include "Logger.h"
+#include "SyntroClock.h"
 
 #define MAX_STREAM_QUEUE_MESSAGES 64
 
-Logger::Logger(QString appType, QString appName, int level, bool diskLog, bool netLog, int logKeep)
+Logger::Logger(const QString& appName, int level, bool diskLog, bool netLog, int logKeep)
+	: Endpoint(SYNTROLOG_BGND_INTERVAL, COMPTYPE_LOGSOURCE)
+
 {
-    m_thread = NULL;
+	m_lastFlushTime = SyntroClock();
     m_activeDiskQ = 0;
 	m_activeStreamQ = 0;
     m_logInterval = LOG_FLUSH_INTERVAL_SECONDS;
 	m_logKeep = logKeep;
 
-	m_appName = appName;
 	m_diskLog = diskLog;
 	m_netLog = netLog;
 	
-	if (m_appName.length() < 1)
-		m_appName = "Unknown";
-
-	if (appType.length() > 0)
-		m_logName = appType + "-" + m_appName + ".log";
-	else
-		m_logName = m_appName + ".log";
+	m_logName = appName + "-" + SyntroUtils::getAppType() + ".log";
 
 	m_logName.replace(' ', '_');
 
  	if (m_diskLog) {
-		if (diskOpen()) {
-			m_thread = new LogThread();
-			m_thread->m_log = this;
-			m_thread->start();
-		}
-		else {
+		if (!diskOpen()) {
 			m_diskLog = false;
 		}
 	}
@@ -71,16 +60,72 @@ Logger::Logger(QString appType, QString appName, int level, bool diskLog, bool n
 
 Logger::~Logger()
 {
-    if (m_thread) {
-		m_thread->m_stop = true;
-        m_thread->wait();
-        delete m_thread;
-        m_thread = NULL;
-    }
-
     if (m_file.isOpen())
 		m_file.close();
 }
+
+void Logger::appClientInit()
+{
+	if (!m_netLog)
+		return;
+	m_logPort = clientAddService(SyntroUtils::getAppType() + SYNTRO_LOG_SERVICE_TAG, SERVICETYPE_MULTICAST, true);
+}
+
+void Logger::appClientBackground()
+{
+	QString bulkMsg;
+	qint64 now = SyntroClock();
+
+	if (m_diskLog && SyntroUtils::syntroTimerExpired(now, m_lastFlushTime, m_logInterval)) {
+		diskFlush();
+		m_lastFlushTime = now;
+	}
+
+	if (!m_netLog)
+		return;
+
+	if (!clientIsServiceActive(m_logPort) || !clientClearToSend(m_logPort))
+		return;
+
+	QQueue<LogMessage> *log = streamQueue();
+	if (!log)
+		return;
+
+	m_streamMutex.lock();
+
+	int count = log->count();
+	if (count < 1) {
+		m_streamMutex.unlock();
+		return;
+	}
+
+	for (int i = 0; i < count; i++) {
+		LogMessage m = log->dequeue();
+		bulkMsg += m.m_level + SYNTRO_LOG_COMPONENT_SEP
+			+ m.m_timeStamp + SYNTRO_LOG_COMPONENT_SEP
+			+ SyntroUtils::displayUID(&m_UID) + SYNTRO_LOG_COMPONENT_SEP
+			+ SyntroUtils::getAppType() + SYNTRO_LOG_SERVICE_TAG + SYNTRO_LOG_COMPONENT_SEP
+			+ m.m_msg + "\n";
+	}
+	m_streamMutex.unlock();
+
+	QByteArray data = bulkMsg.toLatin1();
+	int length = sizeof(SYNTRO_RECORD_HEADER) + data.length();
+
+	SYNTRO_EHEAD *multiCast = clientBuildMessage(m_logPort, length);
+
+	if (multiCast) {
+		SYNTRO_RECORD_HEADER *recordHead = (SYNTRO_RECORD_HEADER *)(multiCast + 1);
+		SyntroUtils::convertIntToUC2(SYNTRO_RECORD_TYPE_LOG, recordHead->type);
+		SyntroUtils::convertIntToUC2(0, recordHead->subType);
+		SyntroUtils::convertIntToUC2(0, recordHead->param);
+		SyntroUtils::convertIntToUC2(sizeof(SYNTRO_RECORD_HEADER), recordHead->headerLength);
+		SyntroUtils::setSyntroTimestamp(&recordHead->timestamp);
+		memcpy((char *)(recordHead + 1), data.constData(), data.length());
+		clientSendMessage(m_logPort, multiCast, sizeof(SYNTRO_EHEAD) + length, SYNTROLINK_LOWPRI);
+	}
+}
+
 
 void Logger::logWrite(QString level, QString str)
 {
@@ -204,17 +249,6 @@ void Logger::diskFlush()
     }
 }
 
-void LogThread::run()
-{
-    while (!m_stop) {
-		sleep(m_log->m_logInterval);
-		m_log->diskFlush();
-    }
-
-	m_log->diskFlush();
-
-    exit(0);
-}
 
 QQueue<LogMessage>* Logger::streamQueue()
 {
@@ -256,3 +290,4 @@ LogMessage& LogMessage::operator=(const LogMessage &rhs)
 
 	return *this;
 }
+

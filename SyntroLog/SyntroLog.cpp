@@ -1,5 +1,5 @@
 //
-//  Copyright (c) 2012 Pansenti, LLC.
+//  Copyright (c) 2012, 2013 Pansenti, LLC.
 //
 //  This file is part of Syntro
 //
@@ -25,8 +25,8 @@
 #include "SyntroAboutDlg.h"
 #include "BasicSetupDlg.h"
 
-SyntroLog::SyntroLog(QSettings *settings, QWidget *parent)
-	: QMainWindow(parent), m_settings(settings)
+SyntroLog::SyntroLog(QWidget *parent)
+	: QMainWindow(parent)
 {
 	ui.setupUi(this);
 	initStatusBar();
@@ -39,9 +39,9 @@ SyntroLog::SyntroLog(QSettings *settings, QWidget *parent)
 	connect(ui.actionAbout, SIGNAL(triggered()), this, SLOT(onAbout()));
 	connect(ui.actionBasicSetup, SIGNAL(triggered()), this, SLOT(onBasicSetup()));
 
-	SyntroUtils::syntroAppInit(m_settings);
+	SyntroUtils::syntroAppInit();
 
-	m_client = new LogClient(this, settings);
+	m_client = new LogClient(this);
 	connect(m_client, SIGNAL(newLogMsg(QByteArray)), this, SLOT(newLogMsg(QByteArray)), Qt::DirectConnection);
 	connect(m_client, SIGNAL(activeClientUpdate(int)), this, SLOT(activeClientUpdate(int)), Qt::DirectConnection);
 	m_client->resumeThread();
@@ -49,10 +49,10 @@ SyntroLog::SyntroLog(QSettings *settings, QWidget *parent)
 	restoreWindowState();
 
 	setWindowTitle(QString("%1 - %2")
-		.arg(m_settings->value(SYNTRO_PARAMS_APPNAME).toString())
-		.arg(m_settings->value(SYNTRO_PARAMS_COMPTYPE).toString()));
+		.arg(SyntroUtils::getAppType())
+		.arg(SyntroUtils::getAppName()));
 
-	m_timer = startTimer(500);
+	m_timer = startTimer(20);
 }
 
 void SyntroLog::closeEvent(QCloseEvent *)
@@ -66,7 +66,6 @@ void SyntroLog::closeEvent(QCloseEvent *)
 		disconnect(m_client, SIGNAL(newLogMsg(QByteArray)), this, SLOT(newLogMsg(QByteArray)));
 		disconnect(m_client, SIGNAL(activeClientUpdate(int)), this, SLOT(activeClientUpdate(int)));
 		m_client->exitThread();
-		m_client->wait();
 	}
 
 	saveWindowState();
@@ -88,11 +87,9 @@ void SyntroLog::activeClientUpdate(int count)
 void SyntroLog::timerEvent(QTimerEvent *)
 {
 	m_controlStatus->setText(m_client->getLinkState());
-
 	m_activeClientMutex.lock();
 	m_activeClientStatus->setText(QString("Active clients - %1").arg(m_activeClientCount));
 	m_activeClientMutex.unlock();
-
 	parseMsgQueue();
 }
 
@@ -100,13 +97,14 @@ void SyntroLog::parseMsgQueue()
 {
 	QMutexLocker lock(&m_logMutex);
 
-	while (!m_logQ.empty()) {
+	if (!m_logQ.empty()) {
 		QByteArray bulkMsg = m_logQ.dequeue();
 		QString s(bulkMsg);
 		QStringList list = s.split('\n');
 
-		for (int i = 0; i < list.count(); i++)
+		for (int i = 0; i < list.count(); i++) {
 			addMessage(list[i]);
+		}
 	}
 }
 
@@ -249,51 +247,55 @@ void SyntroLog::initStatusBar()
 
 void SyntroLog::onAbout()
 {
-	SyntroAbout *dlg = new SyntroAbout(this, m_settings);
+	SyntroAbout *dlg = new SyntroAbout();
 	dlg->show();
 }
 
 void SyntroLog::onBasicSetup()
 {
-	BasicSetupDlg *dlg = new BasicSetupDlg(this, m_settings);
+	BasicSetupDlg *dlg = new BasicSetupDlg(this);
 	dlg->show();
 }
 
 void SyntroLog::saveWindowState()
 {
-	if (m_settings) {
-		m_settings->beginGroup("Window");
-		m_settings->setValue("Geometry", saveGeometry());
-		m_settings->setValue("State", saveState());
+	QSettings *settings = SyntroUtils::getSettings();
 
-		m_settings->beginWriteArray("Grid");
-		for (int i = 0; i < ui.logTable->columnCount() - 1; i++) {
-			m_settings->setArrayIndex(i);
-			m_settings->setValue("columnWidth", ui.logTable->columnWidth(i));
-		}
-		m_settings->endArray();
+	settings->beginGroup("Window");
+	settings->setValue("Geometry", saveGeometry());
+	settings->setValue("State", saveState());
 
-		m_settings->endGroup();
+	settings->beginWriteArray("Grid");
+	for (int i = 0; i < ui.logTable->columnCount() - 1; i++) {
+		settings->setArrayIndex(i);
+		settings->setValue("columnWidth", ui.logTable->columnWidth(i));
 	}
+	settings->endArray();
+
+	settings->endGroup();
+
+	delete settings;
 }
 
 void SyntroLog::restoreWindowState()
 {
-	if (m_settings) {
-		m_settings->beginGroup("Window");
-		restoreGeometry(m_settings->value("Geometry").toByteArray());
-		restoreState(m_settings->value("State").toByteArray());
+	QSettings *settings = SyntroUtils::getSettings();
 
-		int count = m_settings->beginReadArray("Grid");
-		for (int i = 0; i < count && i < ui.logTable->columnCount() - 1; i++) {
-			m_settings->setArrayIndex(i);
-			int width = m_settings->value("columnWidth").toInt();
+	settings->beginGroup("Window");
+	restoreGeometry(settings->value("Geometry").toByteArray());
+	restoreState(settings->value("State").toByteArray());
 
-			if (width > 0)
-				ui.logTable->setColumnWidth(i, width);
-		}
-		m_settings->endArray();
+	int count = settings->beginReadArray("Grid");
+	for (int i = 0; i < count && i < ui.logTable->columnCount() - 1; i++) {
+		settings->setArrayIndex(i);
+		int width = settings->value("columnWidth").toInt();
 
-		m_settings->endGroup();
+		if (width > 0)
+			ui.logTable->setColumnWidth(i, width);
 	}
+	settings->endArray();
+
+	settings->endGroup();
+
+	delete settings;
 }

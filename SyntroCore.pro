@@ -8,17 +8,14 @@ TEMPLATE = subdirs
 SUBDIRS = SyntroLib \
         SyntroGUI \
         SyntroControlLib \
-        SyntroCFS \
         SyntroControl \
         SyntroExec \
-        SyntroLog \
-        SyntroStore
-
+	   SyntroDB \
+        SyntroLog
 SyntroGUI.depends = SyntroLib
 SyntroControlLib.depends = SyntroLib
-SyntroCFS.depends = SyntroLib SyntroGUI
 SyntroControl.depends = SyntroLib SyntroGUI SyntroControlLib
 SyntroExec.depends = SyntroLib SyntroGUI
 SyntroLog.depends = SyntroLib SyntroGUI
-SyntroStore.depends = SyntroLib SyntroGUI
+SyntroDB.depends = SyntroLib SyntroGUI
 

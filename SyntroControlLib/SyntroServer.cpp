@@ -1,5 +1,5 @@
 //
-//  Copyright (c) 2012 Pansenti, LLC.
+//  Copyright (c) 2012, 2013 Pansenti, LLC.
 //	
 //  This file is part of Syntro
 //
@@ -22,45 +22,53 @@
 #include "SyntroControlLib.h"
 #include "SyntroThread.h"
 
+
 // SyntroServer
 
-SyntroServer::SyntroServer(QSettings *settings)
+SyntroServer::SyntroServer() : SyntroThread(QString("SyntroServer"), COMPTYPE_CONTROL) 
 {
-	m_settings = settings;
+	QSettings *settings = SyntroUtils::getSettings();
+	m_logTag = COMPTYPE_CONTROL;
 
 	// process SyntroControl-specific settings
 
-	m_settings->beginGroup(SYNTROCONTROL_PARAMS_GROUP);
+	settings->beginGroup(SYNTROCONTROL_PARAMS_GROUP);
 
 	if (!settings->contains(SYNTROCONTROL_PARAMS_LISTEN_LOCAL_SOCKET))
-		settings->setValue(SYNTROCONTROL_PARAMS_LISTEN_LOCAL_SOCKET, SYNTRO_PRIMARY_SOCKET_LOCAL);			
+		settings->setValue(SYNTROCONTROL_PARAMS_LISTEN_LOCAL_SOCKET, SYNTRO_SOCKET_LOCAL);			
 	if (!settings->contains(SYNTROCONTROL_PARAMS_LISTEN_STATICTUNNEL_SOCKET))
-		settings->setValue(SYNTROCONTROL_PARAMS_LISTEN_STATICTUNNEL_SOCKET, SYNTRO_PRIMARY_SOCKET_STATICTUNNEL);		
+		settings->setValue(SYNTROCONTROL_PARAMS_LISTEN_STATICTUNNEL_SOCKET, SYNTRO_PRIMARY_SOCKET_STATICTUNNEL);
 
-	m_socketNumber = m_settings->value(SYNTROCONTROL_PARAMS_LISTEN_LOCAL_SOCKET).toInt();
-	m_staticTunnelSocketNumber = m_settings->value(SYNTROCONTROL_PARAMS_LISTEN_STATICTUNNEL_SOCKET).toInt();
+	if (!settings->contains(SYNTROCONTROL_PARAMS_HBINTERVAL))
+		settings->setValue(SYNTROCONTROL_PARAMS_HBINTERVAL, SYNTRO_HEARTBEAT_INTERVAL);		
 
-	m_settings->endGroup();
+	if (!settings->contains(SYNTROCONTROL_PARAMS_HBTIMEOUT))
+		settings->setValue(SYNTROCONTROL_PARAMS_HBTIMEOUT, SYNTRO_HEARTBEAT_TIMEOUT);		
+
+	m_socketNumber = settings->value(SYNTROCONTROL_PARAMS_LISTEN_LOCAL_SOCKET).toInt();
+	m_staticTunnelSocketNumber = settings->value(SYNTROCONTROL_PARAMS_LISTEN_STATICTUNNEL_SOCKET).toInt();
+
+	int hbInterval = settings->value(SYNTROCONTROL_PARAMS_HBINTERVAL).toInt();
+	m_heartbeatSendInterval =  hbInterval * SYNTRO_CLOCKS_PER_SEC;
+	m_heartbeatTimeoutCount = settings->value(SYNTROCONTROL_PARAMS_HBTIMEOUT).toInt();
+
+	settings->endGroup();
 
 	// use some standard settings also
 
-	m_heartbeatSendInterval = m_settings->value(SYNTRO_PARAMS_HBINTERVAL).toInt() * SYNTRO_CLOCKS_PER_SEC;
-	m_heartbeatTimeoutCount = m_settings->value(SYNTRO_PARAMS_HBTIMEOUT).toInt();
-
-	m_componentData.init(qPrintable(settings->value(SYNTRO_PARAMS_APPNAME).toString()),
-				COMPTYPE_CONTROL,
-				settings->value(SYNTRO_PARAMS_HBINTERVAL).toInt(),
+	m_componentData.init(COMPTYPE_CONTROL,
+				hbInterval,
 				settings->value(SYNTRO_PARAMS_LOCALCONTROL_PRI).toInt());
 	m_listSyntroLinkSock = NULL;
 	m_listStaticTunnelSock = NULL;
 	m_hello = NULL;
+
+	delete settings;
 }
 
 SyntroServer::~SyntroServer()
 {
-	qDebug() << "SyntroServer has been deleted";
 }
-
 
 Hello *SyntroServer::getHelloObject()
 {
@@ -71,12 +79,14 @@ void SyntroServer::initThread()
 {
 	int		i;
 
+	QSettings *settings = SyntroUtils::getSettings();
+
 	for (i = 0; i < SYNTRO_MAX_CONNECTEDCOMPONENTS; i++)
 		m_components[i].inUse = false;
 	for (i = 0; i < SYNTRO_MAX_CONNECTIONIDS; i++)
 		m_connectionIDMap[i] = -1;
 
-	loadStaticTunnels();
+	loadStaticTunnels(settings);
 	
 	m_multicastManager.m_server = this;
 	m_multicastManager.m_myUID = m_componentData.getMyUID();
@@ -88,89 +98,18 @@ void SyntroServer::initThread()
 	m_counterStart = SyntroClock();
 
 	m_myUID = m_componentData.getMyUID();
-	m_componentName = m_settings->value(SYNTRO_PARAMS_APPNAME).toString();
-	addLogService();
+	m_appName = settings->value(SYNTRO_PARAMS_APPNAME).toString();
 
 	m_timer = startTimer(SYNTROSERVER_INTERVAL);
 	m_lastOpenSocketsTime = SyntroClock();
-}
 
-void SyntroServer::loadStaticTunnels()
-{
-	int	size = m_settings->beginReadArray(SYNTROCONTROL_PARAMS_STATIC_TUNNELS);
-	m_settings->endArray();
-
-	if (size == 0) {										// set a dummy entry for convenience
-		m_settings->beginWriteArray(SYNTROCONTROL_PARAMS_STATIC_TUNNELS);
-
-		m_settings->setArrayIndex(0);
-		m_settings->setValue(SYNTROCONTROL_PARAMS_STATIC_NAME, "Tunnel");
-		m_settings->setValue(SYNTROCONTROL_PARAMS_STATIC_DESTIP_PRIMARY, "0.0.0.0");
-		m_settings->setValue(SYNTROCONTROL_PARAMS_STATIC_DESTIP_BACKUP, "");
-
-		m_settings->endArray();
-		return;
-	}
-
-	// Now create entries for valid static tunnel sources
-
-	m_settings->beginReadArray(SYNTROCONTROL_PARAMS_STATIC_TUNNELS);
-	for (int i = 0; i < size; i++) {
-		m_settings->setArrayIndex(i);
-		QString primary = m_settings->value(SYNTROCONTROL_PARAMS_STATIC_DESTIP_PRIMARY).toString();
-		QString backup = m_settings->value(SYNTROCONTROL_PARAMS_STATIC_DESTIP_BACKUP).toString();
-		if (primary.length() == 0)
-			continue;
-		if (primary == "0.0.0.0")
-			continue;
-
-		SS_COMPONENT *component = getFreeComponent();
-		if (component == NULL)
-			continue;
-
-		component->inUse = true;
-		component->tunnelStatic = true;
-		component->tunnelSource = true;
-		component->tunnelStaticPrimary = primary;
-		component->tunnelStaticBackup = backup;
-		component->tunnelStaticName = m_settings->value(SYNTROCONTROL_PARAMS_STATIC_NAME).toString();
-
-		component->syntroTunnel = new SyntroTunnel(this, component, NULL, NULL);
-		component->state = ConnWFHeartbeat;
-		emit UpdateSyntroStatusBox(component);
-	}
-	m_settings->endArray();
-}
-
-void SyntroServer::addLogService()
-{
-	m_settings->beginGroup(SYNTRO_PARAMS_LOG_GROUP);
-	m_netLogEnabled = m_settings->value(SYNTRO_PARAMS_NET_LOG).toBool();
-	m_settings->endGroup();
-
-	if (m_netLogEnabled) {
-		m_logServiceName = m_settings->value(SYNTRO_PARAMS_COMPTYPE).toString() + 
-			SYNTRO_LOG_SERVICE_TAG;
-
-		// Rebuild directory entry
-
-		m_componentData.DESetup();
-		m_componentData.DEAddValue(DETAG_MSERVICE, m_logServiceName);
-		m_componentData.DEComplete();
-
-		// now generate multicast map entry
-
-		m_logMap = m_multicastManager.MMAllocateMMap(&m_myUID, &m_myUID, 
-			qPrintable(m_componentName), qPrintable(m_logServiceName), SYNTROCONTROL_LOG_PORT);
-	}
+	delete settings;
 }
 
 
-void SyntroServer::exitThread()
+void SyntroServer::finishThread()
 {
-	m_run = false;
 	killTimer(m_timer);
-	exit();
 	
 	for (int i = 0; i < SYNTRO_MAX_CONNECTEDCOMPONENTS; i++)
 		syCleanup(m_components + i);
@@ -186,6 +125,54 @@ void SyntroServer::exitThread()
 	if (m_listStaticTunnelSock != NULL)
 		delete m_listStaticTunnelSock;
 }
+
+void SyntroServer::loadStaticTunnels(QSettings *settings)
+{
+	int	size = settings->beginReadArray(SYNTROCONTROL_PARAMS_STATIC_TUNNELS);
+	settings->endArray();
+
+	if (size == 0) {										// set a dummy entry for convenience
+		settings->beginWriteArray(SYNTROCONTROL_PARAMS_STATIC_TUNNELS);
+
+		settings->setArrayIndex(0);
+		settings->setValue(SYNTROCONTROL_PARAMS_STATIC_NAME, "Tunnel");
+		settings->setValue(SYNTROCONTROL_PARAMS_STATIC_DESTIP_PRIMARY, "0.0.0.0");
+		settings->setValue(SYNTROCONTROL_PARAMS_STATIC_DESTIP_BACKUP, "");
+
+		settings->endArray();
+		return;
+	}
+
+	// Now create entries for valid static tunnel sources
+
+	settings->beginReadArray(SYNTROCONTROL_PARAMS_STATIC_TUNNELS);
+	for (int i = 0; i < size; i++) {
+		settings->setArrayIndex(i);
+		QString primary = settings->value(SYNTROCONTROL_PARAMS_STATIC_DESTIP_PRIMARY).toString();
+		QString backup = settings->value(SYNTROCONTROL_PARAMS_STATIC_DESTIP_BACKUP).toString();
+		if (primary.length() == 0)
+			continue;
+		if (primary == "0.0.0.0")
+			continue;
+
+		SS_COMPONENT *component = getFreeComponent();
+		if (component == NULL)
+			continue;
+
+		component->inUse = true;
+		component->tunnelStatic = true;
+		component->tunnelSource = true;
+		component->tunnelStaticPrimary = primary;
+		component->tunnelStaticBackup = backup;
+		component->tunnelStaticName = settings->value(SYNTROCONTROL_PARAMS_STATIC_NAME).toString();
+
+		component->syntroTunnel = new SyntroTunnel(this, component, NULL, NULL);
+		component->state = ConnWFHeartbeat;
+		updateSyntroStatus(component);
+	}
+	settings->endArray();
+}
+
 
 bool SyntroServer::openSockets()
 {
@@ -208,7 +195,7 @@ bool SyntroServer::openSockets()
 				m_listSyntroLinkSock = NULL;
 			} else {
 				logInfo("Local listener active");
-				m_hello = new Hello(&m_componentData);
+				m_hello = new Hello(&m_componentData, m_logTag);
 				m_hello->m_parentThread = this;
 				m_hello->m_socketFlags = 1;			
 				m_hello->resumeThread();
@@ -344,7 +331,7 @@ bool	SyntroServer::syAccept(bool staticTunnel)
 		}
 		memcpy(component->compIPAddr, componentIPAddr, SYNTRO_IPADDR_LEN);
 		component->compPort = componentPort;
-		component->syntroLink = new SyntroLink();
+		component->syntroLink = new SyntroLink(m_logTag);
 	} else {
 		component = getFreeComponent();
 		if (component == NULL) {							// too many components!
@@ -353,7 +340,7 @@ bool	SyntroServer::syAccept(bool staticTunnel)
 		}
 		memcpy(component->compIPAddr, componentIPAddr, SYNTRO_IPADDR_LEN);
 		component->compPort = componentPort;
-		component->syntroLink = new SyntroLink();
+		component->syntroLink = new SyntroLink(m_logTag);
 	}
 	component->inUse = true;
 	setComponentSocket(component, sock);					// configure component to use this socket
@@ -372,7 +359,7 @@ void	SyntroServer::syClose(SS_COMPONENT *syntroComponent)
 {
 	TRACE1("Closing %s", qPrintable(SyntroUtils::displayUID(&syntroComponent->heartbeat.hello.componentUID)));
 	syCleanup(syntroComponent);
-	emit UpdateSyntroStatusBox(syntroComponent);
+	updateSyntroStatus(syntroComponent);
 	emit DMDisplay(&m_dirManager);
 }
 
@@ -431,6 +418,23 @@ SS_COMPONENT	*SyntroServer::getFreeComponent()
 			component->dirEntryLength = 0;
 			component->index = i;
 			component->dirManagerConnComp = m_dirManager.DMAllocateConnectedComponent(component);
+
+			component->tempRXByteCount = 0;
+			component->tempTXByteCount = 0;
+			component->tempRXPacketCount = 0;
+			component->tempTXPacketCount = 0;
+
+			component->RXPacketRate = 0;
+			component->TXPacketRate = 0;
+			component->RXByteRate = 0;
+			component->TXByteRate = 0;
+
+			component->RXPacketCount = 0;
+			component->TXPacketCount = 0;
+			component->RXByteCount = 0;
+			component->TXByteCount = 0;
+
+			component->lastStatsTime = SyntroClock();
 			return component;
 		}
 	}
@@ -454,6 +458,7 @@ bool SyntroServer::sendSyntroMessage(SYNTRO_UID *uid, int cmd, SYNTRO_MESSAGE *m
 			if (syntroComponent->syntroLink != NULL) {
 				TRACE1("\nSend to %s", qPrintable(SyntroUtils::displayUID(&syntroComponent->heartbeat.hello.componentUID)));
 				syntroComponent->syntroLink->send(cmd, length, priority, (SYNTRO_MESSAGE *)message);
+				updateTXStats(syntroComponent, length);
 				syntroComponent->syntroLink->trySending(syntroComponent->sock);
 				return true;
 			}
@@ -496,6 +501,11 @@ void	SyntroServer::processReceivedData(SS_COMPONENT *syntroComponent)
 		} else {
 			TRACE2("Received %d from %s", cmd, qPrintable(SyntroUtils::displayUID(&syntroComponent->heartbeat.hello.componentUID)));
 		}
+		syntroComponent->tempRXPacketCount++;
+		syntroComponent->RXPacketCount++;
+		syntroComponent->tempRXByteCount += length;
+		syntroComponent->RXByteCount += length;
+
 		processReceivedDataDemux(syntroComponent, cmd, length, message);
 	}
 }
@@ -513,7 +523,7 @@ void SyntroServer::processReceivedDataDemux(SS_COMPONENT *syntroComponent, int c
 				break;
 			}
 			heartbeat = (SYNTRO_HEARTBEAT *)message;
-			heartbeat->hello.componentName[SYNTRO_MAX_COMPNAME - 1] = 0;	// make sure strings are 0 terminated
+			heartbeat->hello.appName[SYNTRO_MAX_APPNAME - 1] = 0;	// make sure strings are 0 terminated
 			heartbeat->hello.componentType[SYNTRO_MAX_COMPTYPE - 1] = 0;	// make sure strings are 0 terminated
 	
 			syntroComponent->lastHeartbeatReceived = SyntroClock();
@@ -527,7 +537,7 @@ void SyntroServer::processReceivedDataDemux(SS_COMPONENT *syntroComponent, int c
 							(strcmp(syntroComponent->heartbeat.hello.componentType, COMPTYPE_CONTROL) == 0))
 					syntroComponent->tunnelDest = true;
 			}
-			emit UpdateSyntroStatusBox(syntroComponent);
+			updateSyntroStatus(syntroComponent);
 			length -= sizeof(SYNTRO_HEARTBEAT);
 			if (length > 0)								// there must be a DE attached						
 				setComponentDE((char *)message + sizeof(SYNTRO_HEARTBEAT), length, syntroComponent);
@@ -619,6 +629,7 @@ void	SyntroServer::sendHeartbeat(SS_COMPONENT *syntroComponent)
 	SYNTRO_HEARTBEAT hb = m_componentData.getMyHeartbeat();
 	memcpy(pMsg, &hb, sizeof(SYNTRO_HEARTBEAT));
 	syntroComponent->syntroLink->send(SYNTROMSG_HEARTBEAT, sizeof(SYNTRO_HEARTBEAT), SYNTROLINK_MEDHIGHPRI, (SYNTRO_MESSAGE *)pMsg);
+	updateTXStats(syntroComponent, sizeof(SYNTRO_HEARTBEAT));
 	syntroComponent->syntroLink->trySending(syntroComponent->sock);
 	TRACE2("Sent response HB to %s from slot %d", qPrintable(SyntroUtils::displayUID(&syntroComponent->heartbeat.hello.componentUID)), syntroComponent->index);
 }
@@ -645,6 +656,7 @@ void SyntroServer::sendTunnelHeartbeat(SS_COMPONENT *syntroComponent)
 			if (syntroComponent->syntroLink != NULL) {
 				syntroComponent->syntroLink->send(SYNTROMSG_HEARTBEAT, messageLength, 
 								SYNTROLINK_MEDHIGHPRI, (SYNTRO_MESSAGE *)message);
+				updateTXStats(syntroComponent, messageLength);
 				syntroComponent->syntroLink->trySending(syntroComponent->sock);
 			}
 		}
@@ -655,6 +667,7 @@ void SyntroServer::sendTunnelHeartbeat(SS_COMPONENT *syntroComponent)
 			if (syntroComponent->syntroLink != NULL) {
 				syntroComponent->syntroLink->send(SYNTROMSG_HEARTBEAT, messageLength, 
 								SYNTROLINK_MEDHIGHPRI, (SYNTRO_MESSAGE *)message);
+				updateTXStats(syntroComponent, messageLength);
 				syntroComponent->syntroLink->trySending(syntroComponent->sock);
 			}
 		}
@@ -663,6 +676,11 @@ void SyntroServer::sendTunnelHeartbeat(SS_COMPONENT *syntroComponent)
 
 
 // SyntroServer message handlers
+
+void SyntroServer::timerEvent(QTimerEvent *event)
+{
+	syntroBackground();
+}
 
 bool SyntroServer::processMessage(SyntroThreadMsg* msg)
 {
@@ -688,10 +706,6 @@ bool SyntroServer::processMessage(SyntroThreadMsg* msg)
 					break;
 			}
 			free((void *)msg->ptrParam);
-			break;
-
-		case SYNTROTHREAD_TIMER_MESSAGE:
-			syntroBackground();
 			break;
 
 		case SYNTROSERVER_ONCONNECT_MESSAGE:
@@ -780,7 +794,7 @@ void	SyntroServer::processHelloUp(HELLOENTRY *helloEntry)
 	if (SyntroUtils::compareUID(&(helloEntry->hello.componentUID), &(myHello->componentUID)))
 		return;												// this is me - ignore!
 
-	TRACE2("Got Hello UP from %s %s", helloEntry->hello.componentName, 
+	TRACE2("Got Hello UP from %s %s", helloEntry->hello.appName, 
 					qPrintable(SyntroUtils::displayIPAddr(helloEntry->hello.IPAddr)));
 
 	if (m_fastUIDLookup.FULLookup(&(helloEntry->hello.componentUID))) {
@@ -820,7 +834,7 @@ void	SyntroServer::processHelloDown(HELLOENTRY *helloEntry)
 	if (SyntroUtils::compareUID(&(helloEntry->hello.componentUID), &(heartbeat.hello.componentUID)))
 		return;												// this is me - ignore!
 
-	TRACE2("Got Hello DOWN from %s %s", helloEntry->hello.componentName, 
+	TRACE2("Got Hello DOWN from %s %s", helloEntry->hello.appName, 
 							qPrintable(SyntroUtils::displayIPAddr(helloEntry->hello.IPAddr)));
 
 	if (m_hello->findComponent(&foundHelloEntry, &(helloEntry->hello.componentUID))) {
@@ -833,7 +847,7 @@ void	SyntroServer::processHelloDown(HELLOENTRY *helloEntry)
 		return;
 	}
 
-	TRACE2("Deleting entry for SyntroControl %s %s", helloEntry->hello.componentName, 
+	TRACE2("Deleting entry for SyntroControl %s %s", helloEntry->hello.appName, 
 									qPrintable(SyntroUtils::displayIPAddr(helloEntry->hello.IPAddr)));
 
 	m_fastUIDLookup.FULDelete(&(helloEntry->hello.componentUID)); 
@@ -846,7 +860,7 @@ void	SyntroServer::processHelloDown(HELLOENTRY *helloEntry)
 	}
 
 	component->inUse = false;
-	emit UpdateSyntroStatusBox(component);
+	updateSyntroStatus(component);
 }
 
 void	SyntroServer::syntroBackground()
@@ -854,9 +868,6 @@ void	SyntroServer::syntroBackground()
 	int i;
 	SS_COMPONENT *syntroComponent;
 	qint64 now;
-
-	if (!m_run)
-		return;
 
 	if (!openSockets())
 		return;												// don't do anything until sockets open
@@ -874,6 +885,7 @@ void	SyntroServer::syntroBackground()
 	{
 		if (syntroComponent->inUse)
 		{
+			updateSyntroData(syntroComponent);
 			if (syntroComponent->tunnelSource) {			
 				syntroComponent->syntroTunnel->tunnelBackground();
 				if (syntroComponent->syntroTunnel->m_connected) {
@@ -887,12 +899,13 @@ void	SyntroServer::syntroBackground()
 
 				if (syntroComponent->syntroTunnel->m_connectInProgress || syntroComponent->syntroTunnel->m_connected) {
 					if (SyntroUtils::syntroTimerExpired(now, syntroComponent->lastHeartbeatReceived,	m_heartbeatTimeoutCount * syntroComponent->heartbeatInterval)) {
-						if (!syntroComponent->tunnelStatic)
-							logWarn(QString("Timeout on tunnel source to %1").arg(syntroComponent->syntroTunnel->m_helloEntry.hello.componentName));
-						else
+						if (!syntroComponent->tunnelStatic) {
+							logWarn(QString("Timeout on tunnel source to %1").arg(syntroComponent->syntroTunnel->m_helloEntry.hello.appName));
+						} else {
 							logWarn(QString("Timeout on tunnel source ") + syntroComponent->tunnelStaticName);
+						}
 						syCleanup(syntroComponent);
-						emit UpdateSyntroStatusBox(syntroComponent);
+						updateSyntroStatus(syntroComponent);
 					}
 				}
 			} else {										// if not tunnel source
@@ -904,66 +917,13 @@ void	SyntroServer::syntroBackground()
 				if (SyntroUtils::syntroTimerExpired(SyntroClock(), syntroComponent->lastHeartbeatReceived, m_heartbeatTimeoutCount * syntroComponent->heartbeatInterval)) {
 					logWarn(QString("Timeout on %1").arg(syntroComponent->index));
 					syCleanup(syntroComponent);
-					emit UpdateSyntroStatusBox(syntroComponent);
+					updateSyntroStatus(syntroComponent);
 				}
 			}
 		}
 	}
-	logServiceBackground();
 	m_multicastManager.MMBackground();
 }
-
-void SyntroServer::logServiceBackground()
-{
-	QString bulkMsg;
-
-	if (!m_netLogEnabled)
-		return;
-
-	if (m_logMap->head == NULL)
-		return;												// nobody is registered
-
-	QQueue<LogMessage> *log = activeStreamQueue();
-	if (!log)
-		return;
-
-	int count = log->count();
-	if (count < 1)
-		return;
-
-	for (int i = 0; i < count; i++) {
-		LogMessage m = log->dequeue();
-		bulkMsg += m.m_level + SYNTRO_LOG_COMPONENT_SEP
-			+ m.m_timeStamp + SYNTRO_LOG_COMPONENT_SEP
-			+ SyntroUtils::displayUID(&m_myUID) + SYNTRO_LOG_COMPONENT_SEP
-			+ m_logServiceName + SYNTRO_LOG_COMPONENT_SEP
-			+ m.m_msg + "\n";
-	}
-
-	QByteArray data = bulkMsg.toLatin1();
-	int length = sizeof(SYNTRO_RECORD_HEADER) + data.length();
-
-	SYNTRO_EHEAD *multiCast = SyntroUtils::createEHEAD(&(m_myUID), 
-					SYNTROCONTROL_LOG_PORT, 
-					&(m_myUID), 
-					SYNTROCONTROL_LOG_PORT, 
-					0, 
-					length);
-
-	if (multiCast) {
-		SYNTRO_RECORD_HEADER *recordHead = (SYNTRO_RECORD_HEADER *)(multiCast + 1);
-		SyntroUtils::convertIntToUC2(SYNTRO_RECORD_TYPE_LOG, recordHead->type);
-		SyntroUtils::convertIntToUC2(0, recordHead->subType);
-		SyntroUtils::convertIntToUC2(0, recordHead->param);
-		SyntroUtils::convertIntToUC2(sizeof(SYNTRO_RECORD_HEADER), recordHead->headerLength);
-		SyntroUtils::setSyntroTimestamp(&recordHead->timestamp);
-		memcpy((char *)(recordHead + 1), data.constData(), data.length());
-		m_multicastManager.MMForwardMulticastMessage(SYNTROMSG_MULTICAST_MESSAGE, (SYNTRO_MESSAGE *)multiCast,
-						sizeof(SYNTRO_EHEAD) + length);
-		free(multiCast);
-	}
-}
-
 
 void	SyntroServer::forwardE2EMessage(SYNTRO_MESSAGE *syntroMessage, int len)
 {
@@ -985,6 +945,7 @@ void	SyntroServer::forwardE2EMessage(SYNTRO_MESSAGE *syntroMessage, int len)
 			if (component->syntroLink != NULL) {
 				TRACE1("Send to %s", qPrintable(SyntroUtils::displayUID(&component->heartbeat.hello.componentUID)));
 				component->syntroLink->send(SYNTROMSG_E2E, len, syntroMessage->flags & SYNTROLINK_PRI, syntroMessage);
+				updateTXStats(component, len);
 				component->syntroLink->trySending(component->sock);
 				m_E2EOut++;
 				m_E2EOutRate++;
@@ -1032,3 +993,88 @@ SS_COMPONENT	*SyntroServer::findComponent(SYNTRO_IPADDR compAddr, int compPort)
 	return NULL;
 }
 
+void SyntroServer::updateSyntroStatus(SS_COMPONENT *syntroComponent)
+{
+	if (receivers(SIGNAL(UpdateSyntroStatusBox(int, QStringList))) == 0)
+		return;
+
+	QStringList list;
+	QString heartbeatInterval;
+	QString appName;
+	QString componentType;
+	QString uid;
+	QString ipaddr;
+	HELLO *hello = &(syntroComponent->heartbeat.hello);
+
+	if (syntroComponent->inUse && (syntroComponent->state == ConnNormal) && (hello != NULL)) {
+		
+		appName = hello->appName;
+		componentType = hello->componentType;
+		uid = SyntroUtils::displayUID(&hello->componentUID);
+		ipaddr = SyntroUtils::displayIPAddr(hello->IPAddr);
+		if (syntroComponent->tunnelSource)					// if I am a tunnel source...
+            heartbeatInterval = "Tunnel dest";				// ...indicate other end is a tunnel dest
+		else
+            heartbeatInterval = QString ("%1") .arg(syntroComponent->heartbeatInterval / SYNTRO_CLOCKS_PER_SEC);
+	} else {
+		if (syntroComponent->tunnelStatic)
+			appName = syntroComponent->tunnelStaticName;
+		else
+			appName = "...";
+	}
+	list.append(appName);
+	list.append(componentType);
+	list.append(uid);
+	list.append(ipaddr);
+	list.append(heartbeatInterval);
+	emit UpdateSyntroStatusBox(syntroComponent->index, list);
+}
+
+
+void SyntroServer::updateSyntroData(SS_COMPONENT *syntroComponent)
+{
+	if (receivers(SIGNAL(UpdateSyntroDataBox(int, QStringList))) == 0)
+		return;
+
+	qint64 now = SyntroClock();
+
+	QStringList list;
+
+	QString RXByteCount;
+	QString TXByteCount;
+	QString RXByteRate;
+	QString TXByteRate;
+
+	qint64 deltaTime = now - syntroComponent->lastStatsTime;
+
+	if (deltaTime <= 0)
+		return;
+
+	if (deltaTime < SYNTROSERVER_STATS_INTERVAL)
+		return;												// max rate enforced
+
+	syntroComponent->lastStatsTime = now;
+
+	// time to update rates
+
+	syntroComponent->RXByteRate = (syntroComponent->tempRXByteCount * SYNTRO_CLOCKS_PER_SEC) / deltaTime; 
+	syntroComponent->TXByteRate = (syntroComponent->tempTXByteCount * SYNTRO_CLOCKS_PER_SEC) / deltaTime; 
+	syntroComponent->RXPacketRate = (syntroComponent->tempRXPacketCount * SYNTRO_CLOCKS_PER_SEC) / deltaTime; 
+	syntroComponent->TXPacketRate = (syntroComponent->tempTXPacketCount * SYNTRO_CLOCKS_PER_SEC) / deltaTime; 
+
+	syntroComponent->tempRXByteCount = 0;
+	syntroComponent->tempTXByteCount = 0;
+	syntroComponent->tempRXPacketCount = 0;
+	syntroComponent->tempTXPacketCount = 0;
+
+	RXByteCount = QString::number(syntroComponent->RXByteCount);
+	TXByteCount = QString::number(syntroComponent->TXByteCount);
+	RXByteRate = QString::number(syntroComponent->RXByteRate);
+	TXByteRate = QString::number(syntroComponent->TXByteRate);
+
+	list.append(RXByteCount);
+	list.append(TXByteCount);
+	list.append(RXByteRate);
+	list.append(TXByteRate);
+	emit UpdateSyntroDataBox(syntroComponent->index, list);
+}

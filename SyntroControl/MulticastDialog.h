@@ -1,5 +1,5 @@
 //
-//  Copyright (c) 2012 Pansenti, LLC.
+//  Copyright (c) 2012, 2013 Pansenti, LLC.
 //	
 //  This file is part of Syntro
 //
@@ -58,6 +58,8 @@ private:
 	QList <QTreeWidgetItem *> m_treeItems;
 	int m_currentMapIndex;									// this is the multicast manager's index of the current service	
 	QTreeWidgetItem *m_currentItem;							// this is the list index of the current service	
+
+	QString m_logTag;
 };
 
 #endif // MULTICASTDIALOG_H
