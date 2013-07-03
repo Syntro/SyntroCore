@@ -95,7 +95,7 @@ class SyntroClockObject;
 #define	SYNTRO_PARAMS_TRUE				"true"				// for true/false settings
 #define	SYNTRO_PARAMS_FALSE				"false"
 
-#define SYNTRO_DEFAULT_LOG_KEEP 5
+#define SYNTRO_DEFAULT_LOG_KEEP 0
 
 //	Syntro message log level defs
 
