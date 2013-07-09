@@ -25,7 +25,7 @@
 // in LOGCLIENT_BACKGROUND_INTERVAL units, so 5 seconds
 #define LOGCLIENT_DIR_REFRESH_INTERVAL 50
 
-LogClient::LogClient(QObject *parent)
+LogClient::LogClient()
 	: Endpoint(LOGCLIENT_BACKGROUND_INTERVAL, COMPTYPE_LOGSINK)
 {
 	// force a dir refresh as soon as we connect
@@ -39,12 +39,12 @@ void LogClient::appClientInit()
 
 void LogClient::appClientConnected()
 {
-	logLocal("SyntroLink established");
+    logLocal(SYNTRO_LOG_INFO, "SyntroLink established");
 }
 
 void LogClient::appClientClosed()
 {
-	logLocal("SyntroLink closed");
+    logLocal(SYNTRO_LOG_INFO, "SyntroLink closed");
 }
 
 void LogClient::appClientReceiveMulticast(int servicePort, SYNTRO_EHEAD *multiCast, int len)
@@ -72,7 +72,7 @@ void LogClient::appClientBackground()
 
 		if (m_dirRefreshCounter > LOGCLIENT_DIR_REFRESH_INTERVAL) {
 			if (m_waitingOnDirRefresh) {
-				logLocal(QString("Failed to get directory response after %1 seconds").arg((LOGCLIENT_BACKGROUND_INTERVAL * LOGCLIENT_DIR_REFRESH_INTERVAL) / 1000));
+                logLocal(SYNTRO_LOG_ERROR, QString("Failed to get directory response after %1 seconds").arg((LOGCLIENT_BACKGROUND_INTERVAL * LOGCLIENT_DIR_REFRESH_INTERVAL) / 1000));
 				m_waitingOnDirRefresh = false;
 			}
 			else {
@@ -110,7 +110,7 @@ void LogClient::appClientReceiveDirectory(SYNTRO_DIRECTORY_RESPONSE *directory, 
 	for (int i = 0; i < m_sources.count(); i++) {
 		if (!m_sources[i].m_active) {
 			clientRemoveService(m_sources[i].m_port);
-			logLocal(QString("Removed client %1").arg(m_sources[i].m_name));
+            logLocal(SYNTRO_LOG_INFO, QString("Removed client %1").arg(m_sources[i].m_name));
 			m_sources.removeAt(i);
 		}
 	}
@@ -162,7 +162,7 @@ void LogClient::handleDirEntry(QString dirEntry)
 				int port = clientAddService(entry, SERVICETYPE_MULTICAST, false, true);
 
 				if (port >= 0) {
-					logLocal(QString("New client %1").arg(entry));
+                    logLocal(SYNTRO_LOG_INFO, QString("New client %1").arg(entry));
 					m_sources.append(LogStreamEntry(entry, true, port));
 				}
 			}
@@ -183,16 +183,23 @@ int LogClient::findEntry(QString name)
 	return -1;
 }
 
-void LogClient::logLocal(QString s)
+void LogClient::logLocal(QString logLevel, QString s)
 {
 	QByteArray msg;
 
 	QDateTime dt = QDateTime::currentDateTime();
 	QString timestamp = QString("%1.%2").arg(dt.toString(Qt::ISODate)).arg(dt.time().msec(), 3, 10, QChar('0'));
 
-	msg.append("LOCAL|");
+    msg.append(logLevel);
+    msg.append(SYNTRO_LOG_COMPONENT_SEP);
 	msg.append(timestamp);
-	msg.append("|local|local|");
+    msg.append(SYNTRO_LOG_COMPONENT_SEP);
+    msg.append("");
+    msg.append(SYNTRO_LOG_COMPONENT_SEP);
+    msg.append(SyntroUtils::getAppType());
+    msg.append(SYNTRO_LOG_COMPONENT_SEP);
+    msg.append("this");
+    msg.append(SYNTRO_LOG_COMPONENT_SEP);
 	msg.append(s);
 
 	emit newLogMsg(msg);

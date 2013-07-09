@@ -29,6 +29,16 @@
 #define logWarn(msg)	_logWarn(m_logTag + "--> " + msg);
 #define logError(msg)	_logError(m_logTag + "--> " + msg);
 
+#define appLogDebug(msg) _logDebug(msg);
+#define appLogInfo(msg)  _logInfo(msg);
+#define appLogWarn(msg)  _logWarn(msg);
+#define appLogError(msg) _logError(msg);
+
+#define SYNTRO_LOG_DEBUG "debug"
+#define SYNTRO_LOG_INFO  "info"
+#define SYNTRO_LOG_WARN  "warn"
+#define SYNTRO_LOG_ERROR "error"
+
 SYNTROLIB_EXPORT bool logCreate();
 SYNTROLIB_EXPORT void logDestroy();
 SYNTROLIB_EXPORT void _logDebug(QString str);

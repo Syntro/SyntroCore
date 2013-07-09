@@ -36,7 +36,7 @@ class LogClient : public Endpoint
 	Q_OBJECT
 
 public:
-	LogClient(QObject *parent);
+    LogClient();
 
 signals:
 	void newLogMsg(QByteArray bulkMsg);
@@ -53,7 +53,7 @@ protected:
 private:
 	void handleDirEntry(QString dirEntry);
 	int findEntry(QString name);
-	void logLocal(QString msg);
+    void logLocal(QString logLevel, QString msg);
 
 	bool m_waitingOnDirRefresh;
 	int m_dirRefreshCounter;

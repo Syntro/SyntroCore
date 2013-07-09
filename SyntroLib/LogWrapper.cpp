@@ -49,19 +49,19 @@ bool logCreate()
 	else if (logKeep > 20)
 		logKeep = 20;
 
-	QString level = settings->value(SYNTRO_PARAMS_LOGLEVEL, QString("info")).toString().toLower();
+	QString level = settings->value(SYNTRO_PARAMS_LOGLEVEL).toString().toLower();
 
-	if (level == "error")
+	if (level == SYNTRO_LOG_ERROR)
 		logLevel = SYNTRO_LOG_LEVEL_ERROR;
-	else if (level == "warn")
+	else if (level == SYNTRO_LOG_WARN)
 		logLevel = SYNTRO_LOG_LEVEL_WARN;
-	else if (level == "info")
+	else if (level == SYNTRO_LOG_INFO)
 		logLevel = SYNTRO_LOG_LEVEL_INFO;
-	else if (level == "debug")
+	else if (level == SYNTRO_LOG_DEBUG)
 		logLevel = SYNTRO_LOG_LEVEL_DEBUG;
 	else {
 		logLevel = SYNTRO_LOG_LEVEL_INFO;
-		level = "info";
+		level = SYNTRO_LOG_INFO;
 	}
 
 	// write out what we are using
@@ -103,7 +103,7 @@ void _logDebug(QString str)
 	if (logLevel < SYNTRO_LOG_LEVEL_DEBUG)
 		return;
 
-	logAny("DEBUG", str);
+	logAny(SYNTRO_LOG_DEBUG, str);
 
 	qDebug() << qPrintable(str);
 }
@@ -113,7 +113,7 @@ void _logInfo(QString str)
 	if (logLevel < SYNTRO_LOG_LEVEL_INFO)
 		return;
 
-	logAny("INFO", str);
+	logAny(SYNTRO_LOG_INFO, str);
 
 	if (logLevel >= SYNTRO_LOG_LEVEL_DEBUG)
 		qDebug() << qPrintable(str);
@@ -124,7 +124,7 @@ void _logWarn(QString str)
 	if (logLevel < SYNTRO_LOG_LEVEL_WARN)
 		return;
 
-	logAny("WARN", str);
+	logAny(SYNTRO_LOG_WARN, str);
 
 	qWarning() << qPrintable(str);
 }
@@ -134,7 +134,7 @@ void _logError(QString str)
 	if (logLevel < SYNTRO_LOG_LEVEL_ERROR)
 		return;
 
-	logAny("ERROR", str);
+	logAny(SYNTRO_LOG_ERROR, str);
 
 	qCritical() << qPrintable(str);
 }

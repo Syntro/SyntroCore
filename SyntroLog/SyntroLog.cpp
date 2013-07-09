@@ -24,13 +24,13 @@
 #include "SyntroLog.h"
 #include "SyntroAboutDlg.h"
 #include "BasicSetupDlg.h"
+#include "SeverityLevelDlg.h"
+#include "ViewLogFieldsDlg.h"
 
 SyntroLog::SyntroLog(QWidget *parent)
 	: QMainWindow(parent)
 {
-	ui.setupUi(this);
-	initStatusBar();
-	initGrid();
+	ui.setupUi(this);	
 
 	m_activeClientCount = 0;
 
@@ -38,15 +38,22 @@ SyntroLog::SyntroLog(QWidget *parent)
 	connect(ui.actionSave, SIGNAL(triggered()), this, SLOT(onSave()));
 	connect(ui.actionAbout, SIGNAL(triggered()), this, SLOT(onAbout()));
 	connect(ui.actionBasicSetup, SIGNAL(triggered()), this, SLOT(onBasicSetup()));
+    connect(ui.actionSeverityLevel, SIGNAL(triggered()), this, SLOT(onSeverityLevel()));
+    connect(ui.actionFields, SIGNAL(triggered()), this, SLOT(onFields()));
 
 	SyntroUtils::syntroAppInit();
 
-	m_client = new LogClient(this);
+    m_client = new LogClient();
 	connect(m_client, SIGNAL(newLogMsg(QByteArray)), this, SLOT(newLogMsg(QByteArray)), Qt::DirectConnection);
 	connect(m_client, SIGNAL(activeClientUpdate(int)), this, SLOT(activeClientUpdate(int)), Qt::DirectConnection);
 	m_client->resumeThread();
 
+    m_fieldLabels << "Level" << "Timestamp" << "UID" << "AppType" << "AppName" << "Message";
 	restoreWindowState();
+
+    initGrid();
+    initStatusBar();
+    onLevelChange();
 
 	setWindowTitle(QString("%1 - %2")
 		.arg(SyntroUtils::getAppType())
@@ -108,82 +115,84 @@ void SyntroLog::parseMsgQueue()
 	}
 }
 
-void SyntroLog::addMessage(QString msg)
+void SyntroLog::addMessage(QString packedMsg)
 {
-	QStringList field = msg.split(SYNTRO_LOG_COMPONENT_SEP);
+    QStringList msg = packedMsg.split(SYNTRO_LOG_COMPONENT_SEP);
 
-	if (field.count() != ui.logTable->columnCount())
+    if (msg.count() != NUM_LOG_FIELDS)
 		return;
 
-	field[1].replace('T', ' ');
+    msg[LOGLEVEL_FIELD] = msg[LOGLEVEL_FIELD].toLower();
+    msg[TIMESTAMP_FIELD].replace('T', ' ');
+    msg[APP_TYPE_FIELD].remove(SYNTRO_LOG_SERVICE_TAG);
 
-	int row = findRowInsertPosition(field[1]);
+    m_entries.append(msg);
+
+    updateTable(msg);
+}
+
+void SyntroLog::updateTable(QStringList msg)
+{
+    int row = findRowInsertPosition(msg);
+
+    if (row < 0)
+        return;
 
 	ui.logTable->insertRow(row);
 
-	// log level
-	QTableWidgetItem *item = new QTableWidgetItem();
-	item->setFlags(item->flags() & ~Qt::ItemIsEditable);
-	item->setText(field[0]);
+    for (int i = 0; i < m_viewFields.count(); i++) {
+        int field = m_viewFields.at(i);
 
-	if (field[0] == "ERROR")
-		item->setBackgroundColor(Qt::red);
-	else if (field[0] == "WARN")
-		item->setBackgroundColor(Qt::yellow);
-	else if (field[0] == "DEBUG")
-		item->setBackgroundColor(Qt::green);
-	else if (field[0] == "LOCAL")
-		item->setBackgroundColor(Qt::gray);
+        QTableWidgetItem *item = new QTableWidgetItem();
+        item->setFlags(item->flags() & ~Qt::ItemIsEditable);
+        item->setText(msg.at(field));
 
+        if (field == LOGLEVEL_FIELD) {
+            if (msg.at(LOGLEVEL_FIELD) == SYNTRO_LOG_ERROR)
+                item->setBackgroundColor(Qt::red);
+            else if (msg.at(LOGLEVEL_FIELD) == SYNTRO_LOG_WARN)
+                item->setBackgroundColor(Qt::yellow);
+            else if (msg.at(LOGLEVEL_FIELD) == SYNTRO_LOG_DEBUG)
+                item->setBackgroundColor(Qt::green);
+        }
 
-	ui.logTable->setItem(row, 0, item);
+        ui.logTable->setItem(row, i, item);
+    }
 
-
-	// timestamp
-	item = new QTableWidgetItem();
-	item->setFlags(item->flags() & ~Qt::ItemIsEditable);
-	item->setText(field[1]);
-	ui.logTable->setItem(row, 1, item);
-
-
-	// UID
-	item = new QTableWidgetItem();
-	item->setFlags(item->flags() & ~Qt::ItemIsEditable);
-	item->setText(field[2]);
-	ui.logTable->setItem(row, 2, item);
-
-
-	// client name
-	item = new QTableWidgetItem();
-	item->setFlags(item->flags() & ~Qt::ItemIsEditable);
-
-	if (field[3].endsWith(SYNTRO_LOG_SERVICE_TAG))
-		item->setText(field[3].left(field[3].length() - strlen(SYNTRO_LOG_SERVICE_TAG)));
-	else
-		item->setText(field[3]);
-
-	ui.logTable->setItem(row, 3, item);
-	
-
-	// the log message
-	item = new QTableWidgetItem();
-	item->setFlags(item->flags() & ~Qt::ItemIsEditable);
-	item->setText(field[4]);
-	ui.logTable->setItem(row, 4, item);
-
-	ui.logTable->scrollToBottom();
+    ui.logTable->scrollToBottom();
 }
 
-int SyntroLog::findRowInsertPosition(QString timestamp)
+int SyntroLog::findRowInsertPosition(QStringList msg)
 {
+    int level = msgLogLevel(msg.at(LOGLEVEL_FIELD));
+
+    if (level > m_severityLevel)
+        return -1;
+
+    QString timestamp = msg.at(TIMESTAMP_FIELD);
+
 	for (int i = ui.logTable->rowCount() - 1; i >= 0; i--) {
-		QTableWidgetItem *item = ui.logTable->item(i, 1);
+        QTableWidgetItem *item = ui.logTable->item(i, m_timestampCol);
 
 		if (timestamp >= item->text())
 			return i + 1;
 	}
 
 	return 0;
+}
+
+int SyntroLog::msgLogLevel(QString level)
+{
+    if (level == SYNTRO_LOG_ERROR)
+        return SYNTRO_LOG_LEVEL_ERROR;
+    else if (level == SYNTRO_LOG_WARN)
+        return SYNTRO_LOG_LEVEL_WARN;
+    else if (level == SYNTRO_LOG_INFO)
+        return SYNTRO_LOG_LEVEL_INFO;
+    else if (level == SYNTRO_LOG_DEBUG)
+        return SYNTRO_LOG_LEVEL_DEBUG;
+    else
+        return 100;
 }
 
 void SyntroLog::onSave()
@@ -205,16 +214,18 @@ void SyntroLog::onSave()
 
 	m_logMutex.lock();
 
-	for (int i = 0; i < ui.logTable->rowCount(); i++) {
-		for (int j = 0; j < ui.logTable->columnCount(); j++) {
-			textStream << ui.logTable->item(i, j)->text();
+    for (int i = 0; i < m_entries.count(); i++) {
+        QStringList msg = m_entries.at(i);
 
-			if (j == ui.logTable->columnCount() - 1)
-				textStream << endl;
-			else
-				textStream << SYNTRO_LOG_COMPONENT_SEP;
-		}
-	}
+        for (int j = 0; j < msg.count(); j++) {
+            textStream << msg.at(j);
+
+            if (j == msg.count() - 1)
+                textStream << endl;
+            else
+                textStream << SYNTRO_LOG_COMPONENT_SEP;
+        }
+    }
 
 	m_logMutex.unlock();
 
@@ -222,16 +233,87 @@ void SyntroLog::onSave()
 	m_savePath = fileName;
 }
 
+void SyntroLog::onSeverityLevel()
+{
+    SeverityLevelDlg dlg(this, m_severityLevel);
+
+    if (dlg.exec() == QDialog::Accepted) {
+        int newLevel = dlg.level();
+
+        if (newLevel != m_severityLevel) {
+            m_severityLevel = newLevel;
+            onLevelChange();
+        }
+    }
+}
+
+void SyntroLog::onLevelChange()
+{
+    switch (m_severityLevel) {
+    case SYNTRO_LOG_LEVEL_ERROR:
+        m_severityLevelStatus->setText("Severity level - error");
+        break;
+    case SYNTRO_LOG_LEVEL_WARN:
+        m_severityLevelStatus->setText("Severity level - warn");
+        break;
+    case SYNTRO_LOG_LEVEL_INFO:
+        m_severityLevelStatus->setText("Severity level - info");
+        break;
+    case SYNTRO_LOG_LEVEL_DEBUG:
+        m_severityLevelStatus->setText("Severity level - debug");
+        break;
+    }
+
+    ui.logTable->setRowCount(0);
+
+    for (int i = 0; i < m_entries.count(); i++)
+        updateTable(m_entries.at(i));
+}
+
+void SyntroLog::onFields()
+{
+    ViewLogFieldsDlg dlg(this, m_viewFields);
+
+    if (dlg.exec() == QDialog::Accepted) {
+        QList<int> newFields = dlg.viewFields();
+
+        if (newFields != m_viewFields) {
+            m_viewFields = newFields;
+            validateViewFields();
+            ui.logTable->setRowCount(0);
+            onFieldsChange();
+            onLevelChange();
+        }
+    }
+}
+
+void SyntroLog::onFieldsChange()
+{
+    ui.logTable->setColumnCount(m_viewFields.count());
+    ui.logTable->horizontalHeader()->setStretchLastSection(true);
+
+    QStringList labels;
+
+    for (int i = 0; i < m_viewFields.count(); i++)
+        labels << m_fieldLabels.at(m_viewFields.at(i));
+
+    ui.logTable->setHorizontalHeaderLabels(labels);
+}
+
 void SyntroLog::initGrid()
 {
-	ui.logTable->setColumnCount(5);
-	ui.logTable->horizontalHeader()->setStretchLastSection(true);
-
 	ui.logTable->verticalHeader()->setDefaultSectionSize(fontMetrics().height() + 4);
 	ui.logTable->setSelectionMode(QAbstractItemView::ContiguousSelection);
 	ui.logTable->setSelectionBehavior(QAbstractItemView::SelectRows);
 
-	ui.logTable->setHorizontalHeaderLabels(QStringList() << "Level" << "Timestamp" << "UID" << "Component" << "Message");
+    onFieldsChange();
+
+    for (int i = 0; i < m_viewFields.count() && i < m_colWidths.count(); i++) {
+        if (m_colWidths.at(i) > 0)
+            ui.logTable->setColumnWidth(i, m_colWidths.at(i));
+    }
+
+    ui.logTable->setShowGrid(true);
 }
 
 void SyntroLog::initStatusBar()
@@ -239,6 +321,11 @@ void SyntroLog::initStatusBar()
 	m_controlStatus = new QLabel(this);
 	m_controlStatus->setAlignment(Qt::AlignLeft);
 	ui.statusBar->addWidget(m_controlStatus, 1);
+
+    m_severityLevelStatus = new QLabel(this);
+    m_severityLevelStatus->setAlignment(Qt::AlignLeft);
+
+    ui.statusBar->addWidget(m_severityLevelStatus);
 
 	m_activeClientStatus = new QLabel(this);
 	m_activeClientStatus->setAlignment(Qt::AlignRight);
@@ -264,6 +351,9 @@ void SyntroLog::saveWindowState()
 	settings->beginGroup("Window");
 	settings->setValue("Geometry", saveGeometry());
 	settings->setValue("State", saveState());
+    settings->endGroup();
+
+    settings->beginGroup("View");
 
 	settings->beginWriteArray("Grid");
 	for (int i = 0; i < ui.logTable->columnCount() - 1; i++) {
@@ -271,6 +361,15 @@ void SyntroLog::saveWindowState()
 		settings->setValue("columnWidth", ui.logTable->columnWidth(i));
 	}
 	settings->endArray();
+
+    settings->beginWriteArray("Fields");
+    for (int i = 0; i < m_viewFields.count(); i++) {
+        settings->setArrayIndex(i);
+        settings->setValue("Field", m_viewFields.at(i));
+    }
+    settings->endArray();
+
+    settings->setValue("SeverityLevel", m_severityLevel);
 
 	settings->endGroup();
 
@@ -284,18 +383,87 @@ void SyntroLog::restoreWindowState()
 	settings->beginGroup("Window");
 	restoreGeometry(settings->value("Geometry").toByteArray());
 	restoreState(settings->value("State").toByteArray());
+    settings->endGroup();
+
+    settings->beginGroup("View");
+    m_colWidths.clear();
 
 	int count = settings->beginReadArray("Grid");
-	for (int i = 0; i < count && i < ui.logTable->columnCount() - 1; i++) {
+    for (int i = 0; i < count; i++) {
 		settings->setArrayIndex(i);
-		int width = settings->value("columnWidth").toInt();
-
-		if (width > 0)
-			ui.logTable->setColumnWidth(i, width);
+        m_colWidths.append(settings->value("columnWidth").toInt());
 	}
-	settings->endArray();
+    settings->endArray();
 
-	settings->endGroup();
+    m_viewFields.clear();
+
+    count = settings->beginReadArray("Fields");
+    for (int i = 0; i < count; i++) {
+        settings->setArrayIndex(i);
+        int field = settings->value("Field").toInt();
+
+        if (field >= 0 && field < NUM_LOG_FIELDS)
+            m_viewFields.append(field);
+    }
+    settings->endArray();
+
+    validateViewFields();
+
+    m_severityLevel = settings->value("SeverityLevel", SYNTRO_LOG_LEVEL_WARN).toInt();
+
+    if (m_severityLevel < SYNTRO_LOG_LEVEL_ERROR && m_severityLevel > SYNTRO_LOG_LEVEL_DEBUG)
+        m_severityLevel = SYNTRO_LOG_LEVEL_WARN;
+
+    settings->endGroup();
 
 	delete settings;
+}
+
+void SyntroLog::validateViewFields()
+{
+    if (m_viewFields.count() < 2) {
+        setDefaultViewFields();
+        return;
+    }
+
+    if (m_viewFields.at(m_viewFields.count() - 1) != MESSAGE_FIELD) {
+        setDefaultViewFields();
+        return;
+    }
+
+    if (m_viewFields.at(0) == LOGLEVEL_FIELD) {
+        if (m_viewFields.at(1) != TIMESTAMP_FIELD) {
+            setDefaultViewFields();
+            return;
+        }
+    }
+    else if (m_viewFields.at(0) != TIMESTAMP_FIELD) {
+        setDefaultViewFields();
+        return;
+    }
+
+    for (int i = 1; i < m_viewFields.count(); i++) {
+        if (m_viewFields.at(i) <= m_viewFields.at(i-1)) {
+            setDefaultViewFields();
+            return;
+        }
+    }
+
+    if (m_viewFields.at(0) == TIMESTAMP_FIELD)
+        m_timestampCol = 0;
+    else
+        m_timestampCol = 1;
+}
+
+void SyntroLog::setDefaultViewFields()
+{
+    m_viewFields.clear();
+
+    m_viewFields.append(LOGLEVEL_FIELD);
+    m_viewFields.append(TIMESTAMP_FIELD);
+    m_viewFields.append(APP_TYPE_FIELD);
+    m_viewFields.append(APP_NAME_FIELD);
+    m_viewFields.append(MESSAGE_FIELD);
+
+    m_timestampCol = 1;
 }

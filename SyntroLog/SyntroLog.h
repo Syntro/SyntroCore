@@ -21,6 +21,7 @@
 #define SYNTROLOG_H
 
 #include <QMainWindow>
+#include <qstringlist.h>
 #include "ui_syntrolog.h"
 #include "LogClient.h"
 
@@ -37,6 +38,8 @@ public slots:
 	void onSave();
 	void onBasicSetup();
 	void onAbout();
+    void onSeverityLevel();
+    void onFields();
 
 protected:
 	void closeEvent(QCloseEvent *event);
@@ -48,8 +51,14 @@ private:
 	void initStatusBar();
 	void initGrid();
 	void parseMsgQueue();
-	void addMessage(QString msg);
-	int findRowInsertPosition(QString timestamp);
+    void addMessage(QString packedMsg);
+    void updateTable(QStringList msg);
+    int findRowInsertPosition(QStringList msg);
+    int msgLogLevel(QString level);
+    void onLevelChange();
+    void onFieldsChange();
+    void validateViewFields();
+    void setDefaultViewFields();
 
 	Ui::SyntroLogClass ui;
 
@@ -62,7 +71,15 @@ private:
 	QMutex m_activeClientMutex;
 
 	QLabel *m_controlStatus;
+    QLabel *m_severityLevelStatus;
 	QLabel *m_activeClientStatus;
+
+    QList<QStringList> m_entries;
+    QList<int> m_viewFields;
+    QStringList m_fieldLabels;
+    QList<int> m_colWidths;
+    int m_severityLevel;
+    int m_timestampCol;
 
 	QString m_savePath;
 };

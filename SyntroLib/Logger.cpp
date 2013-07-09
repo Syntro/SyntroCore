@@ -73,7 +73,7 @@ void Logger::appClientInit()
 
 void Logger::appClientBackground()
 {
-	QString bulkMsg;
+	QString packedMsg;
 	qint64 now = SyntroClock();
 
 	if (m_diskLog && SyntroUtils::syntroTimerExpired(now, m_lastFlushTime, m_logInterval)) {
@@ -101,15 +101,17 @@ void Logger::appClientBackground()
 
 	for (int i = 0; i < count; i++) {
 		LogMessage m = log->dequeue();
-		bulkMsg += m.m_level + SYNTRO_LOG_COMPONENT_SEP
+		packedMsg += m.m_level + SYNTRO_LOG_COMPONENT_SEP
 			+ m.m_timeStamp + SYNTRO_LOG_COMPONENT_SEP
 			+ SyntroUtils::displayUID(&m_UID) + SYNTRO_LOG_COMPONENT_SEP
 			+ SyntroUtils::getAppType() + SYNTRO_LOG_SERVICE_TAG + SYNTRO_LOG_COMPONENT_SEP
+			+ SyntroUtils::getAppName() + SYNTRO_LOG_COMPONENT_SEP
 			+ m.m_msg + "\n";
 	}
+
 	m_streamMutex.unlock();
 
-	QByteArray data = bulkMsg.toLatin1();
+	QByteArray data = packedMsg.toLatin1();
 	int length = sizeof(SYNTRO_RECORD_HEADER) + data.length();
 
 	SYNTRO_EHEAD *multiCast = clientBuildMessage(m_logPort, length);
