@@ -27,19 +27,22 @@
 CFSClient::CFSClient(QObject *parent)
 	: Endpoint(SYNTROCFS_BGND_INTERVAL, COMPTYPE_CFS),  m_parent(parent)
 {
-	m_CFSThread = new CFSThread(this);
+    m_CFSThread = NULL;
 }
 
 void CFSClient::appClientInit()
 {
 	m_CFSPort = clientAddService(SYNTRO_STREAMNAME_CFS, SERVICETYPE_E2E, true);
-	m_CFSThread->resumeThread();
+    m_CFSThread = new CFSThread(this);
+    m_CFSThread->resumeThread();
 	return;
 }
 
 void CFSClient::appClientExit()
 {
-	m_CFSThread->exitThread();
+    if (m_CFSThread != NULL)
+        m_CFSThread->exitThread();
+    m_CFSThread = NULL;
 }
 
 void CFSClient::appClientBackground()

@@ -34,14 +34,17 @@ SyntroDBConsole::SyntroDBConsole(QObject *parent)
 	: QThread(parent)
 {
 	SyntroUtils::syntroAppInit();
-	m_storeClient = new StoreClient(this);
-	m_storeClient->resumeThread();
-	connect(this, SIGNAL(refreshStreamSource(int)), m_storeClient, SLOT(refreshStreamSource(int)), Qt::QueuedConnection); 
-	for (int index = 0; index < SYNTRODB_MAX_STREAMS; index++)
-		emit refreshStreamSource(index);
 
-	m_CFSClient = new CFSClient(this);
-	m_CFSClient->resumeThread();
+    m_storeClient = new StoreClient(this);
+
+    connect(this, SIGNAL(refreshStreamSource(int)),
+        m_storeClient, SLOT(refreshStreamSource(int)), Qt::QueuedConnection);
+    connect(m_storeClient, SIGNAL(running()),
+        this, SLOT(storeRunning()), Qt::QueuedConnection);
+    m_storeClient->resumeThread();
+
+    m_CFSClient = new CFSClient(this);
+    m_CFSClient->resumeThread();
 
 	start();
 }
@@ -49,6 +52,13 @@ SyntroDBConsole::SyntroDBConsole(QObject *parent)
 SyntroDBConsole::~SyntroDBConsole()
 {
 }
+
+void SyntroDBConsole::storeRunning()
+{
+    for (int index = 0; index < SYNTRODB_MAX_STREAMS; index++)
+        emit refreshStreamSource(index);
+}
+
 
 void SyntroDBConsole::showHelp()
 {
@@ -132,7 +142,7 @@ void SyntroDBConsole::run()
 			break;
 
 		default:
-			break;;
+            break;
 		}
 	}
 }

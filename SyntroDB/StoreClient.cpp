@@ -68,12 +68,12 @@ void StoreClient::refreshStreamSource(int index)
 	QMutexLocker locker(&m_lock);
 
 	QSettings *settings = SyntroUtils::getSettings();
-
-	QString rootDirectory = settings->value(SYNTRODB_PARAMS_ROOT_DIRECTORY).toString();
+    QString rootDirectory = settings->value(SYNTRODB_PARAMS_ROOT_DIRECTORY).toString();
 	int count = settings->beginReadArray(SYNTRODB_PARAMS_STREAM_SOURCES);
 
 	if ((index < 0) || (index >= count)) {					// no more entries in settings
 		settings->endArray();
+        delete settings;
 		return;
 	} else {
 		settings->setArrayIndex(index);
@@ -84,9 +84,10 @@ void StoreClient::refreshStreamSource(int index)
 
 		if (settings->value(SYNTRODB_PARAMS_INUSE).toString() == SYNTRO_PARAMS_FALSE) {
 			settings->endArray();
+            delete settings;
 			return;											// just needed to clear the entry
 		}
-		m_sources[index] = new StoreStream(m_logTag);
+        m_sources[index] = new StoreStream(m_logTag);
 		m_diskManagers[index] = new StoreDiskManager(m_sources[index]);
 		m_sources[index]->load(settings, rootDirectory);
 		m_diskManagers[index]->resumeThread();

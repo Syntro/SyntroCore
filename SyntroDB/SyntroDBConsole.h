@@ -35,6 +35,9 @@ public:
 	SyntroDBConsole(QObject *parent);
 	~SyntroDBConsole();
 
+public slots:
+    void storeRunning();
+
 signals:
 	void refreshStreamSource(int index);
 

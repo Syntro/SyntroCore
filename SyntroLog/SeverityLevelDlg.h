@@ -25,7 +25,7 @@
 
 class SeverityLevelDlg : public QDialog
 {
-    Q_OBJECT
+	Q_OBJECT
 
 public:
     SeverityLevelDlg(QWidget *parent, int level);

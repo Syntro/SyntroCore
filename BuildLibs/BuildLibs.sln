@@ -56,10 +56,10 @@ Global
 		{0C7F9BE3-3648-4B6C-B1FB-C8B54629862B}.Debug|Win32.Build.0 = Debug|Win32
 		{0C7F9BE3-3648-4B6C-B1FB-C8B54629862B}.Release|Win32.ActiveCfg = Release|Win32
 		{0C7F9BE3-3648-4B6C-B1FB-C8B54629862B}.Release|Win32.Build.0 = Release|Win32
-		{0C7F9BE3-3648-4B6C-B1FB-C8B54629862B}.StaticDebug|Win32.ActiveCfg = Debug|Win32
-		{0C7F9BE3-3648-4B6C-B1FB-C8B54629862B}.StaticDebug|Win32.Build.0 = Debug|Win32
-		{0C7F9BE3-3648-4B6C-B1FB-C8B54629862B}.StaticRelease|Win32.ActiveCfg = Release|Win32
-		{0C7F9BE3-3648-4B6C-B1FB-C8B54629862B}.StaticRelease|Win32.Build.0 = Release|Win32
+		{0C7F9BE3-3648-4B6C-B1FB-C8B54629862B}.StaticDebug|Win32.ActiveCfg = StaticDebug|Win32
+		{0C7F9BE3-3648-4B6C-B1FB-C8B54629862B}.StaticDebug|Win32.Build.0 = StaticDebug|Win32
+		{0C7F9BE3-3648-4B6C-B1FB-C8B54629862B}.StaticRelease|Win32.ActiveCfg = StaticRelease|Win32
+		{0C7F9BE3-3648-4B6C-B1FB-C8B54629862B}.StaticRelease|Win32.Build.0 = StaticRelease|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -54,13 +54,13 @@ SyntroDB::SyntroDB()
 
 	m_storeClient = new StoreClient(this);
 	
-	connect(this, SIGNAL(refreshStreamSource(int)), 
-		m_storeClient, SLOT(refreshStreamSource(int)), Qt::QueuedConnection); 
-	m_storeClient->resumeThread();
+    connect(this, SIGNAL(refreshStreamSource(int)),
+        m_storeClient, SLOT(refreshStreamSource(int)), Qt::QueuedConnection);
+    connect(m_storeClient, SIGNAL(running()),
+        this, SLOT(storeRunning()), Qt::QueuedConnection);
+    m_storeClient->resumeThread();
 
 	m_CFSClient = new CFSClient(this);
-	connect(m_CFSClient->getCFSThread(), SIGNAL(newStatus(int, SYNTROCFS_STATE *)), 
-		this, SLOT(newStatus(int, SYNTROCFS_STATE *)), Qt::QueuedConnection);
 	m_CFSClient->resumeThread();
 
 	QSettings *settings = SyntroUtils::getSettings();
@@ -77,12 +77,16 @@ SyntroDB::SyntroDB()
 	}
 	settings->endArray();
 
-	for (int index = 0; index < SYNTRODB_MAX_STREAMS; index++)
-		emit refreshStreamSource(index);
 
 	m_startingUp = false;
 
 	delete settings;
+}
+
+void SyntroDB::storeRunning()
+{
+    for (int index = 0; index < SYNTRODB_MAX_STREAMS; index++)
+        emit refreshStreamSource(index);
 }
 
 void SyntroDB::closeEvent(QCloseEvent *)

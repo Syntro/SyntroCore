@@ -20,6 +20,7 @@
 #ifndef VIEWLOGFIELDSDLG_H
 #define VIEWLOGFIELDSDLG_H
 
+#include <qobject.h>
 #include <qdialog.h>
 #include <qcheckbox.h>
 #include <qlist.h>
@@ -35,7 +36,7 @@
 
 class ViewLogFieldsDlg : public QDialog
 {
-    Q_OBJECT
+	Q_OBJECT
 
 public:
     ViewLogFieldsDlg(QWidget *parent, QList<int> fields);

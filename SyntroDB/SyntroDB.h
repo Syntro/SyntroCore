@@ -137,7 +137,7 @@ class SyntroDB : public QMainWindow
 
 public:
 	SyntroDB();
-	~SyntroDB() {};
+    ~SyntroDB() {}
 
 public slots:
 	void onAbout();
@@ -145,6 +145,7 @@ public slots:
 	void boxClicked(bool, int);
 	void buttonClicked(int);
 	void onConfiguration();
+    void storeRunning();
 
 signals:
 	void refreshStreamSource(int index);
