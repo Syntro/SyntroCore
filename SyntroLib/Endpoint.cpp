@@ -24,6 +24,7 @@
 #include "SyntroRecord.h"
 
 //#define ENDPOINT_TRACE
+//#define CFS_TRACE
 
 /*!
     \class Endpoint
@@ -1629,7 +1630,9 @@ void Endpoint::processServiceActivate(SYNTRO_SERVICE_ACTIVATE *serviceActivate)
 	serviceInfo->destPort = SyntroUtils::convertUC2ToUInt(serviceActivate->syntroControlPort);	// record the other end's port number
 	serviceInfo->state = SYNTRO_LOCAL_SERVICE_STATE_ACTIVE;
 	serviceInfo->tLastLookup = SyntroClock();
+#ifdef ENDPOINT_TRACE
 	TRACE2("Received service activate for port %d to SyntroControl port %d", servicePort, serviceInfo->destPort);
+#endif
 }
 
 /*!
@@ -1647,7 +1650,9 @@ void Endpoint::sendRemoteServiceLookup(SYNTRO_SERVICE_INFO *remoteService)
 
 	serviceLookup = (SYNTRO_SERVICE_LOOKUP *)malloc(sizeof(SYNTRO_SERVICE_LOOKUP));
 	*serviceLookup = remoteService->serviceLookup;
+#ifdef ENDPOINT_TRACE
 	TRACE2("Sending request for %s on local port %d", serviceLookup->servicePath, SyntroUtils::convertUC2ToUInt(serviceLookup->localPort));
+#endif
 	syntroSendMessage(SYNTROMSG_SERVICE_LOOKUP_REQUEST, (SYNTRO_MESSAGE *)serviceLookup, sizeof(SYNTRO_SERVICE_LOOKUP), SYNTROLINK_MEDHIGHPRI);
 	remoteService->tLastLookup = SyntroClock();
 }
@@ -1702,13 +1707,18 @@ void Endpoint::processLookupResponse(SYNTRO_SERVICE_LOOKUP *serviceLookup)
 
 		case SYNTRO_REMOTE_SERVICE_STATE_LOOKING:
 			if (serviceLookup->response == SERVICE_LOOKUP_FAIL) {	// the service is not there
+#ifdef ENDPOINT_TRACE
 				TRACE1("Remote service %s unavailable", remoteService->serviceLookup.servicePath);
+#else
+				;
+#endif
 			} else if (serviceLookup->response == SERVICE_LOOKUP_SUCCEED) { // the service is there
+#ifdef ENDPOINT_TRACE
 				TRACE3("Service %s mapped to %s port %d", 
 								serviceLookup->servicePath, 
 								SyntroUtils::displayUID(&(serviceLookup->lookupUID)), 
 								SyntroUtils::convertUC2ToInt(serviceLookup->remotePort));
-
+#endif
 				// got a good response - record the data and change state to registered
 			
 				remoteService->serviceLookup.lookupUID = serviceLookup->lookupUID;	
@@ -1724,7 +1734,9 @@ void Endpoint::processLookupResponse(SYNTRO_SERVICE_LOOKUP *serviceLookup)
 
 		case SYNTRO_REMOTE_SERVICE_STATE_REGISTERED:
 			if (serviceLookup->response == SERVICE_LOOKUP_FAIL) {	// the service has gone away
+#ifdef ENDPOINT_TRACE
 				TRACE1("Remote service %s has gone unavailable", remoteService->serviceLookup.servicePath);
+#endif
 				remoteService->state = SYNTRO_REMOTE_SERVICE_STATE_LOOK;	// start looking again
 			} else if (serviceLookup->response == SERVICE_LOOKUP_SUCCEED) { // the service is still there
 				remoteService->tLastLookupResponse = SyntroClock();		// reset the timeout timer
@@ -1732,14 +1744,18 @@ void Endpoint::processLookupResponse(SYNTRO_SERVICE_LOOKUP *serviceLookup)
 					&& (SyntroUtils::compareUID(&(serviceLookup->lookupUID), &(remoteService->serviceLookup.lookupUID)))
 					&& (SyntroUtils::convertUC2ToInt(serviceLookup->remotePort) == SyntroUtils::convertUC2ToInt(remoteService->serviceLookup.remotePort))
 					&& (SyntroUtils::convertUC2ToInt(serviceLookup->componentIndex) == SyntroUtils::convertUC2ToInt(remoteService->serviceLookup.componentIndex))) {
-					TRACE1("Reconfirmed %s", serviceLookup->servicePath);
+#ifdef ENDPOINT_TRACE
+						TRACE1("Reconfirmed %s", serviceLookup->servicePath);
+#else
+						;
+#endif
 				} else {
-
+#ifdef ENDPOINT_TRACE
 					TRACE3("Service %s remapped to %s port %d", 
 								serviceLookup->servicePath, 
 								SyntroUtils::displayUID(&(serviceLookup->lookupUID)), 
 								SyntroUtils::convertUC2ToInt(serviceLookup->remotePort));
-
+#endif
 					// got a changed response - record the data and carry on
 			
 					remoteService->serviceLookup.lookupUID = serviceLookup->lookupUID;	
@@ -2705,7 +2721,9 @@ void Endpoint::CFSProcessKeepAliveResponse(SYNTRO_CFSHEADER *cfsHdr, int dstPort
 		return;
 	}
 	scf->lastKeepAliveReceived = SyntroClock();
+#ifdef CFS_TRACE
 	TRACE2("Got keep alive response on handle %d port %d", handle, dstPort);
+#endif
 }
 
 /*!
@@ -2784,7 +2802,9 @@ void Endpoint::CFSProcessReadAtIndexResponse(SYNTRO_CFSHEADER *cfsHdr, int dstPo
 	}
 	scf->readInProgress = false;
 	responseCode = SyntroUtils::convertUC2ToUInt(cfsHdr->cfsParam);		// get the response code
+#ifdef CFS_TRACE
 	TRACE3("Got ReadAtIndex response on handle %d port %d code %d", handle, dstPort, responseCode);
+#endif
 	if (responseCode == SYNTROCFS_SUCCESS) {
 		length = SyntroUtils::convertUC4ToInt(cfsHdr->cfsLength);
 		fileData = reinterpret_cast<unsigned char *>(malloc(length));
@@ -2840,7 +2860,9 @@ void Endpoint::CFSProcessWriteAtIndexResponse(SYNTRO_CFSHEADER *cfsHdr, int dstP
 	}
 	scf->writeInProgress = false;
 	responseCode = SyntroUtils::convertUC2ToUInt(cfsHdr->cfsParam);		// get the response code
+#ifdef CFS_TRACE
 	TRACE3("Got WriteAtIndex response on handle %d port %d code %d", handle, dstPort, responseCode);
+#endif
 	CFSWriteAtIndexResponse(dstPort, handle, SyntroUtils::convertUC4ToInt(cfsHdr->cfsIndex), responseCode); 
 }
 

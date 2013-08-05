@@ -175,7 +175,7 @@ void CFSThread::CFSDir(SYNTRO_EHEAD *ehead, SYNTRO_CFSHEADER *cfsMsg)
 	SyntroUtils::convertIntToUC2(SYNTROCFS_TYPE_DIR_RES, responseHdr->cfsType);
 	SyntroUtils::convertIntToUC2(SYNTROCFS_SUCCESS, responseHdr->cfsParam);
 	totalLength = sizeof(SYNTRO_CFSHEADER) + dirString.length() + 1;
-	m_parent->clientSendMessage(m_parent->m_CFSPort, responseE2E, totalLength, SYNTROCFS_E2E_PRIORITY);
+	m_parent->sendMessage(responseE2E, totalLength);
 	TRACE2("Sent directory to %s, length %d", qPrintable(SyntroUtils::displayUID(&ehead->sourceUID)), totalLength);
 	free(ehead);
 }
@@ -235,7 +235,7 @@ void CFSThread::CFSOpen(SYNTRO_EHEAD *ehead, SYNTRO_CFSHEADER *cfsMsg)
 	totalLength = sizeof(SYNTRO_CFSHEADER);
 	TRACE2("Sent open response to %s, response %d", qPrintable(SyntroUtils::displayUID(&ehead->sourceUID)), 
 		SyntroUtils::convertUC2ToInt(cfsMsg->cfsParam));
-	m_parent->clientSendMessage(m_parent->m_CFSPort, ehead, totalLength, SYNTROCFS_E2E_PRIORITY);
+	m_parent->sendMessage(ehead, totalLength);
 }
 
 void CFSThread::CFSClose(SYNTRO_EHEAD *ehead, SYNTRO_CFSHEADER *cfsMsg)
@@ -256,7 +256,7 @@ void CFSThread::CFSClose(SYNTRO_EHEAD *ehead, SYNTRO_CFSHEADER *cfsMsg)
 	TRACE2("Sent close response to %s, response %d", 
 		qPrintable(SyntroUtils::displayUID(&ehead->sourceUID)), 
 		SyntroUtils::convertUC2ToInt(cfsMsg->cfsParam));
-	m_parent->clientSendMessage(m_parent->m_CFSPort, ehead, sizeof(SYNTRO_CFSHEADER), SYNTROCFS_E2E_PRIORITY);
+	m_parent->sendMessage(ehead, sizeof(SYNTRO_CFSHEADER));
 	scs->inUse = false;
 	emit newStatus(handle, scs);
 }
@@ -281,7 +281,7 @@ void CFSThread::CFSKeepAlive(SYNTRO_EHEAD *ehead, SYNTRO_CFSHEADER *cfsMsg)
 
 	TRACE2("Sent keep alive response to %s, response %d", qPrintable(SyntroUtils::displayUID(&ehead->destUID)), 
 		SyntroUtils::convertUC2ToInt(cfsMsg->cfsParam));
-	m_parent->clientSendMessage(m_parent->m_CFSPort, ehead, sizeof(SYNTRO_CFSHEADER), SYNTROCFS_E2E_PRIORITY);
+	m_parent->sendMessage(ehead, sizeof(SYNTRO_CFSHEADER));
 }
 
 void CFSThread::CFSReadIndex(SYNTRO_EHEAD *ehead, SYNTRO_CFSHEADER *cfsMsg)
@@ -396,7 +396,7 @@ void CFSThread::CFSReturnError(SYNTRO_EHEAD *ehead, SYNTRO_CFSHEADER *cfsMsg, in
 	SyntroUtils::convertIntToUC2(responseCode, cfsMsg->cfsParam);
 	TRACE2("Sent error response to %s, response %d", qPrintable(SyntroUtils::displayUID(&ehead->destUID)), 
 		SyntroUtils::convertUC2ToInt(cfsMsg->cfsParam));
-	m_parent->clientSendMessage(m_parent->m_CFSPort, ehead, sizeof(SYNTRO_CFSHEADER), SYNTROCFS_E2E_PRIORITY);
+	m_parent->sendMessage(ehead, sizeof(SYNTRO_CFSHEADER));
 }
 
 bool CFSThread::CFSStructuredFileRead(SYNTRO_EHEAD *ehead, SYNTRO_CFSHEADER *cfsMsg, SYNTROCFS_STATE *scs, unsigned int requestedIndex)
@@ -481,7 +481,7 @@ sendResponse:
 	SyntroUtils::convertIntToUC2(responseCode, responseHdr->cfsParam);
 	SyntroUtils::convertIntToUC4(requestedIndex, responseHdr->cfsIndex);
 	totalLength = sizeof(SYNTRO_CFSHEADER) + recordLength;
-	m_parent->clientSendMessage(m_parent->m_CFSPort, responseE2E, totalLength, SYNTROCFS_E2E_PRIORITY);
+	m_parent->sendMessage(responseE2E, totalLength);
 	TRACE2("Sent record to %s, length %d", qPrintable(SyntroUtils::displayUID(&ehead->sourceUID)), totalLength);
 	return true;
 }
@@ -549,7 +549,7 @@ sendResponse:
 	SyntroUtils::convertIntToUC2(responseCode, responseHdr->cfsParam);
 	SyntroUtils::convertIntToUC4(requestedIndex, responseHdr->cfsIndex);
 	totalLength = sizeof(SYNTRO_CFSHEADER);
-	m_parent->clientSendMessage(m_parent->m_CFSPort, responseE2E, totalLength, SYNTROCFS_E2E_PRIORITY);
+	m_parent->sendMessage(responseE2E, totalLength);
 	TRACE2("Wrote record from %s, length %d", qPrintable(SyntroUtils::displayUID(&ehead->sourceUID)), length);
 	return true;
 }
@@ -618,7 +618,7 @@ sendResponse:
 	SyntroUtils::convertIntToUC2(responseCode, responseHdr->cfsParam);
 	SyntroUtils::convertIntToUC4(requestedIndex, responseHdr->cfsIndex);
 	totalLength = sizeof(SYNTRO_CFSHEADER) + length;
-	m_parent->clientSendMessage(m_parent->m_CFSPort, responseE2E, totalLength, SYNTROCFS_E2E_PRIORITY);
+	m_parent->sendMessage(responseE2E, totalLength);
 	TRACE2("Sent record to %s, length %d", qPrintable(SyntroUtils::displayUID(&ehead->sourceUID)), totalLength);
 	return true;
 }
@@ -657,7 +657,7 @@ sendResponse:
 	SyntroUtils::convertIntToUC2(responseCode, responseHdr->cfsParam);
 	SyntroUtils::convertIntToUC4(requestedIndex, responseHdr->cfsIndex);
 	totalLength = sizeof(SYNTRO_CFSHEADER);
-	m_parent->clientSendMessage(m_parent->m_CFSPort, responseE2E, totalLength, SYNTROCFS_E2E_PRIORITY);
+	m_parent->sendMessage(responseE2E, totalLength);
 	TRACE2("Wrote record from %s, length %d", qPrintable(SyntroUtils::displayUID(&ehead->sourceUID)), length);
 	return true;
 }

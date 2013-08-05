@@ -65,5 +65,22 @@ void CFSClient::appClientReceiveE2E(int servicePort, SYNTRO_EHEAD *message, int 
 	m_CFSThread->postThreadMessage(SYNTRO_CFS_MESSAGE, length, message);
 }
 
+bool CFSClient::appClientProcessThreadMessage(SyntroThreadMsg *msg)
+{
+	switch (msg->message) {
+		case SYNTRO_CFS_MESSAGE:
+			clientSendMessage(m_CFSPort, (SYNTRO_EHEAD *)msg->ptrParam, msg->intParam, SYNTROCFS_E2E_PRIORITY);
+			return true;
+	}
+	return false;
+}
+
+
+void CFSClient::sendMessage(SYNTRO_EHEAD *message, int length)
+{
+	postThreadMessage(SYNTRO_CFS_MESSAGE, length, message); 
+}
+
+
 
 

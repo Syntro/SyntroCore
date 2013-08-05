@@ -36,11 +36,15 @@ public:
 
 	CFSThread *getCFSThread();
 
+	void sendMessage(SYNTRO_EHEAD *message, int length);
+
 protected:
 	void appClientInit();
 	void appClientExit();
 	void appClientReceiveE2E(int servicePort, SYNTRO_EHEAD *message, int length);
 	void appClientBackground();
+
+	bool appClientProcessThreadMessage(SyntroThreadMsg *msg);
 
 	int m_CFSPort;										// the local service port assigned to CFS
 
