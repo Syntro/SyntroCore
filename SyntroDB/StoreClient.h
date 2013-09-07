@@ -24,7 +24,7 @@
 #include "StoreStream.h"
 #include "SyntroDB.h"
 
-class StoreDiskManager;
+class StoreManager;
 
 class StoreClient : public Endpoint
 {
@@ -34,10 +34,7 @@ public:
 	StoreClient(QObject *parent);
 	~StoreClient() {}
 
-	QString storeFormat(QString streamSource);
-
-	StoreStream *m_sources[SYNTRODB_MAX_STREAMS];
-	QMutex m_lock;											// controls access to StoreStream table
+	bool getStoreStream(int index, StoreStream *ss);
 
 public slots:
 	void refreshStreamSource(int index);
@@ -49,8 +46,12 @@ protected:
 
 private:
 	void deleteStreamSource(int index);
+	
 	QObject	*m_parent;
-	StoreDiskManager *m_diskManagers[SYNTRODB_MAX_STREAMS];
+	QMutex m_lock;
+
+	StoreStream *m_sources[SYNTRODB_MAX_STREAMS];
+	StoreManager *m_storeManagers[SYNTRODB_MAX_STREAMS];
 };
 
 #endif // STORECLIENT_H

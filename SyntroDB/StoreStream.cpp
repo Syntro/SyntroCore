@@ -25,6 +25,74 @@
 
 #define DEFAULT_FILE_ROTATION_SIZE 0xFFFFFFE						// 256MB
 
+// static function
+// This limitation based on static entries in the settings file
+// is going away. This is a temporary way to hide it.
+bool StoreStream::streamIndexValid(int index)
+{
+	bool result = true;
+
+	if (index < 0)
+		return false;
+
+	QSettings *settings = SyntroUtils::getSettings();
+	
+	int count = settings->beginReadArray(SYNTRODB_PARAMS_STREAM_SOURCES);
+
+	if (index >= count)
+		result = false;
+
+	settings->endArray();
+    delete settings;
+	
+	return result;
+}
+
+// static function
+bool StoreStream::streamIndexInUse(int index)
+{
+	bool result = false;
+
+	// ambiguous, GIGO, don't pass negative indices
+	if (index < 0)
+		return false;
+
+	QSettings *settings = SyntroUtils::getSettings();
+
+	int count = settings->beginReadArray(SYNTRODB_PARAMS_STREAM_SOURCES);
+
+	if (index < count) {
+		settings->setArrayIndex(index);
+		result = (settings->value(SYNTRODB_PARAMS_INUSE).toString() == SYNTRO_PARAMS_TRUE);
+	}
+
+	settings->endArray();
+	delete settings;
+
+	return result;
+}
+
+StoreStream::StoreStream()
+{
+	m_logTag = "StoreStream";
+	m_storePath = "./";
+	m_createSubFolder = false;
+	m_storeFormat = structuredFileFormat;
+
+	m_rotationPolicy = timeRotation;
+	m_rotationTimeUnits = rotationHourUnits;
+	m_rotationTime = 24;
+	m_rotationSize = 128;
+
+	m_deletionPolicy = timeDeletion;
+	m_deletionTimeUnits = deletionHourUnits;
+	m_deletionTime = 48;
+	m_deletionCount = 5;
+	
+	m_current = QDateTime::currentDateTime();
+
+	clearStats();
+}
 
 StoreStream::StoreStream(const QString& logTag)
 {
@@ -56,6 +124,7 @@ StoreStream::StoreStream(const StoreStream &rhs)
 StoreStream& StoreStream::operator=(const StoreStream &rhs)
 {
 	if (this != &rhs) {
+		m_logTag = rhs.m_logTag;
 		m_folderWritable = rhs.m_folderWritable;
 		m_streamName = rhs.m_streamName;
 		m_origStorePath = rhs.m_origStorePath;
@@ -134,35 +203,48 @@ qint64 StoreStream::rotationSize()
 	return m_rotationSize;
 }
 
-void StoreStream::checkRotation()
+bool StoreStream::needRotation()
 {
 	QDateTime now = QDateTime::currentDateTime();
 
-	if (needTimeRotation(now) || needSizeRotation()) {
-		m_current = now;
+	if (needTimeRotation(now) || needSizeRotation())
+		return true;
 
-		m_fileMutex.lock();
-		if (m_storeFormat == rawFileFormat) {
-			m_currentFile = QString(m_filePrefix + m_current.toString("yyyyMMdd_hhmm.") 
-				+ SYNTRO_RECORD_FLAT_EXT);
-			m_currentFileFullPath = m_storePath + m_currentFile;
-		}
-		else {
-			m_currentFile = QString(m_filePrefix + m_current.toString("yyyyMMdd_hhmm.") 
-				+ SYNTRO_RECORD_SRF_RECORD_EXT);
-			m_currentFileFullPath = m_storePath + m_currentFile;
-			m_currentIndexFileFullPath = QString(m_storePath + m_filePrefix 
-				+ m_current.toString("yyyyMMdd_hhmm.") + SYNTRO_RECORD_SRF_INDEX_EXT);
-		}
-		checkDeletion(now);
-		m_fileMutex.unlock();
+	return false;
+}
 
-		m_statMutex.lock();
-		m_rxRecords = 0;
-		m_rxBytes = 0;
-		m_statMutex.unlock();
+void StoreStream::doRotation()
+{
+	m_current = QDateTime::currentDateTime();
 
+	if (m_storeFormat == rawFileFormat) {
+		m_currentFile = QString(m_filePrefix + m_current.toString("yyyyMMdd_hhmm.") 
+			+ SYNTRO_RECORD_FLAT_EXT);
+
+		m_currentFileFullPath = m_storePath + m_currentFile;
+
+		checkDeletion(m_current);
+		m_fileMutex.unlock();			
 	}
+	else if (m_storeFormat == structuredFileFormat) {
+		m_fileMutex.lock();
+
+		m_currentFile = QString(m_filePrefix + m_current.toString("yyyyMMdd_hhmm.") 
+			+ SYNTRO_RECORD_SRF_RECORD_EXT);
+
+		m_currentFileFullPath = m_storePath + m_currentFile;
+
+		m_currentIndexFileFullPath = QString(m_storePath + m_filePrefix 
+			+ m_current.toString("yyyyMMdd_hhmm.") + SYNTRO_RECORD_SRF_INDEX_EXT);
+
+		checkDeletion(m_current);
+		m_fileMutex.unlock();			
+	}
+
+	m_statMutex.lock();
+	m_rxRecords = 0;
+	m_rxBytes = 0;
+	m_statMutex.unlock();
 }
 
 bool StoreStream::needTimeRotation(QDateTime now)
@@ -213,10 +295,12 @@ void StoreStream::checkDeletion(QDateTime now)
 	dir.setSorting(QDir::Time | QDir::Reversed);
 
     QStringList filters;
+
 	if (m_storeFormat == rawFileFormat) 
 		filters << QString("*.") + SYNTRO_RECORD_FLAT_EXT;
-	else
+	else if (m_storeFormat == structuredFileFormat)
 		filters << QString("*.") + SYNTRO_RECORD_SRF_RECORD_EXT;
+
     dir.setNameFilters(filters);
 	
 	QFileInfoList list = dir.entryInfoList();
@@ -284,34 +368,6 @@ QString StoreStream::srfIndexFullPath()
 	return m_currentIndexFileFullPath;
 }
 
-void StoreStream::queueBlock(QByteArray block)
-{
-	QMutexLocker lock(&m_blockMutex);
-
-	if (m_blocks.count() < 128)
-		m_blocks.enqueue(block);
-
-	updateStats(block.length());
-}
-
-QByteArray StoreStream::dequeueBlock()
-{
-	QMutexLocker lock(&m_blockMutex);
-	QByteArray block;
-
-	if (!m_blocks.empty())
-		block = m_blocks.dequeue();
-
-	return block;
-}
-
-int StoreStream::blockCount()
-{
-	QMutexLocker lock(&m_blockMutex);
-
-	return m_blocks.count();
-}
-
 void StoreStream::updateStats(int recordLength)
 {
 	QMutexLocker lock(&m_statMutex);
@@ -377,6 +433,30 @@ bool StoreStream::checkFolderPermissions()
 #else
 	return info.isWritable();
 #endif
+}
+
+bool StoreStream::load(int sIndex)
+{
+	QSettings *settings = SyntroUtils::getSettings();
+    QString rootDirectory = settings->value(SYNTRODB_PARAMS_ROOT_DIRECTORY).toString();
+
+	int count = settings->beginReadArray(SYNTRODB_PARAMS_STREAM_SOURCES);
+
+	if ((sIndex < 0) || (sIndex >= count)) {
+		settings->endArray();
+        delete settings;
+		return false;
+	} 
+
+	settings->setArrayIndex(sIndex);
+
+	bool result = load(settings, rootDirectory);
+
+	settings->endArray();
+
+	delete settings;
+
+	return result;
 }
 
 // Assumed that settings has already had beginReadArray called
@@ -546,7 +626,7 @@ bool StoreStream::load(QSettings *settings, const QString& rootDirectory)
 		}
 		else {
 			// choose some reasonable defaults
-			if (m_deletionTimeUnits == rotationHourUnits)
+			if (m_deletionTimeUnits == deletionHourUnits)
 				m_deletionTime = 24;
 			else
 				m_deletionTime = 1;

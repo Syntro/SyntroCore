@@ -63,9 +63,6 @@
     <ClCompile Include="StoreClient.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="StoreDiskManager.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="StoreStream.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -174,6 +171,27 @@
     <ClCompile Include="GeneratedFiles\StaticRelease\moc_ConfigurationDlg.cpp">
       <Filter>Generated Files\StaticRelease</Filter>
     </ClCompile>
+    <ClCompile Include="SyntroStoreBlocksRaw.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="SyntroStore.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="SyntroStoreBlocksStructured.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="StoreManager.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="SyntroCFS.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="SyntroCFSRaw.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="SyntroCFSStructured.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <CustomBuild Include="SyntroDB.h">
@@ -208,10 +226,28 @@
     <ClInclude Include="GeneratedFiles\ui_SyntroDB.h">
       <Filter>Generated Files</Filter>
     </ClInclude>
-    <ClInclude Include="StoreDiskManager.h">
+    <ClInclude Include="StoreStream.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="StoreStream.h">
+    <ClInclude Include="SyntroStoreBlocksRaw.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="SyntroStore.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="SyntroStoreBlocksStructured.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="StoreManager.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="SyntroCFS.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="SyntroCFSRaw.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="SyntroCFSStructured.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

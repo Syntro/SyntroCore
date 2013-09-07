@@ -938,3 +938,63 @@ QDateTime SyntroUtils::syntroTimestampToQDateTime(SYNTRO_TIMESTAMP *timestamp)
 	return QDateTime(d, t);
 }
 
+//	Multimedia functions
+
+void SyntroUtils::avmuxHeaderInit(SYNTRO_RECORD_AVMUX *avmuxHead, SYNTRO_AVPARAMS *avParams,
+		int param, int muxSize, int videoSize,int audioSize)
+{
+	memset(avmuxHead, 0, sizeof(SYNTRO_RECORD_AVMUX));
+
+	// do the generic record header stuff
+
+	SyntroUtils::convertIntToUC2(SYNTRO_RECORD_TYPE_AVMUX, avmuxHead->recordHeader.type);
+	SyntroUtils::convertIntToUC2(avParams->avmuxSubtype, avmuxHead->recordHeader.subType);
+	SyntroUtils::convertIntToUC2(sizeof(SYNTRO_RECORD_AVMUX), avmuxHead->recordHeader.headerLength);
+	SyntroUtils::convertIntToUC2(param, avmuxHead->recordHeader.param);
+	SyntroUtils::setSyntroTimestamp(&(avmuxHead->recordHeader.timestamp));
+
+	// and the rest
+
+	avmuxHead->videoSubtype = avParams->videoSubtype;
+	avmuxHead->audioSubtype = avParams->audioSubtype;
+	SyntroUtils::convertIntToUC4(muxSize, avmuxHead->muxSize);
+	SyntroUtils::convertIntToUC4(videoSize, avmuxHead->videoSize);
+	SyntroUtils::convertIntToUC4(audioSize, avmuxHead->audioSize);
+
+	SyntroUtils::convertIntToUC2(avParams->videoWidth, avmuxHead->videoWidth);
+	SyntroUtils::convertIntToUC2(avParams->videoHeight, avmuxHead->videoHeight);
+	SyntroUtils::convertIntToUC2(avParams->videoFramerate, avmuxHead->videoFramerate);
+
+	SyntroUtils::convertIntToUC4(avParams->audioSampleRate, avmuxHead->audioSampleRate);
+	SyntroUtils::convertIntToUC2(avParams->audioChannels, avmuxHead->audioChannels);
+	SyntroUtils::convertIntToUC2(avParams->audioSampleSize, avmuxHead->audioSampleSize);
+
+}
+
+void SyntroUtils::avmuxHeaderToAVParams(SYNTRO_RECORD_AVMUX *avmuxHead, SYNTRO_AVPARAMS *avParams)
+{
+	avParams->avmuxSubtype = convertUC2ToInt(avmuxHead->recordHeader.subType);
+
+	avParams->videoSubtype = avmuxHead->videoSubtype;
+	avParams->audioSubtype = avmuxHead->audioSubtype;
+
+	avParams->videoWidth = convertUC2ToInt(avmuxHead->videoWidth);
+	avParams->videoHeight = convertUC2ToInt(avmuxHead->videoHeight);
+	avParams->videoFramerate = convertUC2ToInt(avmuxHead->videoFramerate);
+
+	avParams->audioSampleRate = convertUC4ToInt(avmuxHead->audioSampleRate);
+	avParams->audioChannels = convertUC2ToInt(avmuxHead->audioChannels);
+	avParams->audioSampleSize = convertUC2ToInt(avmuxHead->audioSampleSize);
+}
+
+void SyntroUtils::videoHeaderInit(SYNTRO_RECORD_VIDEO *videoHead, int width, int height, int size)
+{
+	SyntroUtils::convertIntToUC2(SYNTRO_RECORD_TYPE_VIDEO, videoHead->recordHeader.type);
+	SyntroUtils::convertIntToUC2(SYNTRO_RECORD_TYPE_VIDEO_MJPEG, videoHead->recordHeader.subType);
+	SyntroUtils::convertIntToUC2(sizeof(SYNTRO_RECORD_VIDEO), videoHead->recordHeader.headerLength);
+
+	SyntroUtils::convertIntToUC2(width, videoHead->width);
+	SyntroUtils::convertIntToUC2(height, videoHead->height);
+	SyntroUtils::setSyntroTimestamp(&(videoHead->recordHeader.timestamp));
+	SyntroUtils::convertIntToUC4(size, videoHead->size);
+}

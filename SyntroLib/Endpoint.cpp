@@ -994,6 +994,8 @@ Endpoint::Endpoint(qint64 backgroundInterval, const char *compType)
 
 	m_configHeartbeatInterval = settings->value(SYNTRO_PARAMS_HBINTERVAL, SYNTRO_HEARTBEAT_INTERVAL).toInt();
 	m_configHeartbeatTimeout = settings->value(SYNTRO_PARAMS_HBTIMEOUT, SYNTRO_HEARTBEAT_TIMEOUT).toInt();
+
+	delete settings;
 }
 
 /*!
@@ -2175,7 +2177,7 @@ void Endpoint::CFSDeleteEP(int serviceEP)
 	function returns true, a call to CFSDirResponse will occur, either when a response is received or a timeout occurs.
 */
 
-bool Endpoint::CFSDir(int serviceEP)
+bool Endpoint::CFSDir(int serviceEP, int cfsDirParam)
 {
 	SYNTRO_EHEAD *requestE2E;
 	SYNTRO_CFSHEADER *requestHdr;	
@@ -2189,6 +2191,7 @@ bool Endpoint::CFSDir(int serviceEP)
 	}
 	requestHdr = reinterpret_cast<SYNTRO_CFSHEADER *>(requestE2E+1);			// pointer to the new SyntroCFS header
 	SyntroUtils::convertIntToUC2(SYNTROCFS_TYPE_DIR_REQ, requestHdr->cfsType);
+	SyntroUtils::convertIntToUC2(cfsDirParam, requestHdr->cfsParam);
 	syntroSendMessage(SYNTROMSG_E2E, (SYNTRO_MESSAGE *)requestE2E, sizeof(SYNTRO_EHEAD) + sizeof(SYNTRO_CFSHEADER), SYNTROCFS_E2E_PRIORITY);
 	cfsEPInfo[serviceEP].dirReqTime = SyntroClock();
 	cfsEPInfo[serviceEP].dirInProgress = true;
@@ -2197,58 +2200,96 @@ bool Endpoint::CFSDir(int serviceEP)
 
 /*!
 	CFSOpen is called to open a file identified by filePath on a SyntroCFS server connection 
-	referenced by \a serviceEP. If the \a filePath has an extension of “.srf” then the transfer mode 
-	is set to structured. Otherwise, the file is transferred unstructured in units of blocks. 
-	The \a blockSize is the size of a block and can be from 1 to 65535.
+	referenced by \a serviceEP. 
+
+	If the \a filePath has an extension of “.srf” then the transfer mode is set to structured
+	and the data transfer is in blocks as they were originally received by the Syntro store.
+	The \a param argument is not used.
+
+	If the extension is ".db", the transfer is database mode and query results are returned in
+	result sets of varying length. The \a param argument specifies the table type.
+
+	For any other extension, the transfer mode is assumed to be raw file mode and the data is 
+	transferred in unstructured blocks. The \a param is the size of the blocks returned and 
+	can be from 1 to 65535.
 
 	The functions return a local handle that should be used for all future references to this open file 
 	if the open request was sent to the server, it will return -1 if not. If the request was sent, a call to 
 	CFSOpenResponse() will be made when either a response is received or the request it timed out.
 */
 
-int Endpoint::CFSOpen(int serviceEP, QString filePath, int blockSize)
+int Endpoint::CFSOpenDB(int serviceEP, QString databaseName)
+{
+	return CFSOpen(serviceEP, databaseName, SYNTROCFS_TYPE_DATABASE, 0);	
+}
+
+int Endpoint::CFSOpenStructuredFile(int serviceEP, QString filePath)
+{
+	return CFSOpen(serviceEP, filePath, SYNTROCFS_TYPE_STRUCTURED_FILE, 0);
+}
+
+int Endpoint::CFSOpenRawFile(int serviceEP, QString filePath, int blockSize)
+{
+	// max blockSize is legacy
+	if (blockSize < 1 || blockSize > 0xffff) {
+		logError(QString("CFSOpenRawFile: Invalid blockSize %1").arg(blockSize));
+		return -1;
+	}
+
+	return CFSOpen(serviceEP, filePath, SYNTROCFS_TYPE_RAW_FILE, blockSize);
+}
+
+int Endpoint::CFSOpen(int serviceEP, QString filePath, int cfsMode, int blockSize)
 {
 	int handle;
-	SYNTRO_CFS_FILE *scf;
-	SYNTRO_EHEAD *requestE2E;
-	SYNTRO_CFSHEADER *requestHdr;
-	char *pData;
-	int totalLength;
 
 	// Find a free stream slot
-
 	for (handle = 0; handle < SYNTROCFS_MAX_CLIENT_FILES; handle++) {
 		if (!cfsEPInfo[serviceEP].cfsFile[handle].inUse)
 			break;
 	}
+
 	if (handle == SYNTROCFS_MAX_CLIENT_FILES) {
 		logError(QString("Too many files open"));
 		return -1;
 	}
-	requestE2E = CFSBuildRequest(serviceEP, filePath.size() + 1);
+
+	SYNTRO_EHEAD *requestE2E = CFSBuildRequest(serviceEP, filePath.size() + 1);
+
 	if (requestE2E == NULL) {
 		logError(QString("CFSOpen on unavailable service %1 port %2").arg(filePath).arg(serviceEP));
 		return -1;
 	}
 
-	scf = cfsEPInfo[serviceEP].cfsFile + handle;
+	SYNTRO_CFS_FILE *scf = cfsEPInfo[serviceEP].cfsFile + handle;
+
 	scf->inUse = true;
 	scf->open = false;
 	scf->readInProgress = false;
 	scf->writeInProgress = false;
+	scf->queryInProgress = false;
+	scf->cancelQueryInProgress = false;
 	scf->closeInProgress = false;
 	scf->structured = filePath.endsWith(SYNTRO_RECORD_SRF_RECORD_DOTEXT);
 
-	requestHdr = reinterpret_cast<SYNTRO_CFSHEADER *>(requestE2E+1);	// pointer to the new SyntroCFS header
+	SYNTRO_CFSHEADER *requestHdr = reinterpret_cast<SYNTRO_CFSHEADER *>(requestE2E+1);
+
 	SyntroUtils::convertIntToUC2(SYNTROCFS_TYPE_OPEN_REQ, requestHdr->cfsType);
 	SyntroUtils::convertIntToUC2(scf->clientHandle, requestHdr->cfsClientHandle);
-	SyntroUtils::convertIntToUC2(blockSize, requestHdr->cfsParam);
-	pData = reinterpret_cast<char *>(requestHdr + 1);
-	strcpy(pData, qPrintable(filePath));								// copy in file path
-	totalLength = sizeof(SYNTRO_EHEAD) + sizeof(SYNTRO_CFSHEADER) + (int)strlen(pData) + 1;
+	SyntroUtils::convertIntToUC2(cfsMode, requestHdr->cfsParam);
+	SyntroUtils::convertIntToUC4(blockSize, requestHdr->cfsIndex);	
+
+	char *pData = reinterpret_cast<char *>(requestHdr + 1);
+
+	strcpy(pData, qPrintable(filePath));
+
+	int totalLength = sizeof(SYNTRO_EHEAD) + sizeof(SYNTRO_CFSHEADER) + (int)strlen(pData) + 1;
+
 	syntroSendMessage(SYNTROMSG_E2E, (SYNTRO_MESSAGE *)requestE2E, totalLength, SYNTROCFS_E2E_PRIORITY);
+
 	scf->openReqTime = SyntroClock();
 	scf->openInProgress = true;
+	
 	return handle;
 }
 
@@ -2412,6 +2453,146 @@ bool Endpoint::CFSWriteAtIndex(int serviceEP, int handle, unsigned int index, un
 	return true;
 }
 
+bool Endpoint::CFSQuery(int serviceEP, int handle, QString sql)
+{
+	SYNTROCFS_CLIENT_EPINFO *EP = cfsEPInfo + serviceEP;
+
+	if (!EP->inUse) {
+		logWarn(QString("CFSQuery attempted on not in use port %1").arg(serviceEP));
+		return false;
+	}
+
+	if ((handle < 0) || (handle >= SYNTROCFS_MAX_CLIENT_FILES)) {
+		logWarn(QString("CFSQuery attempted on out of range handle %1 on port %2").arg(handle).arg(serviceEP));
+		return false;													
+	}
+
+	SYNTRO_CFS_FILE *scf = EP->cfsFile + handle;
+
+	if (!scf->inUse || !scf->open) {
+		logWarn(QString("CFSQuery attempted on not open handle %1 on port %2").arg(handle).arg(serviceEP));
+		return false;													
+	}
+
+	SYNTRO_EHEAD *requestE2E = CFSBuildRequest(serviceEP, sql.length() + 1);
+
+	if (requestE2E == NULL) {
+		logWarn(QString("CFSQuery attempted on unavailable service handle %1 on port %2").arg(handle).arg(serviceEP));
+		return false;
+	}
+
+	SYNTRO_CFSHEADER *requestHdr = reinterpret_cast<SYNTRO_CFSHEADER *>(requestE2E + 1);
+
+	SyntroUtils::convertIntToUC2(SYNTROCFS_TYPE_QUERY_REQ, requestHdr->cfsType);
+	SyntroUtils::convertIntToUC2(scf->clientHandle, requestHdr->cfsClientHandle);
+	SyntroUtils::convertIntToUC2(scf->storeHandle, requestHdr->cfsStoreHandle);
+
+	char *pData = reinterpret_cast<char *>(requestHdr + 1);
+	strcpy(pData, qPrintable(sql));
+
+	qDebug() << "Endpoint::CFSQuery() sending request";
+
+	int totalLength = sizeof(SYNTRO_EHEAD) + sizeof(SYNTRO_CFSHEADER) + (int)strlen(pData) + 1;
+	syntroSendMessage(SYNTROMSG_E2E, (SYNTRO_MESSAGE *)requestE2E, totalLength, SYNTROCFS_E2E_PRIORITY);
+
+	scf->queryReqTime = SyntroClock();
+	scf->queryInProgress = true;
+
+	return true;
+}
+
+bool Endpoint::CFSCancelQuery(int serviceEP, int handle)
+{
+	SYNTROCFS_CLIENT_EPINFO *EP = cfsEPInfo + serviceEP;
+
+	if (!EP->inUse) {
+		logWarn(QString("CFSCancelQuery attempted on not in use port %1").arg(serviceEP));
+		return false;
+	}
+
+	if ((handle < 0) || (handle >= SYNTROCFS_MAX_CLIENT_FILES)) {
+		logWarn(QString("CFSCancelQuery attempted on out of range handle %1 on port %2").arg(handle).arg(serviceEP));
+		return false;													
+	}
+
+	SYNTRO_CFS_FILE *scf = EP->cfsFile + handle;
+
+	if (!scf->inUse || !scf->open) {
+		logWarn(QString("CFSCancelQuery attempted on not open handle %1 on port %2").arg(handle).arg(serviceEP));
+		return false;													
+	}
+
+	SYNTRO_EHEAD *requestE2E = CFSBuildRequest(serviceEP, 0);
+
+	if (requestE2E == NULL) {
+		logWarn(QString("CFSCancelQuery attempted on unavailable service handle %1 on port %2").arg(handle).arg(serviceEP));
+		return false;
+	}
+
+	SYNTRO_CFSHEADER *requestHdr = reinterpret_cast<SYNTRO_CFSHEADER *>(requestE2E + 1);
+
+	SyntroUtils::convertIntToUC2(SYNTROCFS_TYPE_CANCEL_QUERY_REQ, requestHdr->cfsType);
+	SyntroUtils::convertIntToUC2(scf->clientHandle, requestHdr->cfsClientHandle);
+	SyntroUtils::convertIntToUC2(scf->storeHandle, requestHdr->cfsStoreHandle);
+
+	qDebug() << "Endpoint::CFSCancelQuery() sending request";
+
+	int totalLength = sizeof(SYNTRO_EHEAD) + sizeof(SYNTRO_CFSHEADER);
+	syntroSendMessage(SYNTROMSG_E2E, (SYNTRO_MESSAGE *)requestE2E, totalLength, SYNTROCFS_E2E_PRIORITY);
+
+	scf->cancelQueryReqTime = SyntroClock();
+	scf->cancelQueryInProgress = true;
+
+	return true;
+}
+
+bool Endpoint::CFSFetchQuery(int serviceEP, int handle, int maxRows, int resultType)
+{
+	SYNTROCFS_CLIENT_EPINFO *EP = cfsEPInfo + serviceEP;
+
+	if (!EP->inUse) {
+		logWarn(QString("CFSFetchQuery attempted on not in use port %1").arg(serviceEP));
+		return false;
+	}
+
+	if ((handle < 0) || (handle >= SYNTROCFS_MAX_CLIENT_FILES)) {
+		logWarn(QString("CFSFetchQuery attempted on out of range handle %1 on port %2").arg(handle).arg(serviceEP));
+		return false;													
+	}
+
+	SYNTRO_CFS_FILE *scf = EP->cfsFile + handle;
+
+	if (!scf->inUse || !scf->open) {
+		logWarn(QString("CFSFetchQuery attempted on not open handle %1 on port %2").arg(handle).arg(serviceEP));
+		return false;													
+	}
+
+	SYNTRO_EHEAD *requestE2E = CFSBuildRequest(serviceEP, 0);
+
+	if (requestE2E == NULL) {
+		logWarn(QString("CFSFetchQuery attempted on unavailable service handle %1 on port %2").arg(handle).arg(serviceEP));
+		return false;
+	}
+
+	SYNTRO_CFSHEADER *requestHdr = reinterpret_cast<SYNTRO_CFSHEADER *>(requestE2E + 1);
+
+	SyntroUtils::convertIntToUC2(SYNTROCFS_TYPE_FETCH_QUERY_REQ, requestHdr->cfsType);
+	SyntroUtils::convertIntToUC2(scf->clientHandle, requestHdr->cfsClientHandle);
+	SyntroUtils::convertIntToUC2(scf->storeHandle, requestHdr->cfsStoreHandle);
+	SyntroUtils::convertIntToUC4(maxRows, requestHdr->cfsIndex);
+	SyntroUtils::convertIntToUC2(resultType, requestHdr->cfsParam);
+
+	qDebug() << "Endpoint::CFSFetchQuery() sending request";
+
+	int totalLength = sizeof(SYNTRO_EHEAD) + sizeof(SYNTRO_CFSHEADER);
+	syntroSendMessage(SYNTROMSG_E2E, (SYNTRO_MESSAGE *)requestE2E, totalLength, SYNTROCFS_E2E_PRIORITY);
+
+	scf->fetchQueryReqTime = SyntroClock();
+	scf->fetchQueryInProgress = true;
+
+	return true;
+}
+
 /*!
 	\internal
 */
@@ -2494,6 +2675,27 @@ void Endpoint::CFSBackground()
 						scf->writeInProgress = false;
 					}
 				}
+				if (scf->queryInProgress) {
+					if (SyntroUtils::syntroTimerExpired(now, scf->queryReqTime, SYNTROCFS_QUERYREQ_TIMEOUT)) {
+						TRACE2("Timed out query request on port %d slot %d", i, j);
+						CFSWriteAtIndexResponse(i, j, 0, SYNTROCFS_ERROR_REQUEST_TIMEOUT);	// tell client
+						scf->queryInProgress = false;
+					}
+				}
+				if (scf->cancelQueryInProgress) {
+					if (SyntroUtils::syntroTimerExpired(now, scf->cancelQueryReqTime, SYNTROCFS_QUERYREQ_TIMEOUT)) {
+						TRACE2("Timed out cancel query request on port %d slot %d", i, j);
+						CFSWriteAtIndexResponse(i, j, 0, SYNTROCFS_ERROR_REQUEST_TIMEOUT);	// tell client
+						scf->cancelQueryInProgress = false;
+					}
+				}
+				if (scf->fetchQueryInProgress) {
+					if (SyntroUtils::syntroTimerExpired(now, scf->fetchQueryReqTime, SYNTROCFS_QUERYREQ_TIMEOUT)) {
+						TRACE2("Timed out fetch query request on port %d slot %d", i, j);
+						CFSWriteAtIndexResponse(i, j, 0, SYNTROCFS_ERROR_REQUEST_TIMEOUT);	// tell client
+						scf->fetchQueryInProgress = false;
+					}
+				}
 				if (scf->closeInProgress) {
 					if (SyntroUtils::syntroTimerExpired(now, scf->closeReqTime, SYNTROCFS_CLOSEREQ_TIMEOUT)) {
 						TRACE2("Timed out close request on port %d slot %d", i, j);
@@ -2526,8 +2728,14 @@ bool Endpoint::CFSProcessMessage(SYNTRO_EHEAD *pE2E, int nLen, int dstPort)
 		return true;										// don't process any further
 	}
 
-	nLen -= sizeof(SYNTRO_CFSHEADER);
 	cfsHdr = reinterpret_cast<SYNTRO_CFSHEADER *>(pE2E + 1);
+
+	unsigned int cfsType = SyntroUtils::convertUC2ToUInt(cfsHdr->cfsType);
+
+	if (cfsType == SYNTROCFS_TYPE_FETCH_QUERY_RES)
+		nLen -= sizeof(SYNTRO_QUERYRESULT_HEADER);
+	else
+		nLen -= sizeof(SYNTRO_CFSHEADER);
 
 	if (nLen != SyntroUtils::convertUC4ToInt(cfsHdr->cfsLength)) {
 		logWarn(QString("SyntroCFS message mismatch %1 %2 on port %3").arg(nLen).arg(SyntroUtils::convertUC2ToUInt(cfsHdr->cfsLength)).arg(dstPort));
@@ -2537,7 +2745,7 @@ bool Endpoint::CFSProcessMessage(SYNTRO_EHEAD *pE2E, int nLen, int dstPort)
 
 	//	Have trapped a SyntroCFS message
 
-	switch (SyntroUtils::convertUC2ToUInt(cfsHdr->cfsType)) {
+	switch (cfsType) {
 		case SYNTROCFS_TYPE_DIR_RES:
 			CFSProcessDirResponse(cfsHdr, dstPort);
 			break;
@@ -2560,6 +2768,18 @@ bool Endpoint::CFSProcessMessage(SYNTRO_EHEAD *pE2E, int nLen, int dstPort)
 
 		case SYNTROCFS_TYPE_WRITE_INDEX_RES:
 			CFSProcessWriteAtIndexResponse(cfsHdr, dstPort);
+			break;
+
+		case SYNTROCFS_TYPE_QUERY_RES:
+			CFSProcessQueryResponse(cfsHdr, dstPort);
+			break;
+
+		case SYNTROCFS_TYPE_CANCEL_QUERY_RES:
+			CFSProcessCancelQueryResponse(cfsHdr, dstPort);
+			break;
+
+		case SYNTROCFS_TYPE_FETCH_QUERY_RES:
+			CFSProcessFetchQueryResponse(cfsHdr, dstPort);
 			break;
 
 		default:
@@ -2874,5 +3094,135 @@ void Endpoint::CFSProcessWriteAtIndexResponse(SYNTRO_CFSHEADER *cfsHdr, int dstP
 
 void Endpoint::CFSWriteAtIndexResponse(int serviceEP, int handle, unsigned int, unsigned int)
 {
-	logDebug(QString("Default CFSWriteAtIndexResponse called %1 %3").arg(serviceEP).arg(handle));
+	logDebug(QString("Default CFSWriteAtIndexResponse called %1 %2").arg(serviceEP).arg(handle));
+}
+
+void Endpoint::CFSProcessQueryResponse(SYNTRO_CFSHEADER *cfsHdr, int dstPort)
+{
+	SYNTROCFS_CLIENT_EPINFO *EP = cfsEPInfo + dstPort;
+	
+	int handle = SyntroUtils::convertUC2ToUInt(cfsHdr->cfsClientHandle);
+
+	if (handle >= SYNTROCFS_MAX_CLIENT_FILES) {
+		logWarn(QString("Query response with invalid handle %1 on port %2").arg(handle).arg(dstPort));
+		return;
+	}
+
+	SYNTRO_CFS_FILE *scf = EP->cfsFile + handle;
+
+	if (!scf->open) {
+		logWarn(QString("Query response on closed handle %1 on port %2").arg(handle).arg(dstPort));
+		return;
+	}
+
+	if (!scf->queryInProgress) {
+		logWarn(QString("Query response but no query in progress on handle %1 port %2").arg(handle).arg(dstPort));
+		return;
+	}
+
+	scf->queryInProgress = false;
+	
+	int responseCode = SyntroUtils::convertUC2ToUInt(cfsHdr->cfsParam);
+
+#ifdef CFS_TRACE
+	TRACE3("Got query response on handle %d port %d code %d", handle, dstPort, responseCode);
+#endif
+
+	CFSQueryResponse(dstPort, handle, responseCode); 
+}
+
+void Endpoint::CFSQueryResponse(int serviceEP, int handle, unsigned int responseCode)
+{
+	logDebug(QString("Default CFSQueryResponse called %1 %2 responseCode %3")
+		.arg(serviceEP).arg(handle).arg(responseCode));
+}
+
+void Endpoint::CFSProcessCancelQueryResponse(SYNTRO_CFSHEADER *cfsHdr, int dstPort)
+{
+	SYNTROCFS_CLIENT_EPINFO *EP = cfsEPInfo + dstPort;
+	
+	int handle = SyntroUtils::convertUC2ToUInt(cfsHdr->cfsClientHandle);
+
+	if (handle >= SYNTROCFS_MAX_CLIENT_FILES) {
+		logWarn(QString("Cancel query response with invalid handle %1 on port %2").arg(handle).arg(dstPort));
+		return;
+	}
+
+	SYNTRO_CFS_FILE *scf = EP->cfsFile + handle;
+
+	if (!scf->open) {
+		logWarn(QString("Cancel query response on closed handle %1 on port %2").arg(handle).arg(dstPort));
+		return;
+	}
+
+	if (!scf->cancelQueryInProgress) {
+		logWarn(QString("Cancel query response but no cancel in progress on handle %1 port %2").arg(handle).arg(dstPort));
+		return;
+	}
+
+	scf->cancelQueryInProgress = false;
+	
+	int responseCode = SyntroUtils::convertUC2ToUInt(cfsHdr->cfsParam);
+
+#ifdef CFS_TRACE
+	TRACE3("Got cancel query response on handle %d port %d code %d", handle, dstPort, responseCode);
+#endif
+
+	CFSCancelQueryResponse(dstPort, handle, responseCode); 
+}
+
+void Endpoint::CFSCancelQueryResponse(int serviceEP, int handle, unsigned int responseCode)
+{
+	logDebug(QString("Default CFSCancelQueryResponse called %1 %2 responseCode %3")
+		.arg(serviceEP).arg(handle).arg(responseCode));
+}
+
+void Endpoint::CFSProcessFetchQueryResponse(SYNTRO_CFSHEADER *cfsHdr, int dstPort)
+{
+	SYNTROCFS_CLIENT_EPINFO *EP = cfsEPInfo + dstPort;
+	
+	int handle = SyntroUtils::convertUC2ToUInt(cfsHdr->cfsClientHandle);
+
+	if (handle >= SYNTROCFS_MAX_CLIENT_FILES) {
+		logWarn(QString("Fetch query response with invalid handle %1 on port %2").arg(handle).arg(dstPort));
+		return;
+	}
+
+	SYNTRO_CFS_FILE *scf = EP->cfsFile + handle;
+
+	if (!scf->open) {
+		logWarn(QString("Fetch query response on closed handle %1 on port %2").arg(handle).arg(dstPort));
+		return;
+	}
+
+	if (!scf->fetchQueryInProgress) {
+		logWarn(QString("Fetch query response but no fetch in progress on handle %1 port %2").arg(handle).arg(dstPort));
+		return;
+	}
+
+	scf->fetchQueryInProgress = false;
+	
+	int responseCode = SyntroUtils::convertUC2ToUInt(cfsHdr->cfsParam);
+	int length = SyntroUtils::convertUC4ToInt(cfsHdr->cfsLength);
+
+	SYNTRO_QUERYRESULT_HEADER *resultHdr = reinterpret_cast<SYNTRO_QUERYRESULT_HEADER *>(cfsHdr);
+
+	int firstRow = SyntroUtils::convertUC4ToInt(resultHdr->firstRow);
+	int lastRow = SyntroUtils::convertUC4ToInt(resultHdr->lastRow);
+	int param1 = SyntroUtils::convertUC4ToInt(resultHdr->param1);
+	int param2 = SyntroUtils::convertUC4ToInt(resultHdr->param2);
+
+	unsigned char *data = reinterpret_cast<unsigned char *>(resultHdr + 1);
+
+#ifdef CFS_TRACE
+	TRACE3("Got fetch query response on handle %d port %d code %d", handle, dstPort, responseCode);
+#endif
+
+	CFSFetchQueryResponse(dstPort, handle, responseCode, firstRow, lastRow, param1, param2, length, data); 
+}
+
+void Endpoint::CFSFetchQueryResponse(int serviceEP, int handle, unsigned int responseCode, int, int, int, int, int, unsigned char *)
+{
+	logDebug(QString("Default CFSFetchQueryResponse called %1 %2 responseCode %3")
+		.arg(serviceEP).arg(handle).arg(responseCode));
 }

@@ -30,7 +30,13 @@
 
 #define	SYNTROCFS_MAX_FILES		1024						// max files open at one time
 
+#define CFS_TYPE_DATABASE   0
+#define CFS_TYPE_STRUCTURED 1
+#define CFS_TYPE_RAW        2
+
 //	The SyntroCFS state information referenced by a stream handle
+
+class SyntroCFS;
 
 typedef struct
 {
@@ -40,17 +46,11 @@ public:
 	int clientHandle;										// the client's handle
 	SYNTRO_UID clientUID;									// the uid of the client app
 	int clientPort;											// the client port
-	unsigned int fileIndex;									// the last requested file record index
-	QString filePath;										// path of the file
-	QString indexPath;										// if its structured
-	bool structured;										// true if structured, false if flat
-	unsigned int fileLength;								// the length of the current file in units of records/blocks
 	qint64 lastKeepalive;									// last time a keepalive was received
 	qint64 rxBytes;											// total bytes received for this file
 	qint64 txBytes;											// total bytes sent for this file
 	qint64 lastStatusEmit;									// the time that the last status was emitted
-
-	int blockSize;											// size of blocks for flat file transfers
+	SyntroCFS *agent;
 } SYNTROCFS_STATE;
 
 class CFSClient;
@@ -77,6 +77,8 @@ protected:
 	void finishThread();
 
 private:
+	SyntroCFS* factory(int cfsMode, CFSClient *client, QString filePath);
+
 	CFSClient *m_parent;
 	QString m_storePath;
 	int m_timer;
@@ -94,20 +96,13 @@ private:
 	void CFSKeepAlive(SYNTRO_EHEAD *ehead, SYNTRO_CFSHEADER *cfsMsg);
 	void CFSReadIndex(SYNTRO_EHEAD *ehead, SYNTRO_CFSHEADER *cfsMsg);
 	void CFSWriteIndex(SYNTRO_EHEAD *ehead, SYNTRO_CFSHEADER *cfsMsg);
+	void CFSQuery(SYNTRO_EHEAD *ehead, SYNTRO_CFSHEADER *cfsMsg);
+	void CFSCancelQuery(SYNTRO_EHEAD *ehead, SYNTRO_CFSHEADER *cfsMsg);
+	void CFSFetchQuery(SYNTRO_EHEAD *ehead, SYNTRO_CFSHEADER *cfsMsg);
 
-	SYNTRO_EHEAD *CFSBuildResponse(SYNTRO_EHEAD *ehead, SYNTRO_CFSHEADER *cfsMsg, int length); // builds a reponse from a request
+	SYNTRO_EHEAD *CFSBuildResponse(SYNTRO_EHEAD *ehead, SYNTRO_CFSHEADER *cfsMsg, int length);
 	bool CFSSanityCheck(SYNTRO_EHEAD *ehead, SYNTRO_CFSHEADER *cfsMsg);
 	void CFSReturnError(SYNTRO_EHEAD *ehead, SYNTRO_CFSHEADER *cfsMsg, int responseCode);
-	bool CFSFindFileIndex(SYNTRO_EHEAD *ehead, SYNTRO_CFSHEADER *cfsMsg, SYNTROCFS_STATE *scs, unsigned int requestedIndex);
-	bool CFSStructuredFileRead(SYNTRO_EHEAD *ehead, SYNTRO_CFSHEADER *cfsMsg, SYNTROCFS_STATE *scs, unsigned int requestedIndex);
-	bool CFSFlatFileRead(SYNTRO_EHEAD *ehead, SYNTRO_CFSHEADER *cfsMsg, SYNTROCFS_STATE *scs, unsigned int requestedIndex);
-	bool CFSStructuredFileWrite(SYNTRO_EHEAD *ehead, SYNTRO_CFSHEADER *cfsMsg, SYNTROCFS_STATE *scs, unsigned int requestedIndex);
-	bool CFSFlatFileWrite(SYNTRO_EHEAD *ehead, SYNTRO_CFSHEADER *cfsMsg, SYNTROCFS_STATE *scs, unsigned int requestedIndex);
-
-	unsigned int getFileSize(SYNTROCFS_STATE *scs);			// returns file size in units of blocks or records
-	unsigned int getStructuredFileSize(SYNTROCFS_STATE *scs);// returns file size in units of records
-	unsigned int getFlatFileSize(SYNTROCFS_STATE *scs);		// returns file size in units of blocks
-
 };
 
 #endif // CFSTHREAD_H

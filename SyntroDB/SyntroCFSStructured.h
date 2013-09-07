@@ -17,40 +17,25 @@
 //  along with Syntro.  If not, see <http://www.gnu.org/licenses/>.
 //
 
-#ifndef DIRTHREAD_H
-#define DIRTHREAD_H
+#ifndef SYNTROCFSSTRUCTURED_H
+#define SYNTROCFSSTRUCTURED_H
 
-#include <qlist.h>
-#include <qdir.h>
+#include "SyntroCFS.h"
 
-#include "SyntroLib.h"
-
-class DirThread : public SyntroThread
+class SyntroCFSStructured : public SyntroCFS
 {
-	Q_OBJECT
-
 public:
-	DirThread(const QString& storePath);
-	~DirThread();
-	
-	QString getDirectory();
-	
-protected:
-	void initThread();
-	void timerEvent(QTimerEvent *event);
-	void finishThread();
+	SyntroCFSStructured(CFSClient *client, QString filePath);
+	virtual ~SyntroCFSStructured();
+
+	virtual bool cfsOpen(SYNTRO_CFSHEADER *cfsMsg);
+	virtual void cfsRead(SYNTRO_EHEAD *ehead, SYNTRO_CFSHEADER *cfsMsg, SYNTROCFS_STATE *scs, unsigned int requestedIndex);
+	virtual void cfsWrite(SYNTRO_EHEAD *ehead, SYNTRO_CFSHEADER *cfsMsg, SYNTROCFS_STATE *scs, unsigned int requestedIndex);
+
+	virtual unsigned int cfsGetRecordCount();
 
 private:
-	void buildDirString();
-	void processDir(QDir dir, QString& dirString, QString relativePath);
-
-	QString m_storePath;
-	QString m_directory;
-	QMutex m_lock;
-
-	int m_timer;
-	bool m_dbOnly;
+	QString m_indexPath;
 };
 
-#endif // DIRTHREAD_H
-
+#endif // SYNTROCFSSTRUCTURED_H

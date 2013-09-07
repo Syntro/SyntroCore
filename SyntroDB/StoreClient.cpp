@@ -21,20 +21,34 @@
 #include "SyntroDBConsole.h"
 #include "StoreClient.h"
 #include "SyntroLib.h"
-#include "StoreDiskManager.h"
+#include "StoreManager.h"
 
 StoreClient::StoreClient(QObject *parent)
 	: Endpoint(SYNTROSTORE_BGND_INTERVAL, COMPTYPE_STORE),  m_parent(parent)
 {
 	for (int i = 0; i < SYNTRODB_MAX_STREAMS; i++) {
 		m_sources[i] = NULL;
-		m_diskManagers[i] = NULL;
+		m_storeManagers[i] = NULL;
 	}
+}
+
+bool StoreClient::getStoreStream(int index, StoreStream *ss)
+{
+	QMutexLocker lock(&m_lock);
+
+	if (index < 0 || index >= SYNTRODB_MAX_STREAMS)
+		return false;
+
+	if (!ss || !m_sources[index])
+		return false;
+
+	*ss = *m_sources[index];
+
+	return true;
 }
 
 void StoreClient::appClientInit()
 {
-
 }
 
 void StoreClient::appClientExit()
@@ -55,53 +69,46 @@ void StoreClient::appClientReceiveMulticast(int servicePort, SYNTRO_EHEAD *messa
 		free(message);
 		return;
 	}
-	if (m_sources[sourceIndex] != NULL) {					// still active
-		m_sources[sourceIndex]->queueBlock(QByteArray(reinterpret_cast<char *>(message + 1), len));
+
+	if (m_storeManagers[sourceIndex] != NULL) {
+		m_storeManagers[sourceIndex]->queueBlock(QByteArray(reinterpret_cast<char *>(message + 1), len));
 		clientSendMulticastAck(servicePort);
 	}
 	free(message);
 }
 
-
 void StoreClient::refreshStreamSource(int index)
 {
 	QMutexLocker locker(&m_lock);
 
-	QSettings *settings = SyntroUtils::getSettings();
-    QString rootDirectory = settings->value(SYNTRODB_PARAMS_ROOT_DIRECTORY).toString();
-	int count = settings->beginReadArray(SYNTRODB_PARAMS_STREAM_SOURCES);
-
-	if ((index < 0) || (index >= count)) {					// no more entries in settings
-		settings->endArray();
-        delete settings;
+	if (!StoreStream::streamIndexValid(index))
 		return;
-	} else {
-		settings->setArrayIndex(index);
-		if (m_diskManagers[index] != NULL) {					// must get rid of old one
-			deleteStreamSource(index);
-			m_diskManagers[index] = NULL;
-		}
 
-		if (settings->value(SYNTRODB_PARAMS_INUSE).toString() == SYNTRO_PARAMS_FALSE) {
-			settings->endArray();
-            delete settings;
-			return;											// just needed to clear the entry
-		}
-        m_sources[index] = new StoreStream(m_logTag);
-		m_diskManagers[index] = new StoreDiskManager(m_sources[index]);
-		m_sources[index]->load(settings, rootDirectory);
-		m_diskManagers[index]->resumeThread();
+	bool inUse = StoreStream::streamIndexInUse(index);
 
-		if (m_sources[index]->folderWritable()) {
-			m_sources[index]->port = clientAddService(m_sources[index]->streamName(), SERVICETYPE_MULTICAST, false);
-			clientSetServiceData(m_sources[index]->port, index);	// record my index in service entry
-		} else {
-			logError(QString("Folder is not writable: %1").arg(m_sources[index]->pathOnly()));
-		}
+	if (m_storeManagers[index] != NULL)
+		deleteStreamSource(index);
+
+	if (!inUse)
+		return;
+
+	m_sources[index] = new StoreStream(m_logTag);
+	m_sources[index]->load(index);
+
+	if (!m_sources[index]->folderWritable()) {
+		logError(QString("Folder is not writable: %1").arg(m_sources[index]->pathOnly()));
+		delete m_sources[index];
+		m_sources[index] = NULL;
 	}
-	settings->endArray();
 
-	delete settings;
+	m_storeManagers[index] = new StoreManager(m_sources[index]);
+
+	m_sources[index]->port = clientAddService(m_sources[index]->streamName(), SERVICETYPE_MULTICAST, false);
+
+	// record index in service entry
+	clientSetServiceData(m_sources[index]->port, index);
+
+	m_storeManagers[index]->resumeThread();
 }
 
 void StoreClient::deleteStreamSource(int index)
@@ -111,12 +118,18 @@ void StoreClient::deleteStreamSource(int index)
 		return;
 	}
 
-	if (m_diskManagers[index] == NULL)
-		return;												// not currently active
+	if (m_storeManagers[index] == NULL)
+		return;
 
 	clientRemoveService(m_sources[index]->port);
-	m_diskManagers[index]->exitThread();
-	m_diskManagers[index]->thread()->wait(5);
+	StoreManager *dm = m_storeManagers[index];
+	dm->stop();
+
+	// deletes automatically, but don't want to reference it again
+	m_storeManagers[index] = NULL;
+	
+	dm->exitThread();
+
 	delete m_sources[index];
 	m_sources[index] = NULL;
 }

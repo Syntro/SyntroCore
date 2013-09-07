@@ -24,6 +24,7 @@
 #include "SyntroDefs.h"
 #include "HelloDefs.h"
 #include "LogWrapper.h"
+#include "SyntroAV/SyntroAVDefs.h"
 
 //	Standard Qt includes for SyntroLib
 
@@ -162,6 +163,13 @@ public:
     static void swapEHead(SYNTRO_EHEAD *ehead);		// swaps UIDs and port numbers
     static bool crackServicePath(QString servicePath, QString &regionName, QString& componentName, QString& serviceName); // breaks a service path into its constituent bits
     static bool syntroTimerExpired(qint64 now, qint64 start, qint64 interval);
+
+//	Multimedia stream functions
+
+	static void avmuxHeaderInit(SYNTRO_RECORD_AVMUX *avmuxHead, SYNTRO_AVPARAMS *avParams,
+		int param, int muxSize, int videoSize,int audioSize);
+	static void avmuxHeaderToAVParams(SYNTRO_RECORD_AVMUX *avmuxHead, SYNTRO_AVPARAMS *avParams);
+	static void videoHeaderInit(SYNTRO_RECORD_VIDEO *videoHead, int width, int height, int size);
 
 
 //	Service path functions

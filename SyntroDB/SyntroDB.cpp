@@ -136,21 +136,17 @@ void SyntroDB::displayStreamDetails(int index)
 
 void SyntroDB::timerEvent(QTimerEvent *)
 {
-	StoreStream *storeStream;
+	StoreStream ss;
 
 	for (int i = 0; i < SYNTRODB_MAX_STREAMS; i++) {
-		m_storeClient->m_lock.lock();
-		if (m_storeClient->m_sources[i] == NULL) {
-			m_storeClient->m_lock.unlock();
+		if (!m_storeClient->getStoreStream(i, &ss))
 			continue;
-		}
-		storeStream = m_storeClient->m_sources[i];
-		m_rxStreamTable->item(i, SYNTRODB_COL_TOTALRECS)->setText(QString::number(storeStream->rxTotalRecords()));
-		m_rxStreamTable->item(i, SYNTRODB_COL_TOTALBYTES)->setText(QString::number(storeStream->rxTotalBytes()));
-		m_rxStreamTable->item(i, SYNTRODB_COL_FILERECS)->setText(QString::number(storeStream->rxRecords()));
-		m_rxStreamTable->item(i, SYNTRODB_COL_FILEBYTES)->setText(QString::number(storeStream->rxBytes()));
-		m_rxStreamTable->item(i, SYNTRODB_COL_FILE)->setText(storeStream->currentFile());
-		m_storeClient->m_lock.unlock();
+
+		m_rxStreamTable->item(i, SYNTRODB_COL_TOTALRECS)->setText(QString::number(ss.rxTotalRecords()));
+		m_rxStreamTable->item(i, SYNTRODB_COL_TOTALBYTES)->setText(QString::number(ss.rxTotalBytes()));
+		m_rxStreamTable->item(i, SYNTRODB_COL_FILERECS)->setText(QString::number(ss.rxRecords()));
+		m_rxStreamTable->item(i, SYNTRODB_COL_FILEBYTES)->setText(QString::number(ss.rxBytes()));
+		m_rxStreamTable->item(i, SYNTRODB_COL_FILE)->setText(ss.currentFile());
 	}
 
 	m_controlStatus->setText(m_storeClient->getLinkState());

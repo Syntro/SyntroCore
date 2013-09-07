@@ -16,7 +16,7 @@ HTML.postheader = \
     "    </div>\n" \
     "    <div id=\"shortCut\">\n" \
     "      <ul>\n" \
-    "        <li class=\"shortCut-topleft-inactive\"><span><a href=\"index.html\">Syntro 0.6</a></span></li>\n" \
+    "        <li class=\"shortCut-topleft-inactive\"><span><a href=\"index.html\">Syntro 0.7</a></span></li>\n" \
     "        </a></li>\n" \
     "      </ul>\n" \
     "     </div>\n" \

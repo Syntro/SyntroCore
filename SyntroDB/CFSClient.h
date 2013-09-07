@@ -23,12 +23,14 @@
 #include "SyntroLib.h"
 
 class CFSThread;
+class SyntroCFS;
 
 class CFSClient : public Endpoint
 {
 	Q_OBJECT
 
 friend class CFSThread;
+friend class SyntroCFS;
 
 public:
 	CFSClient(QObject *parent);
@@ -52,7 +54,6 @@ private:
 
 	QObject	*m_parent;
 	CFSThread *m_CFSThread;								// the worker thread
-
 };
 
 #endif // CFSCLIENT_H

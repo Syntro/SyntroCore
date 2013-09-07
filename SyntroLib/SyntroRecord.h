@@ -52,5 +52,9 @@ typedef struct
 	SYNTRO_UC4 data;										// unused at this time
 } SYNTRO_STORE_RECORD_HEADER;
 
+// SQL defs
+
+#define SYNTRO_RECORD_SQL_VIDEO_FILE_DOTEXT	".dbv"
 
 #endif // SYNTRORECORD_H
+

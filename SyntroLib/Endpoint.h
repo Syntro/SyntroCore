@@ -100,8 +100,14 @@ typedef struct
 	bool open;												// true if file open
 	bool readInProgress;									// true if a read has been issued
 	bool writeInProgress;									// true if a write has been issued
+	bool queryInProgress;
+	bool cancelQueryInProgress;
+	bool fetchQueryInProgress;
 	qint64 readReqTime;										// when the read request was sent
 	qint64 writeReqTime;									// when the write request was sent
+	qint64 queryReqTime;
+	qint64 cancelQueryReqTime;
+	qint64 fetchQueryReqTime;
 	bool closeInProgress;									// true if a close has been issued
 	qint64 closeReqTime;									// when the close request was sent
 	qint64 lastKeepAliveSent;								// the time the last keep alive was sent
@@ -333,22 +339,31 @@ protected:
 //	is seen in a defined time. In other words, after a call to CFSDir, the client must wait until
 //	CFSDirResponse is called before trying again - a call to CFSDirResponse is guaranteed in all
 //	circumstances unless the call returns false, indicating that the request could not be issued.
+//  The cfsDirParam allows the client to pass parameters to the SyntroCFS service providing the
+//  directory. Currently used to request filtering of the returned directory list. The default is
+//  no filtering.
 
-	bool CFSDir(int serviceEP);								// requests a list of available files from the SyntroCFS 
+	bool CFSDir(int serviceEP, int cfsDirParam = SYNTROCFS_DIR_PARAM_LIST_ALL);
 
 //	CFSDirReponse is called when a response is obtained or the request fails
 //	responseCode contains the SyntroCFS response code, filePaths will contain the paths of the returned files
 
 	virtual void CFSDirResponse(int serviceEP, unsigned int responseCode, QStringList filePaths); 
 
-//	CFSOpen is called to open a file from a SyntroCFS store.
-//	The function returns the local handle allocated to the file.
-//	If -1 is returned, this means that too many files are open already.
-//	If the filePath ends with the structured file extension, the open is in structured record mode
-//	otherwise block mode is assumed. The blockSize can be set to whatever the client needs - it's
-//	ignored for structured mode.
+//	CFSOpenDB is a convenience function that calls CFSOpen with
+//  cfsType = SYNTROCFS_TYPE_DATABASE
 
-	int CFSOpen(int serviceEP, QString filePath, int blockSize = 128);
+	int CFSOpenDB(int serviceEP, QString databaseName);
+
+//	CFSOpenStructuredFile is a convenience function that calls CFSOpen with
+//  cfsType = SYNTROCFS_TYPE_STRUCTURED_FILE 
+
+	int CFSOpenStructuredFile(int serviceEP, QString filePath);
+
+//	CFSOpenRawFile is a convenience function that calls CFSOpen with
+//  cfsType = SYNTROCFS_TYPE_RAW_FILE 
+
+	int CFSOpenRawFile(int serviceEP, QString filePath, int blockSize = 128);
 
 //	CFSOpenResponse is called when a response is obtained or the open request fails in some way
 //	responseCode contains the response code which can be success or error. If success, the file
@@ -408,11 +423,26 @@ protected:
 
 	virtual void CFSWriteAtIndexResponse(int serviceEP, int handle, unsigned int index, unsigned int responseCode);
 
+
+	bool CFSQuery(int serviceEP, int handle, QString sql);
+	virtual void CFSQueryResponse(int serviceEP, int handle, unsigned int responseCode);
+
+	bool CFSCancelQuery(int serviceEP, int handle);
+	virtual void CFSCancelQueryResponse(int serviceEP, int handle, unsigned int responseCode);
+
+	bool CFSFetchQuery(int serviceEP, int handle, int maxRows, int resultType = SYNTROCFS_QUERY_RESULT_TYPE_ROW_DATA);
+	virtual void CFSFetchQueryResponse(int serviceEP, int handle, unsigned int responseCode, int firstRow, int lastRow, int param1, int param2, int length, unsigned char *data);
+
 	QString m_logTag;										// to to be prepended to any log messages
 
 //-------------------------------------------------------------------------------------------
 
 private:
+	//	CFSOpen is called to open a file from a SyntroCFS store.
+	//	The function returns the local handle allocated to the file.
+	//	If -1 is returned, this means that too many files are open already.
+	int CFSOpen(int serviceEP, QString filePath, int cfsMode, int blockSize);
+
 	SyntroComponentData m_componentData;					// the component data for this component
 
 	QString m_compType;										// type of the component
@@ -507,6 +537,9 @@ private:
 	void CFSProcessKeepAliveResponse(SYNTRO_CFSHEADER *cfsHdr, int dstPort);	// process a keep alive response
 	void CFSProcessReadAtIndexResponse(SYNTRO_CFSHEADER *cfsHdr, int dstPort);	// process a read at index response
 	void CFSProcessWriteAtIndexResponse(SYNTRO_CFSHEADER *cfsHdr, int dstPort);	// process a write at index response
+	void CFSProcessQueryResponse(SYNTRO_CFSHEADER *cfsHdr, int dstPort);
+	void CFSProcessCancelQueryResponse(SYNTRO_CFSHEADER *cfsHdr, int dstPort);
+	void CFSProcessFetchQueryResponse(SYNTRO_CFSHEADER *cfsHdr, int dstPort);
 
 	void CFSSendKeepAlive(int remoteServiceEP, SYNTRO_CFS_FILE *scf);		// sends a keep alive on an open stream
 	void CFSTimeoutKeepAlive(int remoteServiceEP, SYNTRO_CFS_FILE *scf);	// handles a keep alive timeout

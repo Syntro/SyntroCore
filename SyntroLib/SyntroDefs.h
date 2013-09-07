@@ -22,7 +22,7 @@
 
 //	Version
 
-#define	SYNTROLIB_VERSION	"0.6.0"
+#define	SYNTROLIB_VERSION	"0.7.0"
 
 //	Timer definition
 //
@@ -66,7 +66,7 @@
 
 //	Syntro message size maximums
 
-#define SYNTRO_MESSAGE_MAX			0x40000
+#define SYNTRO_MESSAGE_MAX			0x80000
 
 //-------------------------------------------------------------------------------------------
 //	IP related definitions
@@ -403,6 +403,8 @@ typedef	struct
 
 //	Standard multicast stream names
 
+#define SYNTRO_STREAMNAME_AVMUX				"avmux"
+#define	SYNTRO_STREAMNAME_AVMUXLR			"avmux:lr"
 #define SYNTRO_STREAMNAME_VIDEO				"video"
 #define	SYNTRO_STREAMNAME_VIDEOLR			"video:lr"
 #define SYNTRO_STREAMNAME_AUDIO				"audio"
@@ -456,6 +458,7 @@ typedef struct
 #define SYNTRO_RECORD_TYPE_AIRQUALITY	9					// air quality sensor
 #define SYNTRO_RECORD_TYPE_PRESSURE		10					// air pressure sensor
 #define SYNTRO_RECORD_TYPE_ZIGBEE		11					// zigbee multicast data
+#define	SYNTRO_RECORD_TYPE_AVMUX		12					// an avmux stream record
 
 #define	SYNTRO_RECORD_TYPE_USER		(0x8000)				// user defined codes start here
 

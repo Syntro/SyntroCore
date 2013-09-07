@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE QDOCINDEX>
-<INDEX url="http://www.pansenti.com" title="SyntroCore Documentation" version="0.6">
+<INDEX url="http://www.pansenti.com" title="SyntroCore Documentation" version="0.7">
     <namespace access="public" threadsafety="unspecified" status="commendable" name="" href="" location="">
         <class access="public" threadsafety="unspecified" status="commendable" name="Endpoint" href="endpoint.html" location="Endpoint.h" bases="SyntroThread" module="SyntroLib">
             <function access="protected" threadsafety="unspecified" status="commendable" name="CFSAddEP" fullname="Endpoint::CFSAddEP" href="endpoint.html#CFSAddEP" location="Endpoint.h" virtual="non" meta="plain" const="false" static="false" overload="false" type="void" signature="CFSAddEP(int serviceEP)">

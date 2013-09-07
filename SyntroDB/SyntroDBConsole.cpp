@@ -59,7 +59,6 @@ void SyntroDBConsole::storeRunning()
         emit refreshStreamSource(index);
 }
 
-
 void SyntroDBConsole::showHelp()
 {
 	printf("\n\nOptions are:\n\n");
@@ -79,21 +78,17 @@ void SyntroDBConsole::showCounts()
 	printf("\n\n%-15s %-12s %-16s %s", "Service", "RX records", "RX bytes", "Active File");
 	printf("\n%-15s %-12s %-16s %s", "-------", "----------", "--------", "------------------------");
 
-	StoreStream *storeStream;
+	StoreStream ss;
 
 	for (int i = 0; i < SYNTRODB_MAX_STREAMS; i++) {
-		m_storeClient->m_lock.lock();
-		if (m_storeClient->m_sources[i] == NULL) {
-			m_storeClient->m_lock.unlock();
+		if (!m_storeClient->getStoreStream(i, &ss))
 			continue;
-		}
-		storeStream = m_storeClient->m_sources[i];
+
 		printf("\n%-15s %-12s %-16s %s",
-			qPrintable(storeStream->streamName()),
-			qPrintable(QString::number(storeStream->rxTotalRecords())),
-			qPrintable(QString::number(storeStream->rxTotalBytes())),
-			qPrintable(storeStream->currentFile()));			
-		m_storeClient->m_lock.unlock();
+			qPrintable(ss.streamName()),
+			qPrintable(QString::number(ss.rxTotalRecords())),
+			qPrintable(QString::number(ss.rxTotalBytes())),
+			qPrintable(ss.currentFile()));			
 	}
 	printf("\n");
 }

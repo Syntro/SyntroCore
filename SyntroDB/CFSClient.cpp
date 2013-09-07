@@ -35,19 +35,18 @@ void CFSClient::appClientInit()
 	m_CFSPort = clientAddService(SYNTRO_STREAMNAME_CFS, SERVICETYPE_E2E, true);
     m_CFSThread = new CFSThread(this);
     m_CFSThread->resumeThread();
-	return;
 }
 
 void CFSClient::appClientExit()
 {
     if (m_CFSThread != NULL)
         m_CFSThread->exitThread();
+
     m_CFSThread = NULL;
 }
 
 void CFSClient::appClientBackground()
 {
-
 }
 
 CFSThread *CFSClient::getCFSThread()
@@ -62,16 +61,17 @@ void CFSClient::appClientReceiveE2E(int servicePort, SYNTRO_EHEAD *message, int 
 		free(message);
 		return;
 	}
+
 	m_CFSThread->postThreadMessage(SYNTRO_CFS_MESSAGE, length, message);
 }
 
 bool CFSClient::appClientProcessThreadMessage(SyntroThreadMsg *msg)
 {
-	switch (msg->message) {
-		case SYNTRO_CFS_MESSAGE:
-			clientSendMessage(m_CFSPort, (SYNTRO_EHEAD *)msg->ptrParam, msg->intParam, SYNTROCFS_E2E_PRIORITY);
-			return true;
+	if (msg->message == SYNTRO_CFS_MESSAGE) {
+		clientSendMessage(m_CFSPort, (SYNTRO_EHEAD *)msg->ptrParam, msg->intParam, SYNTROCFS_E2E_PRIORITY);
+		return true;
 	}
+
 	return false;
 }
 
@@ -80,7 +80,3 @@ void CFSClient::sendMessage(SYNTRO_EHEAD *message, int length)
 {
 	postThreadMessage(SYNTRO_CFS_MESSAGE, length, message); 
 }
-
-
-
-

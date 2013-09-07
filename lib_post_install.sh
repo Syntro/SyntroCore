@@ -2,7 +2,7 @@
 
 UNAME=`uname`
 MACHINE=`uname -m`
-VERSION="0.6.0"
+VERSION="0.7.0"
 
 echo "Creating links for $UNAME $MACHINE $VERSION"
 

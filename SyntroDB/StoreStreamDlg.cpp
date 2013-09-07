@@ -31,7 +31,6 @@ StoreStreamDlg::StoreStreamDlg(QWidget *parent, int index)
 	loadCurrentValues();
 }
 
-
 void StoreStreamDlg::okButtonClick()
 {
 	QSettings *settings = SyntroUtils::getSettings();
@@ -39,10 +38,10 @@ void StoreStreamDlg::okButtonClick()
 	settings->beginWriteArray(SYNTRODB_PARAMS_STREAM_SOURCES);
 	settings->setArrayIndex(m_index);
 
-	if (m_formatCombo->currentIndex() == 0)
-		settings->setValue(SYNTRODB_PARAMS_FORMAT, SYNTRO_RECORD_STORE_FORMAT_SRF);
-	else
+	if (m_formatCombo->currentIndex() == 1)
 		settings->setValue(SYNTRODB_PARAMS_FORMAT, SYNTRO_RECORD_STORE_FORMAT_RAW);
+	else //if (m_formatCombo->currentIndex() == 0)
+		settings->setValue(SYNTRODB_PARAMS_FORMAT, SYNTRO_RECORD_STORE_FORMAT_SRF);
 
 	settings->setValue(SYNTRODB_PARAMS_CREATE_SUBFOLDER, 
 		m_subFolderCheck->checkState() == Qt::Checked ? SYNTRO_PARAMS_TRUE : SYNTRO_PARAMS_FALSE);
@@ -110,8 +109,6 @@ void StoreStreamDlg::cancelButtonClick()
 	reject();
 }
 
-
-
 void StoreStreamDlg::loadCurrentValues()
 {
 	QSettings *settings = SyntroUtils::getSettings();
@@ -121,10 +118,10 @@ void StoreStreamDlg::loadCurrentValues()
 
 	m_streamName->setText(settings->value(SYNTRODB_PARAMS_STREAM_SOURCE).toString());
 
-	if (settings->value(SYNTRODB_PARAMS_FORMAT) == SYNTRO_RECORD_STORE_FORMAT_SRF)
-		m_formatCombo->setCurrentIndex(0);
-	else
+	if (settings->value(SYNTRODB_PARAMS_FORMAT) == SYNTRO_RECORD_STORE_FORMAT_RAW)
 		m_formatCombo->setCurrentIndex(1);
+	else // if (settings->value(SYNTRODB_PARAMS_FORMAT) == SYNTRO_RECORD_STORE_FORMAT_SRF)
+		m_formatCombo->setCurrentIndex(0);
 
 	if (settings->value(SYNTRODB_PARAMS_CREATE_SUBFOLDER) == SYNTRO_PARAMS_TRUE)
 		m_subFolderCheck->setCheckState(Qt::Checked);
@@ -181,7 +178,7 @@ void StoreStreamDlg::layoutWidgets()
 	formLayout->addRow(new QLabel("Store stream"), e);
 
 	m_formatCombo = new QComboBox;
-	m_formatCombo->addItem("Structured [srf])");
+	m_formatCombo->addItem("Structured file [srf])");
 	m_formatCombo->addItem("Raw [raw]");
 	m_formatCombo->setEditable(false);
 	QHBoxLayout *a = new QHBoxLayout;

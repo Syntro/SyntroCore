@@ -17,40 +17,26 @@
 //  along with Syntro.  If not, see <http://www.gnu.org/licenses/>.
 //
 
-#ifndef DIRTHREAD_H
-#define DIRTHREAD_H
+#ifndef SYNTROCFSRAW_H
+#define SYNTROCFSRAW_H
 
-#include <qlist.h>
-#include <qdir.h>
+#include "SyntroCFS.h"
 
-#include "SyntroLib.h"
-
-class DirThread : public SyntroThread
+class SyntroCFSRaw : public SyntroCFS
 {
-	Q_OBJECT
-
 public:
-	DirThread(const QString& storePath);
-	~DirThread();
-	
-	QString getDirectory();
-	
-protected:
-	void initThread();
-	void timerEvent(QTimerEvent *event);
-	void finishThread();
+	SyntroCFSRaw(CFSClient *client, QString filePath);
+	virtual ~SyntroCFSRaw();
+
+	virtual bool cfsOpen(SYNTRO_CFSHEADER *cfsMsg);
+	virtual void cfsRead(SYNTRO_EHEAD *ehead, SYNTRO_CFSHEADER *cfsMsg, SYNTROCFS_STATE *scs, unsigned int requestedIndex);
+	virtual void cfsWrite(SYNTRO_EHEAD *ehead, SYNTRO_CFSHEADER *cfsMsg, SYNTROCFS_STATE *scs, unsigned int requestedIndex);
+
+	virtual unsigned int cfsGetRecordCount();
 
 private:
-	void buildDirString();
-	void processDir(QDir dir, QString& dirString, QString relativePath);
-
-	QString m_storePath;
-	QString m_directory;
-	QMutex m_lock;
-
-	int m_timer;
-	bool m_dbOnly;
+	int m_blockSize;
+	unsigned int m_recordCount;
 };
 
-#endif // DIRTHREAD_H
-
+#endif // SYNTROCFSRAW_H

@@ -1,24 +1,36 @@
-HEADERS += StoreDiskManager.h \
+HEADERS += CFSClient.h \
+    CFSThread.h \
+    ConfigurationDlg.h \
+    DirThread.h \
+    StoreClient.h \
+    StoreManager.h \
     StoreStream.h \
     StoreStreamDlg.h \
-    StoreClient.h \
-    CFSClient.h \
-    CFSThread.h \
-    DIRThread.h \
+    SyntroCFS.h \
+    SyntroCFSRaw.h \
+    SyntroCFSStructured.h \
+    SyntroDB.h \
     SyntroDBConsole.h \
-    ConfigurationDlg.h \
-    SyntroDB.h
+    SyntroStore.h \
+    SyntroStoreBlocksRaw.h \
+    SyntroStoreBlocksStructured.h
 
-SOURCES += StoreStream.cpp \
-    StoreStreamDlg.cpp \
-    main.cpp \
-    SyntroDBConsole.cpp \
-    SyntroDB.cpp \
-    StoreClient.cpp \
-    CFSClient.cpp \
+SOURCES += CFSClient.cpp \
     CFSThread.cpp \
-    DIRThread.cpp \
     ConfigurationDlg.cpp \
-    StoreDiskManager.cpp
+    DirThread.cpp \
+    main.cpp \
+    StoreClient.cpp \
+    StoreManager.cpp \
+    StoreStream.cpp \
+    StoreStreamDlg.cpp \    
+    SyntroCFS.cpp \
+    SyntroCFSRaw.cpp \
+    SyntroCFSStructured.cpp \
+    SyntroDB.cpp \
+    SyntroDBConsole.cpp \
+    SyntroStore.cpp \
+    SyntroStoreBlocksRaw.cpp \
+    SyntroStoreBlocksStructured.cpp
 
 FORMS += SyntroDB.ui

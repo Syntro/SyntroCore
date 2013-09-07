@@ -35,24 +35,106 @@ typedef enum
     SYNTRO_RECORDHEADER_PARAM_POSTROLL,                     // indicates a postroll frame
  } SYNTROAV_RECORDHEADER_PARAM;
 
-//	Video subType codes
+//	AVMux subType codes
+
 typedef enum
 {
-	SYNTRO_RECORD_TYPE_VIDEO_UNKNOWN = -1,					// unknown format
+	SYNTRO_RECORD_TYPE_AVMUX_UNKNOWN = -1,					// unknown mux
+	SYNTRO_RECORD_TYPE_AVMUX_NONE,							// no muxing
+	SYNTRO_RECORD_TYPE_AVMUX_MP4,							// MP4 mux
+	SYNTRO_RECORD_TYPE_AVMUX_OGG,							// Ogg mux
+	SYNTRO_RECORD_TYPE_AVMUX_WEBM,							// Webm mux
+
+	// This entry marks the end of the enum
+
+	SYNTRO_RECORD_TYPE_AVMUX_END							// the end
+} SYNTROAV_AVMUXSUBTYPE;
+
+
+//	Video subType codes
+
+typedef enum
+{
+	SYNTRO_RECORD_TYPE_VIDEO_UNKNOWN = -1,					// unknown format or not present
 	SYNTRO_RECORD_TYPE_VIDEO_MJPEG,							// MJPEG compression
 	SYNTRO_RECORD_TYPE_VIDEO_MPEG1,							// MPEG1 compression
 	SYNTRO_RECORD_TYPE_VIDEO_MPEG2,							// MPEG2 compression
 	SYNTRO_RECORD_TYPE_VIDEO_H264,							// H264 compression
+	SYNTRO_RECORD_TYPE_VIDEO_VP8,							// VP8 compression
+	SYNTRO_RECORD_TYPE_VIDEO_THEORA,						// theora compression
 
 	// This entry marks the end of the enum
 
 	SYNTRO_RECORD_TYPE_VIDEO_END							// the end
 } SYNTROAV_VIDEOSUBTYPE;
 
+//	Audio subType codes
+
+typedef enum
+{
+	SYNTRO_RECORD_TYPE_AUDIO_UNKNOWN = -1,					// unknown format or not present
+	SYNTRO_RECORD_TYPE_AUDIO_PCM,							// PCM/WAV uncompressed
+	SYNTRO_RECORD_TYPE_AUDIO_MP3,							// MP3 compression
+	SYNTRO_RECORD_TYPE_AUDIO_AC3,							// AC3 compression
+	SYNTRO_RECORD_TYPE_AUDIO_AAC,							// AAC compression
+	SYNTRO_RECORD_TYPE_AUDIO_VORBIS,						// Vorbis compression
+
+	// This entry marks the end of the enum
+
+	SYNTRO_RECORD_TYPE_AUDIO_END							// the end
+} SYNTROAV_AUDIOSUBTYPE;
+
+//	SYNTRO_RECORD_AVMUX - used to send muxed video and audio data
+//
+//	The structure follows the SYNTRO_EHEAD structure. The lengths of the
+//	three types of data (avmux, video and audio) describe what is present. The 
+//	actual data is always in that order. So, if there's video and audio, the video would
+//	be first and the audio second. The offset to the audio can be calculated from the
+//	length of the video.
+//
+//	The header information is always set correctly regardless of what data is contained
+//	so that any record can be used to determine the types of data that the stream carries.
+
+typedef struct
+{
+	SYNTRO_RECORD_HEADER recordHeader;						// the record type header
+	SYNTRO_UC2 spare0;										// unused at present - set to 0
+	unsigned char videoSubtype;								// type of video stream
+	unsigned char audioSubtype;								// type of audio stream
+	SYNTRO_UC4 muxSize;										// size of the muxed data (if present)
+	SYNTRO_UC4 videoSize;									// size of the video data (if present)
+	SYNTRO_UC4 audioSize;									// size of the audio data (if present)
+	SYNTRO_UC2 videoWidth;									// width of frame
+	SYNTRO_UC2 videoHeight;									// height of frame
+	SYNTRO_UC2 videoFramerate;								// framerate
+	SYNTRO_UC2 videoSpare;									// unused at present - set to 0
+	SYNTRO_UC4 audioSampleRate;								// sample rate of audio
+	SYNTRO_UC2 audioChannels;								// number of channels
+	SYNTRO_UC2 audioSampleSize;								// size of samples (in bits)
+	SYNTRO_UC2 audioSpare;									// unused at present - set to 0
+	SYNTRO_UC2 spare1;										// unused at present - set to 0
+} SYNTRO_RECORD_AVMUX;
+
+// A convenient version for use by code
+
+typedef struct
+{
+	int avmuxSubtype;										// the mux subtype
+	unsigned char videoSubtype;								// type of video stream
+	unsigned char audioSubtype;								// type of audio stream
+	int videoWidth;											// width of frame
+	int videoHeight;										// height of frame
+	int videoFramerate;										// framerate
+	int audioSampleRate;									// sample rate of audio
+	int audioChannels;										// number of channels
+	int audioSampleSize;									// size of samples (in bits)
+} SYNTRO_AVPARAMS;
+
+
 //	SYNTRO_RECORD_VIDEO - used to send video frames
 //
 //	The structure follows the SYNTRO_EHEAD structure. Immediately following this structure
-//	is the left (or single) image data followed by the right image data (if present).
+//	is the image data.
 
 typedef struct
 {
@@ -61,20 +143,6 @@ typedef struct
 	SYNTRO_UC2 height;										// height of each image
 	SYNTRO_UC4 size;										// size of the image
 } SYNTRO_RECORD_VIDEO;
-
-//	Audio subType codes
-typedef enum
-{
-	SYNTRO_RECORD_TYPE_AUDIO_UNKNOWN = -1,					// unknown format
-	SYNTRO_RECORD_TYPE_AUDIO_PCM,							// PCM/WAV uncompressed
-	SYNTRO_RECORD_TYPE_AUDIO_MP3,							// MP3 compression
-	SYNTRO_RECORD_TYPE_AUDIO_AC3,							// AC3 compression
-	SYNTRO_RECORD_TYPE_AUDIO_AAC,							// AAC compression
-
-	// This entry marks the end of the enum
-
-	SYNTRO_RECORD_TYPE_AUDIO_END							// the end
-} SYNTROAV_AUDIOSUBTYPE;
 
 //	SYNTRO_RECORD_AUDIO - used to send audio data
 //

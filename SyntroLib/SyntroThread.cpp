@@ -77,14 +77,16 @@ void SyntroThread::resumeThread()
 
 	moveToThread(m_thread);
 
-	connect(m_thread, SIGNAL(started()), this, SLOT(internalRunLoop()), Qt::QueuedConnection);
+	connect(m_thread, SIGNAL(started()), this, SLOT(internalRunLoop()));
 
-	connect(this, SIGNAL(internalEndThread()), this, SLOT(cleanup()), Qt::QueuedConnection);
+	connect(this, SIGNAL(internalEndThread()), this, SLOT(cleanup()));
 
-	connect(this, SIGNAL(internalKillThread()), m_thread, SLOT(quit()), Qt::QueuedConnection);
-	connect(this, SIGNAL(internalKillThread()), this, SLOT(deleteLater()), Qt::QueuedConnection);
+	connect(this, SIGNAL(internalKillThread()), m_thread, SLOT(quit()));
 
-	connect(m_thread, SIGNAL(finished()), m_thread, SLOT(deleteLater()), Qt::QueuedConnection);
+	connect(m_thread, SIGNAL(finished()), m_thread, SLOT(deleteLater()));
+
+	connect(m_thread, SIGNAL(finished()), this, SLOT(deleteLater()));
+
 	installEventFilter(this);
 
 	m_thread->start();

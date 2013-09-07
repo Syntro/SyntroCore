@@ -18,6 +18,7 @@
 //
 
 #include "DirThread.h"
+#include "SyntroRecord.h"
 #include "SyntroDB.h"
 
 DirThread::DirThread(const QString& storePath)
@@ -52,7 +53,6 @@ void DirThread::timerEvent(QTimerEvent *)
 	buildDirString();
 }
 
-
 void DirThread::buildDirString()
 {
 	QDir dir;
@@ -68,10 +68,9 @@ void DirThread::buildDirString()
 		return;
 	}
 
-
 	dir.setFilter(QDir::Files | QDir::AllDirs | QDir::NoDotAndDotDot);
-	processDir(dir, m_directory, "");							// start off in root directory
-	return;
+
+	processDir(dir, m_directory, "");
 }
 
 void DirThread::processDir(QDir dir, QString& dirString, QString relativePath)
@@ -80,19 +79,25 @@ void DirThread::processDir(QDir dir, QString& dirString, QString relativePath)
 
 	for (int i = 0; i < list.size(); i++) {
 		QFileInfo fileInfo = list.at(i);
+
 		if (fileInfo.isDir()) {
 			dir.cd(fileInfo.fileName());
+
 			if (relativePath == "")
 				processDir(dir, dirString, fileInfo.fileName());
 			else
 				processDir(dir, dirString, relativePath + SYNTRO_SERVICEPATH_SEP + fileInfo.fileName());
+
 			dir.cdUp();
-		} else {
+		}
+		else {
+			if (dirString.length() > 0)
+				dirString += SYNTROCFS_FILENAME_SEP;
+
 			if (relativePath == "")
-				dirString += fileInfo.fileName() + SYNTROCFS_FILENAME_SEP;
+				dirString += fileInfo.fileName();
 			else
-				dirString += relativePath + SYNTRO_SERVICEPATH_SEP + fileInfo.fileName() + SYNTROCFS_FILENAME_SEP;
+				dirString += relativePath + SYNTRO_SERVICEPATH_SEP + fileInfo.fileName();
 		}
 	}
 }
-

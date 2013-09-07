@@ -17,40 +17,23 @@
 //  along with Syntro.  If not, see <http://www.gnu.org/licenses/>.
 //
 
-#ifndef DIRTHREAD_H
-#define DIRTHREAD_H
+#include "SyntroUtils.h"
 
-#include <qlist.h>
-#include <qdir.h>
+#include "SyntroStore.h"
 
-#include "SyntroLib.h"
+SyntroStore::SyntroStore(StoreStream *stream) 
+{	
+	m_stream = stream;
+}
 
-class DirThread : public SyntroThread
+SyntroStore::~SyntroStore()
 {
-	Q_OBJECT
+}
 
-public:
-	DirThread(const QString& storePath);
-	~DirThread();
-	
-	QString getDirectory();
-	
-protected:
-	void initThread();
-	void timerEvent(QTimerEvent *event);
-	void finishThread();
+void SyntroStore::queueBlock(QByteArray block)
+{
+	QMutexLocker lock(&m_blockMutex);
 
-private:
-	void buildDirString();
-	void processDir(QDir dir, QString& dirString, QString relativePath);
-
-	QString m_storePath;
-	QString m_directory;
-	QMutex m_lock;
-
-	int m_timer;
-	bool m_dbOnly;
-};
-
-#endif // DIRTHREAD_H
-
+	if (m_blocks.count() < 128)
+		m_blocks.enqueue(block);
+}

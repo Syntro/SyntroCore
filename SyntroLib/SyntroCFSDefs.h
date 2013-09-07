@@ -44,6 +44,15 @@ typedef struct
 	SYNTRO_UC4 cfsLength;									// length of data that follows this structure (record, stream name etc)
 } SYNTRO_CFSHEADER;
 
+typedef struct
+{
+	SYNTRO_CFSHEADER cfsHeader;
+	SYNTRO_UC4 firstRow;
+	SYNTRO_UC4 lastRow;
+	SYNTRO_UC4 param1;
+	SYNTRO_UC4 param2;
+} SYNTRO_QUERYRESULT_HEADER;
+
 //	SyntroCFS message type codes
 //
 //	Note: cfsLength is alsways used and must be set to zero if the message is just the SYNTRO_CFSHEADER
@@ -151,6 +160,14 @@ typedef struct
 
 #define	SYNTROCFS_TYPE_WRITE_INDEX_RES	19					// response to a write at index n - contains success or error code
 
+
+#define SYNTROCFS_TYPE_QUERY_REQ		20
+#define SYNTROCFS_TYPE_QUERY_RES		21
+#define SYNTROCFS_TYPE_CANCEL_QUERY_REQ 22
+#define SYNTROCFS_TYPE_CANCEL_QUERY_RES 23
+#define SYNTROCFS_TYPE_FETCH_QUERY_REQ	24
+#define SYNTROCFS_TYPE_FETCH_QUERY_RES	25
+
 //	SyntroCFS Size Defines
 
 #define	SYNTROCFS_MAX_CLIENT_FILES			32				// max files a client can have open at one time per EP
@@ -179,14 +196,26 @@ typedef struct
 #define	SYNTROCFS_ERROR_WRITE					(SYNTROCFS_ERROR_CODE + 16) // flat file write failed
 #define	SYNTROCFS_ERROR_TRANSFER_TOO_LONG		(SYNTROCFS_ERROR_CODE + 17) // if message would be too long
 #define	SYNTROCFS_ERROR_READ					(SYNTROCFS_ERROR_CODE + 18) // flat file read failed
+#define SYNTROCFS_ERROR_BAD_BLOCKSIZE_REQUEST	(SYNTROCFS_ERROR_CODE + 19) // flat file access cannot request a block size < zero
+#define SYNTROCFS_ERROR_INVALID_REQUEST_TYPE	(SYNTROCFS_ERROR_CODE + 20) // request type not valid for this cfs mode
+#define SYNTROCFS_ERROR_DB_OPEN_FAILED			(SYNTROCFS_ERROR_CODE + 21)
+#define SYNTROCFS_ERROR_MEMORY_ALLOC_FAIL		(SYNTROCFS_ERROR_CODE + 22)
+#define SYNTROCFS_ERROR_INVALID_QUERY			(SYNTROCFS_ERROR_CODE + 23)
+#define SYNTROCFS_ERROR_QUERY_FAILED			(SYNTROCFS_ERROR_CODE + 24)
+#define SYNTROCFS_ERROR_QUERY_NOT_ACTIVE		(SYNTROCFS_ERROR_CODE + 25)
+#define SYNTROCFS_ERROR_TYPE_NOT_SUPPORTED		(SYNTROCFS_ERROR_CODE + 26)
+#define SYNTROCFS_ERROR_QUERY_RESULT_TYPE_NOT_SUPPORTED		(SYNTROCFS_ERROR_CODE + 27)
+
+
 //	SyntroCFS Timer Values
 
 #define	SYNTROCFS_DIRREQ_TIMEOUT				(SYNTRO_CLOCKS_PER_SEC * 5)	// how long to wait for a directory response
 #define	SYNTROCFS_OPENREQ_TIMEOUT				(SYNTRO_CLOCKS_PER_SEC * 5)	// how long to wait for a file open response
 #define	SYNTROCFS_READREQ_TIMEOUT				(SYNTRO_CLOCKS_PER_SEC * 5)	// how long to wait for a file read response
 #define	SYNTROCFS_WRITEREQ_TIMEOUT				(SYNTRO_CLOCKS_PER_SEC * 5)	// how long to wait for a file write response
+#define SYNTROCFS_QUERYREQ_TIMEOUT				(SYNTRO_CLOCKS_PER_SEC * 5)	
 #define	SYNTROCFS_CLOSEREQ_TIMEOUT				(SYNTRO_CLOCKS_PER_SEC * 5)	// how long to wait for a file close response
-#define	SYNTROCFS_KEEPALIVE_INTERVAL			(SYNTRO_CLOCKS_PER_SEC * 2)	// interval between keep alives
+#define	SYNTROCFS_KEEPALIVE_INTERVAL			(SYNTRO_CLOCKS_PER_SEC * 5)	// interval between keep alives
 #define	SYNTROCFS_KEEPALIVE_TIMEOUT				(SYNTROCFS_KEEPALIVE_INTERVAL * 3)	// at which point the file is considered closed
 
 //	SyntroCFS E2E Message Priority
@@ -194,5 +223,20 @@ typedef struct
 
 #define	SYNTROCFS_E2E_PRIORITY					(SYNTROLINK_MEDHIGHPRI)
 
-#endif	// _SYNTRODEFS_H
+// SyntroCFS DIRREQ optional parameters
+#define SYNTROCFS_DIR_PARAM_LIST_ALL			0
+#define SYNTROCFS_DIR_PARAM_LIST_DB_ONLY		1
 
+// SyntroCFS OPENREQ parameters for cfsType
+#define SYNTROCFS_TYPE_STRUCTURED_FILE          0
+#define SYNTROCFS_TYPE_RAW_FILE                 1
+#define SYNTROCFS_TYPE_DATABASE					2
+
+#define SYNTROCFS_QUERY_RESULT_TYPE_ROW_DATA	0
+#define SYNTROCFS_QUERY_RESULT_TYPE_AV_DATA		1
+
+#define SYNTROCFS_QUERY_RESULTS_NO_MORE_DATA		0x01
+#define SYNTROCFS_QUERY_RESULTS_HAVE_COLUMN_NAMES	0x02
+#define SYNTROCFS_QUERY_RESULTS_SIZE_LIMITED		0x04
+
+#endif	// _SYNTRODEFS_H

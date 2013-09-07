@@ -26,6 +26,7 @@
 #include <qqueue.h>
 #include <qlabel.h>
 
+
 enum StoreFileFormat { structuredFileFormat, rawFileFormat };
 
 enum StoreRotationPolicy { timeRotation, sizeRotation, anyRotation };
@@ -37,10 +38,14 @@ enum StoreDeletionTimeUnits { deletionHourUnits, deletionDayUnits };
 class StoreStream
 {
 public:
+	StoreStream();
 	StoreStream(const QString& logTag);
 	StoreStream(const StoreStream &rhs);
 
 	StoreStream& operator=(const StoreStream &rhs);
+
+	static bool streamIndexValid(int index);
+	static bool streamIndexInUse(int index);
 
 	QString pathOnly();
 	QString streamName();
@@ -53,7 +58,8 @@ public:
 	qint64 rotationSize();
 
 	bool folderWritable();
-	void checkRotation();
+	bool needRotation();
+	void doRotation();
 
 	QString currentFile();
 	QString currentFileFullPath();
@@ -69,10 +75,8 @@ public:
 	void clearStats();
 
 	bool load(QSettings *settings, const QString& rootDirectory);
+	bool load(int sIndex);
 
-	void queueBlock(QByteArray block);
-	QByteArray dequeueBlock();
-	int blockCount();
 	int port;
 
 private:
@@ -115,9 +119,6 @@ private:
 	qint64 m_rxTotalBytes;
 	qint64 m_rxRecords;
 	qint64 m_rxBytes;
-
-	QMutex m_blockMutex;
-	QQueue<QByteArray> m_blocks;
 
 	QString m_logTag;
 };

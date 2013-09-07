@@ -17,40 +17,21 @@
 //  along with Syntro.  If not, see <http://www.gnu.org/licenses/>.
 //
 
-#ifndef DIRTHREAD_H
-#define DIRTHREAD_H
+#ifndef SYNTROSTOREBLOCKSRAW_H
+#define SYNTROSTOREBLOCKSRAW_H
 
-#include <qlist.h>
-#include <qdir.h>
+#include "SyntroStore.h"
 
-#include "SyntroLib.h"
-
-class DirThread : public SyntroThread
+class SyntroStoreBlocksRaw : public SyntroStore
 {
-	Q_OBJECT
-
 public:
-	DirThread(const QString& storePath);
-	~DirThread();
-	
-	QString getDirectory();
-	
-protected:
-	void initThread();
-	void timerEvent(QTimerEvent *event);
-	void finishThread();
+	SyntroStoreBlocksRaw(StoreStream *stream);
+	virtual ~SyntroStoreBlocksRaw();
+
+	void processQueue();
 
 private:
-	void buildDirString();
-	void processDir(QDir dir, QString& dirString, QString relativePath);
-
-	QString m_storePath;
-	QString m_directory;
-	QMutex m_lock;
-
-	int m_timer;
-	bool m_dbOnly;
+	void writeBlocks();
 };
 
-#endif // DIRTHREAD_H
-
+#endif // SYNTROSTOREBLOCKSRAW_H
