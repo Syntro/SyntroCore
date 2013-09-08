@@ -2268,6 +2268,7 @@ int Endpoint::CFSOpen(int serviceEP, QString filePath, int cfsMode, int blockSiz
 	scf->readInProgress = false;
 	scf->writeInProgress = false;
 	scf->queryInProgress = false;
+	scf->fetchQueryInProgress = false;
 	scf->cancelQueryInProgress = false;
 	scf->closeInProgress = false;
 	scf->structured = filePath.endsWith(SYNTRO_RECORD_SRF_RECORD_DOTEXT);
