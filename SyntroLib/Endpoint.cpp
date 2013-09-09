@@ -957,10 +957,9 @@ void Endpoint::appClientReceiveE2E(int servicePort, SYNTRO_EHEAD *message, int)
 	message must be freed in the overriding function.
 */
 
-void Endpoint::appClientReceiveDirectory(SYNTRO_DIRECTORY_RESPONSE *directory, int)
+void Endpoint::appClientReceiveDirectory(QStringList)
 {
 	logWarn(QString("Unexpected directory response reported by Endpoint"));
-	free(directory);
 }
 
 
@@ -1407,7 +1406,8 @@ void Endpoint::processReceivedDataDemux(int cmd, int len, SYNTRO_MESSAGE*syntroM
 			break;
 
 		case SYNTROMSG_DIRECTORY_RESPONSE:
-			appClientReceiveDirectory((SYNTRO_DIRECTORY_RESPONSE *)syntroMessage, len);
+			processDirectoryResponse((SYNTRO_DIRECTORY_RESPONSE *)syntroMessage, len);
+			free(syntroMessage);
 			break;
 
 		case SYNTROMSG_E2E:
@@ -1780,6 +1780,24 @@ void Endpoint::processLookupResponse(SYNTRO_SERVICE_LOOKUP *serviceLookup)
 			}
 			break;
 	}
+}
+
+/*!
+	\internal
+*/
+
+void Endpoint::processDirectoryResponse(SYNTRO_DIRECTORY_RESPONSE *directoryResponse, int len)
+{
+	QStringList dirList;
+
+	QByteArray data(reinterpret_cast<char *>(directoryResponse + 1), len - sizeof(SYNTRO_DIRECTORY_RESPONSE));
+
+	QList<QByteArray> list = data.split(0);
+
+	for (int i = 0; i < list.count(); i++)
+		dirList << list.at(i);
+
+	appClientReceiveDirectory(dirList);
 }
 
 /*!

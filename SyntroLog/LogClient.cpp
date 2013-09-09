@@ -19,6 +19,7 @@
 
 #include "LogClient.h"
 #include "SyntroLib.h"
+#include "DirectoryEntry.h"
 
 #define	LOGCLIENT_BACKGROUND_INTERVAL (SYNTRO_CLOCKS_PER_SEC / 10)
 
@@ -84,25 +85,14 @@ void LogClient::appClientBackground()
 	}
 }
 
-void LogClient::appClientReceiveDirectory(SYNTRO_DIRECTORY_RESPONSE *directory, int length)
+void LogClient::appClientReceiveDirectory(QStringList dirList)
 {
 	int oldCount = m_sources.count();
-
-	// don't want the header or the trailing NULL byte
-	QByteArray rawDir(reinterpret_cast<char *>(directory + 1), length - (1 + sizeof(SYNTRO_DIRECTORY_RESPONSE)));
-
-	// it's wasteful for SyntroControl to be sending this, but until that gets fixed ...
-	QByteArray stripDir = rawDir.replace("<NSV></NSV>", "");
-
-	// done with this
-	free(directory);
 
 	// mark all inactive
 	for (int i = 0; i < m_sources.count(); i++)
 		m_sources[i].m_active = false;
 
-	QList<QByteArray> dirList = stripDir.split(0);
-	
 	for (int i = 0; i < dirList.count(); i++)
 		handleDirEntry(QString(dirList[i]));
 
@@ -122,54 +112,33 @@ void LogClient::appClientReceiveDirectory(SYNTRO_DIRECTORY_RESPONSE *directory, 
 	m_dirRefreshCounter = 0;
 }
 
-void LogClient::handleDirEntry(QString dirEntry)
+void LogClient::handleDirEntry(QString item)
 {
-	QString appNameStart = QString("<") + DETAG_APPNAME + ">";
-	QString appNameEnd = QString("</") + DETAG_APPNAME + ">";
-	QString msvStart = QString("<") + DETAG_MSERVICE + ">";
-	QString msvEnd = QString("</") + DETAG_MSERVICE + ">";
+	DirectoryEntry dirEntry(item);
 
-	int start, end;
-
-	start = dirEntry.indexOf(appNameStart);
-	if (start == -1) {
-		logError("Failed to find app name in dir entry");
+	if (!dirEntry.isValid())
 		return;
+
+	if (dirEntry.componentType() != COMPTYPE_LOGSOURCE)
+		return;
+
+	 if (!dirEntry.multicastService().endsWith(SYNTRO_LOG_SERVICE_TAG))
+		return;
+
+	QString entry = dirEntry.appName() + SYNTRO_SERVICEPATH_SEP + dirEntry.multicastService();
+
+	int i = findEntry(entry);
+
+	if (i >= 0) {
+		m_sources[i].m_active = true;
 	}
-		
-	end = dirEntry.indexOf(appNameEnd);
-	if (end == -1) {
-		logError("Failed to find end of app name in dir entry");
-		return;
-	}
-	QString appName = dirEntry.mid(start + 5, end - (start + 5));
-		
-	start = dirEntry.indexOf(msvStart);
-	if (start == -1)
-		return;
+	else {
+		int port = clientAddService(entry, SERVICETYPE_MULTICAST, false, true);
 
-	while (start >= 0) {
-		end = dirEntry.indexOf(msvEnd);
-
-		QString entry = appName + SYNTRO_SERVICEPATH_SEP + dirEntry.mid(start + 5, end - (start + 5));
-
-		if (entry.endsWith(SYNTRO_LOG_SERVICE_TAG)) {
-			int i = findEntry(entry);
-		
-			if (i >= 0) {
-				m_sources[i].m_active = true;
-			} else {
-				int port = clientAddService(entry, SERVICETYPE_MULTICAST, false, true);
-
-				if (port >= 0) {
-                    logLocal(SYNTRO_LOG_INFO, QString("New client %1").arg(entry));
-					m_sources.append(LogStreamEntry(entry, true, port));
-				}
-			}
+		if (port >= 0) {
+			logLocal(SYNTRO_LOG_INFO, QString("New client %1").arg(entry));
+			m_sources.append(LogStreamEntry(entry, true, port));
 		}
-
-		dirEntry = dirEntry.right(dirEntry.length() - (end + 6));
-		start = dirEntry.indexOf("<MSV>");
 	}
 }
 

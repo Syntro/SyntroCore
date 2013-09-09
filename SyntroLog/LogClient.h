@@ -46,12 +46,12 @@ protected:
 	void appClientInit();
 	void appClientReceiveMulticast(int servicePort, SYNTRO_EHEAD *multiCast, int len);
 	void appClientBackground();
-	void appClientReceiveDirectory(SYNTRO_DIRECTORY_RESPONSE *directory, int length);
+	void appClientReceiveDirectory(QStringList dirList);
 	void appClientConnected();
 	void appClientClosed();
 
 private:
-	void handleDirEntry(QString dirEntry);
+	void handleDirEntry(QString item);
 	int findEntry(QString name);
     void logLocal(QString logLevel, QString msg);
 

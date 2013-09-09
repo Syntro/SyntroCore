@@ -11,7 +11,8 @@ HEADERS += Endpoint.h \
     SyntroClock.h \
     LogWrapper.h \
     Logger.h \
-    SyntroComponentData.h
+    SyntroComponentData.h \
+    DirectoryEntry.h
 
 SOURCES += Endpoint.cpp \
     Hello.cpp \
@@ -22,4 +23,5 @@ SOURCES += Endpoint.cpp \
     SyntroClock.cpp \
     LogWrapper.cpp \
     Logger.cpp \
-    SyntroComponentData.cpp
+    SyntroComponentData.cpp \
+    DirectoryEntry.cpp

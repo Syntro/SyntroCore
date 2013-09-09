@@ -308,7 +308,7 @@ protected:
 
 //	appClientReceiveDirectory is able to process a directory response
 
-	virtual void appClientReceiveDirectory(SYNTRO_DIRECTORY_RESPONSE *directory, int length);
+	virtual void appClientReceiveDirectory(QStringList directory);
 
 //	appClientBackground is called every background interval timer tick and
 //	can be used for any background processing that may be necessary
@@ -503,6 +503,7 @@ private:
 	void sendRemoteServiceLookup(SYNTRO_SERVICE_INFO *remoteService); // send a lookup request message
 	void processServiceActivate(SYNTRO_SERVICE_ACTIVATE *serviceActivate);// handles a service activate request
 	void processLookupResponse(SYNTRO_SERVICE_LOOKUP *serviceLookup);// handles the response to a service lookup
+	void processDirectoryResponse(SYNTRO_DIRECTORY_RESPONSE *directoryResponse, int len);
 
 	void processMulticast(SYNTRO_EHEAD *ehead, int len, int destPort); // process a multicast message
 	void processMulticastAck(SYNTRO_EHEAD *ehead, int len, int destPort);// process a multicast ack message
