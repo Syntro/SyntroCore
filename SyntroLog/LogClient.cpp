@@ -114,6 +114,8 @@ void LogClient::appClientReceiveDirectory(QStringList dirList)
 
 void LogClient::handleDirEntry(QString item)
 {
+	QStringList services;
+
 	DirectoryEntry dirEntry(item);
 
 	if (!dirEntry.isValid())
@@ -122,22 +124,26 @@ void LogClient::handleDirEntry(QString item)
 	if (dirEntry.componentType() != COMPTYPE_LOGSOURCE)
 		return;
 
-	 if (!dirEntry.multicastService().endsWith(SYNTRO_LOG_SERVICE_TAG))
-		return;
+	services = dirEntry.multicastServices();
 
-	QString entry = dirEntry.appName() + SYNTRO_SERVICEPATH_SEP + dirEntry.multicastService();
+	for (int j = 0; j < services.count(); j++) {
+		if (!services.at(j).endsWith(SYNTRO_LOG_SERVICE_TAG))
+			continue;
 
-	int i = findEntry(entry);
+		QString entry = dirEntry.appName() + SYNTRO_SERVICEPATH_SEP + services.at(j);
 
-	if (i >= 0) {
-		m_sources[i].m_active = true;
-	}
-	else {
-		int port = clientAddService(entry, SERVICETYPE_MULTICAST, false, true);
+		int i = findEntry(entry);
 
-		if (port >= 0) {
-			logLocal(SYNTRO_LOG_INFO, QString("New client %1").arg(entry));
-			m_sources.append(LogStreamEntry(entry, true, port));
+		if (i >= 0) {
+			m_sources[i].m_active = true;
+		}
+		else {
+			int port = clientAddService(entry, SERVICETYPE_MULTICAST, false, true);
+
+			if (port >= 0) {
+				logLocal(SYNTRO_LOG_INFO, QString("New client %1").arg(entry));
+				m_sources.append(LogStreamEntry(entry, true, port));
+			}
 		}
 	}
 }

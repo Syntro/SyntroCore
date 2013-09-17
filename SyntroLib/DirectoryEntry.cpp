@@ -17,6 +17,8 @@
 //  along with Syntro.  If not, see <http://www.gnu.org/licenses/>.
 //
 
+#include <qstringlist.h>
+
 #include "SyntroDefs.h"
 #include "DirectoryEntry.h"
 
@@ -31,8 +33,8 @@ void DirectoryEntry::setLine(QString dirLine)
 	m_uid.clear();
 	m_name.clear();
 	m_type.clear();
-	m_multicastService.clear();
-	m_e2eService.clear();
+	m_multicastServices.clear();
+	m_e2eServices.clear();
 
 	m_raw = dirLine;
 
@@ -62,14 +64,14 @@ QString DirectoryEntry::componentType()
 	return m_type;
 }
 
-QString DirectoryEntry::multicastService()
+QStringList DirectoryEntry::multicastServices()
 {
-	return m_multicastService;
+	return m_multicastServices;
 }
 
-QString DirectoryEntry::e2eService()
+QStringList DirectoryEntry::e2eServices()
 {
-	return m_e2eService;
+	return m_e2eServices;
 }
 
 void DirectoryEntry::parseLine()
@@ -80,8 +82,8 @@ void DirectoryEntry::parseLine()
 	m_uid = element(DETAG_UID);
 	m_name = element(DETAG_APPNAME);
 	m_type = element(DETAG_COMPTYPE);
-	m_multicastService = element(DETAG_MSERVICE);
-	m_e2eService = element(DETAG_ESERVICE);
+	m_multicastServices = elements(DETAG_MSERVICE);
+	m_e2eServices = elements(DETAG_ESERVICE);
 }
 
 QString DirectoryEntry::element(QString name)
@@ -89,12 +91,37 @@ QString DirectoryEntry::element(QString name)
 	QString element;
 
 	QString start= QString("<%1>").arg(name);
-	
+	QString end = QString("</%1>").arg(name);
+
 	int i = m_raw.indexOf(start);
-	int j = m_raw.indexOf(QString("</%1>").arg(name));
+	int j = m_raw.indexOf(end);
 
 	if (i >= 0 && j > i + start.length())
 		element = m_raw.mid(i + start.length(), j - (i + start.length()));
 
 	return element;
+}
+
+QStringList DirectoryEntry::elements(QString name)
+{
+	QStringList elements;
+	int pos = 0;
+
+	QString start = QString("<%1>").arg(name);
+	QString end = QString("</%1>").arg(name);
+
+	int i = m_raw.indexOf(start, pos);
+
+	while (i >= 0) {
+		int j = m_raw.indexOf(end, pos);
+
+		if (j > i + start.length())
+			elements << m_raw.mid(i + start.length(), j - (i + start.length()));
+
+		pos = j + end.length();
+
+		i = m_raw.indexOf(start, pos);
+	}
+
+	return elements;
 }

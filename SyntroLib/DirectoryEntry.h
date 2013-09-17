@@ -35,19 +35,20 @@ public:
 	QString uid();
 	QString appName();
 	QString componentType();
-	QString multicastService();
-	QString e2eService();
+	QStringList multicastServices();
+	QStringList e2eServices();
 
 private:
 	void parseLine();
 	QString element(QString name);
+	QStringList elements(QString name);
 
 	QString m_raw;
 	QString m_uid;
 	QString m_name;
 	QString m_type;
-	QString m_multicastService;
-	QString m_e2eService;
+	QStringList m_multicastServices;
+	QStringList m_e2eServices;
 };
 
 #endif // DIRECTORYENTRY_H

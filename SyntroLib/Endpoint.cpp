@@ -1794,8 +1794,10 @@ void Endpoint::processDirectoryResponse(SYNTRO_DIRECTORY_RESPONSE *directoryResp
 
 	QList<QByteArray> list = data.split(0);
 
-	for (int i = 0; i < list.count(); i++)
-		dirList << list.at(i);
+	for (int i = 0; i < list.count(); i++) {
+		if (list.at(i).length() > 0)
+			dirList << list.at(i);
+	}
 
 	appClientReceiveDirectory(dirList);
 }
