@@ -44,6 +44,7 @@ typedef enum
 	SYNTRO_RECORD_TYPE_AVMUX_MP4,							// MP4 mux
 	SYNTRO_RECORD_TYPE_AVMUX_OGG,							// Ogg mux
 	SYNTRO_RECORD_TYPE_AVMUX_WEBM,							// Webm mux
+	SYNTRO_RECORD_TYPE_AVMUX_RTP,							// RTP interleave format
 
 	// This entry marks the end of the enum
 
@@ -62,6 +63,8 @@ typedef enum
 	SYNTRO_RECORD_TYPE_VIDEO_H264,							// H264 compression
 	SYNTRO_RECORD_TYPE_VIDEO_VP8,							// VP8 compression
 	SYNTRO_RECORD_TYPE_VIDEO_THEORA,						// theora compression
+	SYNTRO_RECORD_TYPE_VIDEO_RTPMPEG4,						// mpeg 4 over RTP
+	SYNTRO_RECORD_TYPE_VIDEO_RTPCAPS,						// RTP caps message
 
 	// This entry marks the end of the enum
 
@@ -78,6 +81,8 @@ typedef enum
 	SYNTRO_RECORD_TYPE_AUDIO_AC3,							// AC3 compression
 	SYNTRO_RECORD_TYPE_AUDIO_AAC,							// AAC compression
 	SYNTRO_RECORD_TYPE_AUDIO_VORBIS,						// Vorbis compression
+	SYNTRO_RECORD_TYPE_AUDIO_RTPAAC,						// aac over RTP
+	SYNTRO_RECORD_TYPE_AUDIO_RTPCAPS,						// RTP caps message
 
 	// This entry marks the end of the enum
 
