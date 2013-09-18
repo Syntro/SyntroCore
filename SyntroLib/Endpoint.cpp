@@ -2511,8 +2511,6 @@ bool Endpoint::CFSQuery(int serviceEP, int handle, QString sql)
 	char *pData = reinterpret_cast<char *>(requestHdr + 1);
 	strcpy(pData, qPrintable(sql));
 
-	qDebug() << "Endpoint::CFSQuery() sending request";
-
 	int totalLength = sizeof(SYNTRO_EHEAD) + sizeof(SYNTRO_CFSHEADER) + (int)strlen(pData) + 1;
 	syntroSendMessage(SYNTROMSG_E2E, (SYNTRO_MESSAGE *)requestE2E, totalLength, SYNTROCFS_E2E_PRIORITY);
 
@@ -2555,8 +2553,6 @@ bool Endpoint::CFSCancelQuery(int serviceEP, int handle)
 	SyntroUtils::convertIntToUC2(SYNTROCFS_TYPE_CANCEL_QUERY_REQ, requestHdr->cfsType);
 	SyntroUtils::convertIntToUC2(scf->clientHandle, requestHdr->cfsClientHandle);
 	SyntroUtils::convertIntToUC2(scf->storeHandle, requestHdr->cfsStoreHandle);
-
-	qDebug() << "Endpoint::CFSCancelQuery() sending request";
 
 	int totalLength = sizeof(SYNTRO_EHEAD) + sizeof(SYNTRO_CFSHEADER);
 	syntroSendMessage(SYNTROMSG_E2E, (SYNTRO_MESSAGE *)requestE2E, totalLength, SYNTROCFS_E2E_PRIORITY);
@@ -2602,8 +2598,6 @@ bool Endpoint::CFSFetchQuery(int serviceEP, int handle, int maxRows, int resultT
 	SyntroUtils::convertIntToUC2(scf->storeHandle, requestHdr->cfsStoreHandle);
 	SyntroUtils::convertIntToUC4(maxRows, requestHdr->cfsIndex);
 	SyntroUtils::convertIntToUC2(resultType, requestHdr->cfsParam);
-
-	qDebug() << "Endpoint::CFSFetchQuery() sending request";
 
 	int totalLength = sizeof(SYNTRO_EHEAD) + sizeof(SYNTRO_CFSHEADER);
 	syntroSendMessage(SYNTROMSG_E2E, (SYNTRO_MESSAGE *)requestE2E, totalLength, SYNTROCFS_E2E_PRIORITY);
