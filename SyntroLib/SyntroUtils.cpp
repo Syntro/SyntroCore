@@ -330,10 +330,37 @@ void SyntroUtils::swapUID(SYNTRO_UID *a, SYNTRO_UID *b)
 	memcpy(b, &temp, sizeof(SYNTRO_UID));
 }
 
-//	UC2 and UC4 Conversion routines
+//	UC2, UC4 and UC8 Conversion routines
 //
 //	*** Note: 32 bit int assumed ***
 //
+
+/*!
+	Returns the int64 value of the SYNTRO_UC8 variable \a uc8.
+*/
+
+qint64 SyntroUtils::convertUC8ToInt64(SYNTRO_UC8 uc8)
+{
+	return ((qint64)uc8[0] << 56) | ((qint64)uc8[1] << 48) | ((qint64)uc8[2] << 40) | ((qint64)uc8[3] << 32) |
+		((qint64)uc8[4] << 24) | ((qint64)uc8[5] << 16) | ((qint64)uc8[6] << 8) | ((qint64)uc8[0] << 0);
+}
+
+/*!
+	Converts an int64 value in \a val into a SYNTRO_UC8 variable \a uc8.
+*/
+
+void SyntroUtils::convertInt64ToUC8(qint64 val, SYNTRO_UC8 uc8)
+{
+	uc8[7] = val & 0xff;
+	uc8[6] = (val >> 8) & 0xff;
+	uc8[5] = (val >> 16) & 0xff;
+	uc8[4] = (val >> 24) & 0xff;
+	uc8[3] = (val >> 32) & 0xff;
+	uc8[2] = (val >> 40) & 0xff;
+	uc8[1] = (val >> 48) & 0xff;
+	uc8[0] = (val >> 56) & 0xff;
+}
+
 
 /*!
 	Returns the integer value of the SYNTRO_UC4 variable \a uc4.

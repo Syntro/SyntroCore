@@ -198,6 +198,8 @@ public:
 
 //	Syntro type conversion functions
 
+    static qint64 convertUC8ToInt64(SYNTRO_UC8 uc8);
+    static void convertInt64ToUC8(qint64 val, SYNTRO_UC8 uc8);
     static int convertUC4ToInt(SYNTRO_UC4 uc4);
     static void convertIntToUC4(int val, SYNTRO_UC4 uc4);
     static int convertUC2ToInt(SYNTRO_UC2 uc2);

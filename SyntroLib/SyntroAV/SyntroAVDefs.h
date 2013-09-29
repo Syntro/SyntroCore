@@ -27,11 +27,9 @@
 typedef enum
 {
     SYNTRO_RECORDHEADER_PARAM_NOOP = 0,                     // indicates a filler record
-    SYNTRO_RECORDHEADER_PARAM_NORMAL_START,                 // indicates a start normal record
+	SYNTRO_RECORDHEADER_PARAM_REFRESH,						// indicates a refresh MJPEG frame
     SYNTRO_RECORDHEADER_PARAM_NORMAL,                       // indicates a normal record
-    SYNTRO_RECORDHEADER_PARAM_PREROLL_START,                // indicates start preroll frame
     SYNTRO_RECORDHEADER_PARAM_PREROLL,                      // indicates a preroll frame
-    SYNTRO_RECORDHEADER_PARAM_POSTROLL_START,               // indicates a start postroll frame
     SYNTRO_RECORDHEADER_PARAM_POSTROLL,                     // indicates a postroll frame
  } SYNTROAV_RECORDHEADER_PARAM;
 
@@ -40,11 +38,12 @@ typedef enum
 typedef enum
 {
 	SYNTRO_RECORD_TYPE_AVMUX_UNKNOWN = -1,					// unknown mux
-	SYNTRO_RECORD_TYPE_AVMUX_NONE,							// no muxing
+	SYNTRO_RECORD_TYPE_AVMUX_MJPPCM,						// MJPEG + PCM interleaved
 	SYNTRO_RECORD_TYPE_AVMUX_MP4,							// MP4 mux
 	SYNTRO_RECORD_TYPE_AVMUX_OGG,							// Ogg mux
 	SYNTRO_RECORD_TYPE_AVMUX_WEBM,							// Webm mux
 	SYNTRO_RECORD_TYPE_AVMUX_RTP,							// RTP interleave format
+	SYNTRO_RECORD_TYPE_AVMUX_RTPCAPS,						// RTP caps
 
 	// This entry marks the end of the enum
 

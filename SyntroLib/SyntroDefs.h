@@ -78,11 +78,12 @@ typedef unsigned char SYNTRO_IPADDR[SYNTRO_IPADDR_LEN] ;	// a convenient type fo
 
 //-------------------------------------------------------------------------------------------
 //	Some general purpose typedefs - used esepcially for transferring values greater than
-//	8 bits across the network. Assumes processor has 32 bit ints!
+//	8 bits across the network. 
 //
 
-typedef	unsigned char SYNTRO_UC2[2];						// an array of two unsigned chars
-typedef	unsigned char SYNTRO_UC4[4];						// an array of four unsigned chars
+typedef	unsigned char SYNTRO_UC2[2];						// an array of two unsigned chars (short)
+typedef	unsigned char SYNTRO_UC4[4];						// an array of four unsigned chars (int)
+typedef	unsigned char SYNTRO_UC8[8];						// an array of eight unsigned chars (int64)
 
 //-------------------------------------------------------------------------------------------
 //	Some useful defines for MAC addresses
