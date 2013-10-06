@@ -49,6 +49,10 @@ bool logCreate()
 	else if (logKeep > 20)
 		logKeep = 20;
 
+	int maxSize = settings->value(SYNTRO_PARAMS_LOG_MAXDISKSIZE, -1).toInt();
+	if (maxSize < 0)
+		maxSize = SYNTRO_DEFAULT_MAX_DISK_LOG_SIZE;
+
 	QString level = settings->value(SYNTRO_PARAMS_LOGLEVEL).toString().toLower();
 
 	if (level == SYNTRO_LOG_ERROR)
@@ -69,10 +73,11 @@ bool logCreate()
 	settings->setValue(SYNTRO_PARAMS_DISK_LOG, diskLog);
 	settings->setValue(SYNTRO_PARAMS_NET_LOG, netLog);
 	settings->setValue(SYNTRO_PARAMS_LOG_KEEP, logKeep);
+	settings->setValue(SYNTRO_PARAMS_LOG_MAXDISKSIZE, maxSize);
 
 	settings->endGroup();
 
-	logSingleton = new Logger(appName, logLevel, diskLog, netLog, logKeep);
+	logSingleton = new Logger(appName, logLevel, diskLog, netLog, logKeep, maxSize);
 	logSingleton->setHeartbeatTimers(
 			settings->value(SYNTRO_PARAMS_LOG_HBINTERVAL, SYNTRO_LOG_HEARTBEAT_INTERVAL).toInt(),
 			settings->value(SYNTRO_PARAMS_LOG_HBTIMEOUT, SYNTRO_LOG_HEARTBEAT_TIMEOUT).toInt());

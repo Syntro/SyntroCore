@@ -52,7 +52,7 @@ public:
 class Logger : public Endpoint
 {
 public:
-	Logger(const QString& appName, int level, bool diskLog, bool netLog, int logKeep);
+	Logger(const QString& appName, int level, bool diskLog, bool netLog, int logKeep, int maxSize);
 
 	~Logger();
 
@@ -72,6 +72,7 @@ private:
 	bool m_diskLog;
 	bool m_netLog;
 	int m_logKeep;
+	qint64 m_maxDiskSize;
 	QFile m_file;
 	QTextStream m_stream;
 	QWaitCondition m_stopCondition;

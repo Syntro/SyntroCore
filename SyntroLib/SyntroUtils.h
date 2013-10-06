@@ -92,11 +92,13 @@ class SyntroClockObject;
 #define SYNTRO_PARAMS_DISK_LOG			"diskLog"			// implement local disk logging, true|false, default true
 #define SYNTRO_PARAMS_NET_LOG			"netLog"			// implement network logging, true|false, default true
 #define SYNTRO_PARAMS_LOG_KEEP			"logKeep"			// the number of log files to keep, default is SYNTRO_DEFAULT_LOG_KEEP
+#define SYNTRO_PARAMS_LOG_MAXDISKSIZE 	"maxDiskSize"		// the max size in kbytes any log file can grow to or else cause a rotation
 
 #define	SYNTRO_PARAMS_TRUE				"true"				// for true/false settings
 #define	SYNTRO_PARAMS_FALSE				"false"
 
-#define SYNTRO_DEFAULT_LOG_KEEP 0
+#define SYNTRO_DEFAULT_LOG_KEEP 1							// default o keeping one log file
+#define SYNTRO_DEFAULT_MAX_DISK_LOG_SIZE 1000				// default is to rotate after 1Mb of log
 
 //	Syntro message log level defs
 

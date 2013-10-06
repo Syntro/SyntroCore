@@ -27,7 +27,7 @@
 
 #define MAX_STREAM_QUEUE_MESSAGES 64
 
-Logger::Logger(const QString& appName, int level, bool diskLog, bool netLog, int logKeep)
+Logger::Logger(const QString& appName, int level, bool diskLog, bool netLog, int logKeep, int maxSize)
 	: Endpoint(SYNTROLOG_BGND_INTERVAL, COMPTYPE_LOGSOURCE)
 
 {
@@ -56,6 +56,7 @@ Logger::Logger(const QString& appName, int level, bool diskLog, bool netLog, int
 		if (level == SYNTRO_LOG_LEVEL_DEBUG)
 			logWrite("DEBUG", QString("Qt  runtime %1  build %2").arg(qVersion()).arg(QT_VERSION_STR));
 	}
+	m_maxDiskSize = maxSize * 1024;
 }
 
 Logger::~Logger()
@@ -249,8 +250,13 @@ void Logger::diskFlush()
 		m_stream << next.m_level << " " << next.m_timeStamp << " " << next.m_msg << endl;
 #endif
     }
+	if (m_maxDiskSize > 0) {
+		QFileInfo fi(m_logName);
+		if (fi.size() >= m_maxDiskSize) {
+			m_file.close();										// this will cause a rotation
+		}
+	}
 }
-
 
 QQueue<LogMessage>* Logger::streamQueue()
 {
