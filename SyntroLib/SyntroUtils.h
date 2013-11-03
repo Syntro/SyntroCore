@@ -169,7 +169,7 @@ public:
 //	Multimedia stream functions
 
 	static void avmuxHeaderInit(SYNTRO_RECORD_AVMUX *avmuxHead, SYNTRO_AVPARAMS *avParams,
-		int param, int muxSize, int videoSize,int audioSize);
+		int param, int recordIndex, int muxSize, int videoSize,int audioSize);
 	static void avmuxHeaderToAVParams(SYNTRO_RECORD_AVMUX *avmuxHead, SYNTRO_AVPARAMS *avParams);
 	static void videoHeaderInit(SYNTRO_RECORD_VIDEO *videoHead, int width, int height, int size);
 
@@ -209,15 +209,10 @@ public:
     static void convertIntToUC2(int val, SYNTRO_UC2 uc2);
     static void copyUC2(SYNTRO_UC2 dst, SYNTRO_UC2 src);
 
-//	Timestamp functions
+//	Syntro timestamp functions
 
-    static QString timestampToString(SYNTRO_TIMESTAMP *timestamp);	// get a display version of a Syntro timestamp
-    static QString timestampToString(QDateTime *timestamp);// get a display version of a timestamp
-    static void setSyntroTimestamp(SYNTRO_TIMESTAMP *timestamp);	// sets a timestamp value from system time
-    static void getSyntroTimestamp(SYNTRO_TIMESTAMP *timestamp, QDateTime *systemTime); // converts a Syntro timestamp to SYSTEMTIME
-    static QString timestampToDateString(SYNTRO_TIMESTAMP *timestamp);
-    static QString timestampToTimeString(SYNTRO_TIMESTAMP *timestamp);
-    static QDateTime syntroTimestampToQDateTime(SYNTRO_TIMESTAMP *timestamp);
+	static void setTimestamp(SYNTRO_UC8 timestamp);
+	static qint64 getTimestamp(SYNTRO_UC8 timestamp);
 
 //	Information for the network address in use
 

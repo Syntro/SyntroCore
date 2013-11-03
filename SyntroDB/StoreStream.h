@@ -30,7 +30,7 @@
 enum StoreFileFormat { structuredFileFormat, rawFileFormat };
 
 enum StoreRotationPolicy { timeRotation, sizeRotation, anyRotation };
-enum StoreRotationTimeUnits { rotationMinuteUnits, rotationHourUnits };  
+enum StoreRotationTimeUnits { rotationMinuteUnits, rotationHourUnits, rotationDayUnits };  
 
 enum StoreDeletionPolicy { timeDeletion, countDeletion, anyDeletion };
 enum StoreDeletionTimeUnits { deletionHourUnits, deletionDayUnits };  
@@ -85,6 +85,7 @@ private:
 	bool checkFolderPermissions();
 
 	void checkDeletion(QDateTime now);
+	void setCurrentStart(QDateTime now);
 
 	bool m_folderWritable;
 	QString m_streamName;
@@ -110,6 +111,9 @@ private:
 	QString m_currentIndexFileFullPath;
 	qint32 m_rotationSecs;
 	qint32 m_deletionSecs;
+
+	qint32 m_daysToRotation;
+	QDate m_today;
 
 	QMutex m_fileMutex;
 	QDateTime m_current;

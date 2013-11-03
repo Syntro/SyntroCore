@@ -79,6 +79,9 @@
     <ClInclude Include="DirectoryEntry.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="SyntroClock.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <CustomBuild Include="SyntroSocket.h">
@@ -88,9 +91,6 @@
       <Filter>Header Files</Filter>
     </CustomBuild>
     <CustomBuild Include="Hello.h">
-      <Filter>Header Files</Filter>
-    </CustomBuild>
-    <CustomBuild Include="SyntroClock.h">
       <Filter>Header Files</Filter>
     </CustomBuild>
     <CustomBuild Include="Endpoint.h">
@@ -152,9 +152,6 @@
     <ClCompile Include="GeneratedFiles\StaticRelease\moc_Hello.cpp">
       <Filter>Generated Files\StaticRelease</Filter>
     </ClCompile>
-    <ClCompile Include="SyntroClock.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="GeneratedFiles\StaticDebug\moc_SyntroClock.cpp">
       <Filter>Generated Files\StaticDebug</Filter>
     </ClCompile>
@@ -177,6 +174,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="DirectoryEntry.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="SyntroClock.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

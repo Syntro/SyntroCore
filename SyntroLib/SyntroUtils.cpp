@@ -92,8 +92,10 @@ const char *SyntroUtils::syntroLibVersion()
 void SyntroUtils::syntroAppInit()
 {
 	m_logTag = "Utils";
+#ifdef SYNTROCLOCK_ZEROBASED
 	m_syntroClockGen = new SyntroClockObject();
 	m_syntroClockGen->start();
+#endif
 	getMyIPAddress();
 	logCreate();
 }
@@ -107,12 +109,14 @@ void SyntroUtils::syntroAppInit()
 void SyntroUtils::syntroAppExit()
 {
 	logDestroy();
+#ifdef SYNTROCLOCK_ZEROBASED
 	if (m_syntroClockGen) {
 		m_syntroClockGen->m_run = false;
 		m_syntroClockGen->wait(200);							// should never take more than this
 		delete m_syntroClockGen;
 		m_syntroClockGen = NULL;
 	}
+#endif
 }
 
 /*!
@@ -342,7 +346,7 @@ void SyntroUtils::swapUID(SYNTRO_UID *a, SYNTRO_UID *b)
 qint64 SyntroUtils::convertUC8ToInt64(SYNTRO_UC8 uc8)
 {
 	return ((qint64)uc8[0] << 56) | ((qint64)uc8[1] << 48) | ((qint64)uc8[2] << 40) | ((qint64)uc8[3] << 32) |
-		((qint64)uc8[4] << 24) | ((qint64)uc8[5] << 16) | ((qint64)uc8[6] << 8) | ((qint64)uc8[0] << 0);
+		((qint64)uc8[4] << 24) | ((qint64)uc8[5] << 16) | ((qint64)uc8[6] << 8) | ((qint64)uc8[7] << 0);
 }
 
 /*!
@@ -834,168 +838,54 @@ void SyntroUtils::getMyIPAddress()
 }
 
 /*!
-	Fills a SYNTRO_TIMESTAMP structure \a timestamp with the current date and time.
+	Sets the current mS resolution timestamp into \a timestamp.
 */
 
-void SyntroUtils::setSyntroTimestamp(SYNTRO_TIMESTAMP *timestamp)
+void SyntroUtils::setTimestamp(SYNTRO_UC8 timestamp)
 {
-	QDateTime	tm = QDateTime::currentDateTime();
-	QDate tmd = tm.date();
-	QTime tmt = tm.time();
-
-	convertIntToUC2(tmd.year(), timestamp->year);
-	convertIntToUC2(tmd.month(), timestamp->month);
-	convertIntToUC2(tmd.dayOfWeek(), timestamp->dayOfWeek);
-	convertIntToUC2(tmd.day(), timestamp->day);
-	convertIntToUC2(tmt.hour(), timestamp->hour);
-	convertIntToUC2(tmt.minute(), timestamp->minute);
-	convertIntToUC2(tmt.second(), timestamp->second);
-	convertIntToUC2(tmt.msec(), timestamp->milliseconds);
+	convertInt64ToUC8(QDateTime::currentMSecsSinceEpoch(), timestamp);
 }
 
 /*!
-	Returns a QString containing a string form of the SYNTRO_TIMESTAMP \a timestamp.
-	
-	The string is in the form "year/month/day hour:min:sec.millisec"
+	Returns the timestamp in \a timestamp as a qint64.
 */
 
-QString SyntroUtils::timestampToString(SYNTRO_TIMESTAMP *timestamp)
+qint64 SyntroUtils::getTimestamp(SYNTRO_UC8 timestamp)
 {
-	QString str;
-
-	str.sprintf("%d/%02d/%02d %02d:%02d:%02d.%03d", 
-		convertUC2ToInt(timestamp->year),
-		convertUC2ToInt(timestamp->month),
-		convertUC2ToInt(timestamp->day),
-		convertUC2ToInt(timestamp->hour),
-		convertUC2ToInt(timestamp->minute),
-		convertUC2ToInt(timestamp->second),
-		convertUC2ToInt(timestamp->milliseconds));
-	return str;
-}
-
-/*!
-	Returns a QString containing a string form of the QDateTime \a timestamp.
-
-	The string is in the form "year/month/day hour:min:sec.millisec"
-
-*/
-
-
-QString SyntroUtils::timestampToString(QDateTime *timestamp)
-{
-	QString str;
-
-	QDate tmd = timestamp->date();
-	QTime tmt = timestamp->time();
-
-	str.sprintf("%d/%02d/%02d %02d:%02d:%02d.%03d", 
-		tmd.year(),
-		tmd.month(),
-		tmd.day(),
-		tmt.hour(),
-		tmt.minute(),
-		tmt.second(),
-		tmt.msec());
-	return str;
-}
-
-/*!
-	Returns a QString containing a string form of the SYNTRO_TIMESTAMP \a timestamp.
-	
-	The string is in the form "year/month/day"
-*/
-
-QString SyntroUtils::timestampToDateString(SYNTRO_TIMESTAMP *timestamp)
-{
-	QString str;
-
-	str.sprintf("%d/%02d/%02d", 
-			convertUC2ToInt(timestamp->year),
-			convertUC2ToInt(timestamp->month),
-			convertUC2ToInt(timestamp->day));
-
-	return str;
-}
-
-/*!
-	Returns a QString containing a string form of the SYNTRO_TIMESTAMP \a timestamp.
-	
-	The string is in the form "hour:min:sec.millisec"
-*/
-
-QString SyntroUtils::timestampToTimeString(SYNTRO_TIMESTAMP *timestamp)
-{
-	QString str;
-
-	str.sprintf("%02d:%02d:%02d.%03d", 
-			convertUC2ToInt(timestamp->hour),
-			convertUC2ToInt(timestamp->minute),
-			convertUC2ToInt(timestamp->second),
-			convertUC2ToInt(timestamp->milliseconds));
-
-	return str;
-}
-
-/*!
-	Converts a SYNTRO_TIMESTAMP \a timestamp into a QDateTime \a time.
-*/
-
-void SyntroUtils::getSyntroTimestamp(SYNTRO_TIMESTAMP *timestamp, QDateTime *time)
-{
-	time->setTime(QTime(convertUC2ToUInt(timestamp->hour), convertUC2ToUInt(timestamp->minute), 
-			convertUC2ToUInt(timestamp->second), convertUC2ToUInt(timestamp->milliseconds)));
-
-	time->setDate(QDate(convertUC2ToUInt(timestamp->year), convertUC2ToUInt(timestamp->month),
-		convertUC2ToUInt(timestamp->milliseconds)));
-}
-
-/*!
-	Returns a QDateTime constructed from the SYNTRO_TIMESTAMP \a timestamp.
-*/
-
-QDateTime SyntroUtils::syntroTimestampToQDateTime(SYNTRO_TIMESTAMP *timestamp)
-{
-	QDate d(convertUC2ToInt(timestamp->year), convertUC2ToInt(timestamp->month), 
-			convertUC2ToInt(timestamp->day));
-
-	QTime t(convertUC2ToInt(timestamp->hour), convertUC2ToInt(timestamp->minute), 
-			convertUC2ToInt(timestamp->second), convertUC2ToInt(timestamp->milliseconds));
-
-	return QDateTime(d, t);
+	return convertUC8ToInt64(timestamp);
 }
 
 //	Multimedia functions
 
 void SyntroUtils::avmuxHeaderInit(SYNTRO_RECORD_AVMUX *avmuxHead, SYNTRO_AVPARAMS *avParams,
-		int param, int muxSize, int videoSize,int audioSize)
+		int param, int recordIndex, int muxSize, int videoSize,int audioSize)
 {
 	memset(avmuxHead, 0, sizeof(SYNTRO_RECORD_AVMUX));
 
 	// do the generic record header stuff
 
-	SyntroUtils::convertIntToUC2(SYNTRO_RECORD_TYPE_AVMUX, avmuxHead->recordHeader.type);
-	SyntroUtils::convertIntToUC2(avParams->avmuxSubtype, avmuxHead->recordHeader.subType);
-	SyntroUtils::convertIntToUC2(sizeof(SYNTRO_RECORD_AVMUX), avmuxHead->recordHeader.headerLength);
-	SyntroUtils::convertIntToUC2(param, avmuxHead->recordHeader.param);
-	SyntroUtils::setSyntroTimestamp(&(avmuxHead->recordHeader.timestamp));
+	convertIntToUC2(SYNTRO_RECORD_TYPE_AVMUX, avmuxHead->recordHeader.type);
+	convertIntToUC2(avParams->avmuxSubtype, avmuxHead->recordHeader.subType);
+	convertIntToUC2(sizeof(SYNTRO_RECORD_AVMUX), avmuxHead->recordHeader.headerLength);
+	convertIntToUC2(param, avmuxHead->recordHeader.param);
+	convertIntToUC4(recordIndex, avmuxHead->recordHeader.recordIndex);
+	setTimestamp(avmuxHead->recordHeader.timestamp);
 
 	// and the rest
 
 	avmuxHead->videoSubtype = avParams->videoSubtype;
 	avmuxHead->audioSubtype = avParams->audioSubtype;
-	SyntroUtils::convertIntToUC4(muxSize, avmuxHead->muxSize);
-	SyntroUtils::convertIntToUC4(videoSize, avmuxHead->videoSize);
-	SyntroUtils::convertIntToUC4(audioSize, avmuxHead->audioSize);
+	convertIntToUC4(muxSize, avmuxHead->muxSize);
+	convertIntToUC4(videoSize, avmuxHead->videoSize);
+	convertIntToUC4(audioSize, avmuxHead->audioSize);
 
-	SyntroUtils::convertIntToUC2(avParams->videoWidth, avmuxHead->videoWidth);
-	SyntroUtils::convertIntToUC2(avParams->videoHeight, avmuxHead->videoHeight);
-	SyntroUtils::convertIntToUC2(avParams->videoFramerate, avmuxHead->videoFramerate);
+	convertIntToUC2(avParams->videoWidth, avmuxHead->videoWidth);
+	convertIntToUC2(avParams->videoHeight, avmuxHead->videoHeight);
+	convertIntToUC2(avParams->videoFramerate, avmuxHead->videoFramerate);
 
-	SyntroUtils::convertIntToUC4(avParams->audioSampleRate, avmuxHead->audioSampleRate);
-	SyntroUtils::convertIntToUC2(avParams->audioChannels, avmuxHead->audioChannels);
-	SyntroUtils::convertIntToUC2(avParams->audioSampleSize, avmuxHead->audioSampleSize);
-
+	convertIntToUC4(avParams->audioSampleRate, avmuxHead->audioSampleRate);
+	convertIntToUC2(avParams->audioChannels, avmuxHead->audioChannels);
+	convertIntToUC2(avParams->audioSampleSize, avmuxHead->audioSampleSize);
 }
 
 void SyntroUtils::avmuxHeaderToAVParams(SYNTRO_RECORD_AVMUX *avmuxHead, SYNTRO_AVPARAMS *avParams)
@@ -1016,12 +906,12 @@ void SyntroUtils::avmuxHeaderToAVParams(SYNTRO_RECORD_AVMUX *avmuxHead, SYNTRO_A
 
 void SyntroUtils::videoHeaderInit(SYNTRO_RECORD_VIDEO *videoHead, int width, int height, int size)
 {
-	SyntroUtils::convertIntToUC2(SYNTRO_RECORD_TYPE_VIDEO, videoHead->recordHeader.type);
-	SyntroUtils::convertIntToUC2(SYNTRO_RECORD_TYPE_VIDEO_MJPEG, videoHead->recordHeader.subType);
-	SyntroUtils::convertIntToUC2(sizeof(SYNTRO_RECORD_VIDEO), videoHead->recordHeader.headerLength);
+	convertIntToUC2(SYNTRO_RECORD_TYPE_VIDEO, videoHead->recordHeader.type);
+	convertIntToUC2(SYNTRO_RECORD_TYPE_VIDEO_MJPEG, videoHead->recordHeader.subType);
+	convertIntToUC2(sizeof(SYNTRO_RECORD_VIDEO), videoHead->recordHeader.headerLength);
 
-	SyntroUtils::convertIntToUC2(width, videoHead->width);
-	SyntroUtils::convertIntToUC2(height, videoHead->height);
-	SyntroUtils::setSyntroTimestamp(&(videoHead->recordHeader.timestamp));
-	SyntroUtils::convertIntToUC4(size, videoHead->size);
+	convertIntToUC2(width, videoHead->width);
+	convertIntToUC2(height, videoHead->height);
+	setTimestamp(videoHead->recordHeader.timestamp);
+	convertIntToUC4(size, videoHead->size);
 }

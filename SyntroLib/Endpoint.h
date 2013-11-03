@@ -60,7 +60,7 @@ typedef struct
 	int	state;												// state of the service
 	SYNTRO_SERVICE_LOOKUP serviceLookup;					// the lookup structure
 
-	unsigned char lastReceivedSeqNo;						// sequence number on last received multicast message
+	int lastReceivedSeqNo;									// sequence number on last received multicast message
 	unsigned char nextSendSeqNo;							// the number to use on the next sent multicast message
 	unsigned char lastReceivedAck;							// the last ack received
 	qint64 lastSendTime;									// time the last multicast frame was sent

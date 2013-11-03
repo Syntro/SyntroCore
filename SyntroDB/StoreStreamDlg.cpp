@@ -64,10 +64,19 @@ void StoreStreamDlg::okButtonClick()
 			break;
 	}
 
-	if (m_rotationTimeUnits->currentIndex() == 1)
+	switch (m_rotationTimeUnits->currentIndex()) {
+	case 1:
 		settings->setValue(SYNTRODB_PARAMS_ROTATION_TIME_UNITS, SYNTRODB_PARAMS_ROTATION_TIME_UNITS_HOURS);
-	else	
+		break;
+
+	case 2:
+		settings->setValue(SYNTRODB_PARAMS_ROTATION_TIME_UNITS, SYNTRODB_PARAMS_ROTATION_TIME_UNITS_DAYS);
+		break;
+
+	default:
 		settings->setValue(SYNTRODB_PARAMS_ROTATION_TIME_UNITS, SYNTRODB_PARAMS_ROTATION_TIME_UNITS_MINUTES);
+		break;
+	}
 	
 	settings->setValue(SYNTRODB_PARAMS_ROTATION_TIME, m_rotationTime->text());
 	settings->setValue(SYNTRODB_PARAMS_ROTATION_SIZE, m_rotationSize->text());
@@ -138,10 +147,11 @@ void StoreStreamDlg::loadCurrentValues()
 	else
 		m_rotationPolicy->setCurrentIndex(2);
 
+	m_rotationTimeUnits->setCurrentIndex(0);
 	if (settings->value(SYNTRODB_PARAMS_ROTATION_TIME_UNITS).toString() == SYNTRODB_PARAMS_ROTATION_TIME_UNITS_HOURS)
 		m_rotationTimeUnits->setCurrentIndex(1);
-	else
-		m_rotationTimeUnits->setCurrentIndex(0);
+	if (settings->value(SYNTRODB_PARAMS_ROTATION_TIME_UNITS).toString() == SYNTRODB_PARAMS_ROTATION_TIME_UNITS_DAYS)
+		m_rotationTimeUnits->setCurrentIndex(2);
 
 	m_rotationTime->setText(settings->value(SYNTRODB_PARAMS_ROTATION_TIME).toString());
 	m_rotationSize->setText(settings->value(SYNTRODB_PARAMS_ROTATION_SIZE).toString());
@@ -209,6 +219,7 @@ void StoreStreamDlg::layoutWidgets()
 	m_rotationTimeUnits = new QComboBox;
 	m_rotationTimeUnits->addItem(SYNTRODB_PARAMS_ROTATION_TIME_UNITS_MINUTES);
 	m_rotationTimeUnits->addItem(SYNTRODB_PARAMS_ROTATION_TIME_UNITS_HOURS);
+	m_rotationTimeUnits->addItem(SYNTRODB_PARAMS_ROTATION_TIME_UNITS_DAYS);
 	m_rotationTimeUnits->setEditable(false);
 	QHBoxLayout *c = new QHBoxLayout;
 	c->addWidget(m_rotationTimeUnits);

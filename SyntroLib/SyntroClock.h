@@ -23,6 +23,7 @@
 #include "SyntroUtils.h"
 #include "qtimer.h"
 
+#ifdef SYNTROCLOCK_ZEROBASED
 class SyntroClockObject : public QThread
 {
 	Q_OBJECT
@@ -32,6 +33,7 @@ public:
 
 	bool m_run;
 };
+#endif
 
 //		SyntroClock() returns mS elapsed since the system reference
 

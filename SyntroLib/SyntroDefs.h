@@ -384,24 +384,6 @@ typedef struct
 															// the directory string follows
 } SYNTRO_DIRECTORY_RESPONSE;
 
-//-------------------------------------------------------------------------------------------
-//	SYNTRO_TIMESTAMP - data structure used to send timestamps
-//
-//	This is based on the Windows SYSTEMTIME but uses portable data types
-//
-
-typedef	struct
-{
-    SYNTRO_UC2 year;
-    SYNTRO_UC2 month;
-    SYNTRO_UC2 dayOfWeek;
-    SYNTRO_UC2 day;
-    SYNTRO_UC2 hour;
-    SYNTRO_UC2 minute;
-    SYNTRO_UC2 second;
-    SYNTRO_UC2 milliseconds;
-} SYNTRO_TIMESTAMP;
-
 //	Standard multicast stream names
 
 #define SYNTRO_STREAMNAME_AVMUX				"avmux"
@@ -442,7 +424,10 @@ typedef struct
 	SYNTRO_UC2 subType;										// the sub type code
 	SYNTRO_UC2 headerLength;								// total length of specific record header
 	SYNTRO_UC2 param;										// type specific parameter
-	SYNTRO_TIMESTAMP timestamp;								// timestamp for the sample
+	SYNTRO_UC2 param1;										// another one
+	SYNTRO_UC2 param2;										// and another one
+	SYNTRO_UC4 recordIndex;									// a monotonically incerasing index number
+	SYNTRO_UC8 timestamp;									// timestamp for the sample
 } SYNTRO_RECORD_HEADER;
 
 //	Major type codes
@@ -471,7 +456,7 @@ typedef struct
 
 //----------------------------------------------------------
 //
-//	Syntro servo defs. These are used in many things, including SyntroRobot and SyntroAV
+//	Defs for servo actuators
 
 #define	SYNTRO_SERVO_CENTER			0x8000					// middle of servo range
 #define	SYNTRO_SERVO_RANGE			0x7fff					// servo value range from center

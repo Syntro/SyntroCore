@@ -123,7 +123,7 @@ void Logger::appClientBackground()
 		SyntroUtils::convertIntToUC2(0, recordHead->subType);
 		SyntroUtils::convertIntToUC2(0, recordHead->param);
 		SyntroUtils::convertIntToUC2(sizeof(SYNTRO_RECORD_HEADER), recordHead->headerLength);
-		SyntroUtils::setSyntroTimestamp(&recordHead->timestamp);
+		SyntroUtils::setTimestamp(recordHead->timestamp);
 		memcpy((char *)(recordHead + 1), data.constData(), data.length());
 		clientSendMessage(m_logPort, multiCast, sizeof(SYNTRO_EHEAD) + length, SYNTROLINK_LOWPRI);
 	}

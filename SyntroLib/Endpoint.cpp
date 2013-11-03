@@ -2024,7 +2024,7 @@ void Endpoint::endpointConnected()
 			service->state = SYNTRO_LOCAL_SERVICE_STATE_INACTIVE;
 		else
 			service->state = SYNTRO_REMOTE_SERVICE_STATE_LOOK;
-		service->lastReceivedSeqNo = 0;
+		service->lastReceivedSeqNo = -1;
 		service->nextSendSeqNo = 0;
 		service->lastReceivedAck = 0;
 		service->lastSendTime = SyntroClock();
@@ -2075,6 +2075,9 @@ void Endpoint::processMulticast(SYNTRO_EHEAD *message, int length, int destPort)
 		return;								
 	}
 
+	if (service->lastReceivedSeqNo == message->seq) {
+		logWarn(QString("Received duplicate multicast seq number %1").arg(message->seq));
+	}
 	service->lastReceivedSeqNo = message->seq;
 
 	appClientReceiveMulticast(destPort, message, length);
