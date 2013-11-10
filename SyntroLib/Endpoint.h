@@ -49,7 +49,8 @@ typedef struct
 	bool enabled;											// true if the service is operating
 	bool local;												// true if this is a local service, false if remote
 	int serviceType;										// service type code
-	int serviceData;										// the int valude that the appClient can set
+	int serviceData;										// the int value that the appClient can set
+	void *serviceDataPointer;								// the pointer that the appClient can set
 
 	bool removingService;									// true if disabling due to service removal
 	SYNTRO_SERVPATH	servicePath;							// the path of the service
@@ -191,6 +192,15 @@ protected:
 //	so ideally -1 should not be a valid value!
 
 	int	 clientGetServiceData(int servicePort);
+
+//	clientSetServiceDataPointer allows a pointer to be set in the service entry
+
+	bool clientSetServiceDataPointer(int servicePort, void *value);
+
+//	clientGetServiceDataPointer retrieves the pointer previously set in a service entry
+//	Note that there is no easy way on indicating an error except by returning NULL.
+
+	void *clientGetServiceDataPointer(int servicePort);
 
 //	clientEnableService activates a previously stopped service. Returns false if error.
 

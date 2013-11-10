@@ -186,6 +186,8 @@ int Endpoint::clientAddService(QString servicePath, int serviceType, bool local,
 	service->serviceType = serviceType;
 	strcpy(service->servicePath, qPrintable(servicePath));
 	service->state = SYNTRO_LOCAL_SERVICE_STATE_INACTIVE;
+	service->serviceData = -1;
+	service->serviceDataPointer = NULL;
 	if (!local) {
 		strcpy(service->serviceLookup.servicePath, qPrintable(servicePath));
 		service->serviceLookup.serviceType = serviceType;
@@ -619,6 +621,51 @@ int Endpoint::clientGetServiceData(int servicePort)
 		return -1;
 	}
 	return service->serviceData;
+}
+
+/*!
+	Saves a user data pointer \a value to be added to the service entry indicated by \a servicePort.
+*/
+
+bool Endpoint::clientSetServiceDataPointer(int servicePort, void *value)
+{
+	SYNTRO_SERVICE_INFO *service;
+
+	QMutexLocker locker(&m_serviceLock);
+
+	if ((servicePort < 0) || (servicePort >= SYNTRO_MAX_SERVICESPERCOMPONENT)) {
+		logWarn(QString("Tried to set data value for service in out of range port %1").arg(servicePort));
+		return false;
+	}
+	service = m_serviceInfo + servicePort;
+	if (!service->inUse) {
+		logWarn(QString("Tried to set data value on not in use port %1").arg(servicePort));
+		return false;
+	}
+	service->serviceDataPointer = value;
+	return true;
+}
+
+/*!
+	 Retrieves the \a servicePort's pointer value set by a previous clientSetServiceDataPointer() call.
+*/
+
+void *Endpoint::clientGetServiceDataPointer(int servicePort)
+{
+	SYNTRO_SERVICE_INFO *service;
+
+	QMutexLocker locker(&m_serviceLock);
+
+	if ((servicePort < 0) || (servicePort >= SYNTRO_MAX_SERVICESPERCOMPONENT)) {
+		logWarn(QString("Tried to get data value for service in out of range port %1").arg(servicePort));
+		return NULL;
+	}
+	service = m_serviceInfo + servicePort;
+	if (!service->inUse) {
+		logWarn(QString("Tried to get data value on not in use port %1").arg(servicePort));
+		return NULL;
+	}
+	return service->serviceDataPointer;
 }
 
 /*!
@@ -1598,6 +1645,8 @@ void Endpoint::serviceInit()
 		service->state = SYNTRO_LOCAL_SERVICE_STATE_INACTIVE;
 		service->serviceLookup.response = SERVICE_LOOKUP_FAIL;// indicate lookup response not valid
 		service->serviceLookup.servicePath[0] = 0;			 // no service path
+		service->serviceData = -1;
+		service->serviceDataPointer = NULL;
 		SyntroUtils::convertIntToUC2(i, service->serviceLookup.localPort); // this is my local port index
 	}	
 }

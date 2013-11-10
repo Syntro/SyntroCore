@@ -1,1 +1,1 @@
-!win32:VERSION = 0.7.0
+!win32:VERSION = 0.8.0

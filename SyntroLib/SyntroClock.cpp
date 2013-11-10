@@ -18,38 +18,8 @@
 //
 
 #include "SyntroClock.h"
-#include "qelapsedtimer.h"
 
-#ifdef SYNTROCLOCK_ZEROBASED
-qint64 syntroClockValue = 0;								// this contains the mS monotonic system clock
-QMutex syntroClockLock;										// this is used to control access to the clock variable
-QElapsedTimer syntroElapsedTimer;
-
-void SyntroClockObject::run()
-{
-	m_run = true;
-	syntroElapsedTimer.start();
-	while (m_run)
-	{
-		usleep(10500);
-		syntroClockLock.lock();
-		syntroClockValue += syntroElapsedTimer.restart();
-		syntroClockLock.unlock();
-	}
-}
-
-qint64 SyntroClock()
-{
-	qint64 clockVal;
-
-	syntroClockLock.lock();
-	clockVal = syntroClockValue;
-	syntroClockLock.unlock();
-	return clockVal;
-}
-#else
 qint64 SyntroClock()
 {
 	return QDateTime::currentMSecsSinceEpoch();
 }
-#endif

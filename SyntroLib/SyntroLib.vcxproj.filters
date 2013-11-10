@@ -152,18 +152,6 @@
     <ClCompile Include="GeneratedFiles\StaticRelease\moc_Hello.cpp">
       <Filter>Generated Files\StaticRelease</Filter>
     </ClCompile>
-    <ClCompile Include="GeneratedFiles\StaticDebug\moc_SyntroClock.cpp">
-      <Filter>Generated Files\StaticDebug</Filter>
-    </ClCompile>
-    <ClCompile Include="GeneratedFiles\Debug\moc_SyntroClock.cpp">
-      <Filter>Generated Files\Debug</Filter>
-    </ClCompile>
-    <ClCompile Include="GeneratedFiles\StaticRelease\moc_SyntroClock.cpp">
-      <Filter>Generated Files\StaticRelease</Filter>
-    </ClCompile>
-    <ClCompile Include="GeneratedFiles\Release\moc_SyntroClock.cpp">
-      <Filter>Generated Files\Release</Filter>
-    </ClCompile>
     <ClCompile Include="Logger.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>

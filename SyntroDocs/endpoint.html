@@ -1,10 +1,10 @@
-<?xml version="1.0" encoding="UTF-8"?>
+﻿<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
 <head>
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 <!-- Endpoint.cpp -->
-  <title>SyntroCore 0.7: Endpoint Class</title>
+  <title>SyntroCore 0.8: Endpoint Class</title>
   <link rel="stylesheet" type="text/css" href="style/style.css" />
   <script src="scripts/jquery.js" type="text/javascript"></script>
   <script src="scripts/functions.js" type="text/javascript"></script>
@@ -45,7 +45,7 @@
     </div>
     <div id="shortCut">
       <ul>
-        <li class="shortCut-topleft-inactive"><span><a href="index.html">Syntro 0.7</a></span></li>
+        <li class="shortCut-topleft-inactive"><span><a href="index.html">Syntro 0.8</a></span></li>
         </a></li>
       </ul>
      </div>
@@ -149,6 +149,7 @@
 <tr><td class="memItemLeft rightAlign topAlign"> int </td><td class="memItemRight bottomAlign"><b><a href="endpoint.html#clientGetRemoteServiceState">clientGetRemoteServiceState</a></b>(int<i> servicePort</i>)</td></tr>
 <tr><td class="memItemLeft rightAlign topAlign"> SYNTRO_UID * </td><td class="memItemRight bottomAlign"><b><a href="endpoint.html#clientGetRemoteServiceUID">clientGetRemoteServiceUID</a></b>(int<i> servicePort</i>)</td></tr>
 <tr><td class="memItemLeft rightAlign topAlign"> int </td><td class="memItemRight bottomAlign"><b><a href="endpoint.html#clientGetServiceData">clientGetServiceData</a></b>(int<i> servicePort</i>)</td></tr>
+<tr><td class="memItemLeft rightAlign topAlign"> int </td><td class="memItemRight bottomAlign"><b><a href="endpoint.html#clientGetServiceData">clientGetServiceDataPointer</a></b>(int<i> servicePort</i>)</td></tr>
 <tr><td class="memItemLeft rightAlign topAlign"> int </td><td class="memItemRight bottomAlign"><b><a href="endpoint.html#clientGetServiceDestPort">clientGetServiceDestPort</a></b>(int<i> servicePort</i>)</td></tr>
 <tr><td class="memItemLeft rightAlign topAlign"> QString </td><td class="memItemRight bottomAlign"><b><a href="endpoint.html#clientGetServicePath">clientGetServicePath</a></b>(int<i> servicePort</i>)</td></tr>
 <tr><td class="memItemLeft rightAlign topAlign"> int </td><td class="memItemRight bottomAlign"><b><a href="endpoint.html#clientGetServiceType">clientGetServiceType</a></b>(int<i> servicePort</i>)</td></tr>
@@ -161,6 +162,7 @@
 <tr><td class="memItemLeft rightAlign topAlign"> bool </td><td class="memItemRight bottomAlign"><b><a href="endpoint.html#clientSendMessage">clientSendMessage</a></b>(int<i> servicePort</i>, SYNTRO_EHEAD *<i> message</i>, int<i> length</i>, int<i> priority</i> = SYNTROLINK_LOWPRI)</td></tr>
 <tr><td class="memItemLeft rightAlign topAlign"> bool </td><td class="memItemRight bottomAlign"><b><a href="endpoint.html#clientSendMulticastAck">clientSendMulticastAck</a></b>(int<i> servicePort</i>)</td></tr>
 <tr><td class="memItemLeft rightAlign topAlign"> bool </td><td class="memItemRight bottomAlign"><b><a href="endpoint.html#clientSetServiceData">clientSetServiceData</a></b>(int<i> servicePort</i>, int<i> value</i>)</td></tr>
+<tr><td class="memItemLeft rightAlign topAlign"> bool </td><td class="memItemRight bottomAlign"><b><a href="endpoint.html#clientSetServiceDataPointer">clientSetServiceDataPointer</a></b>(int<i> servicePort</i>, void *<i> value</i>)</td></tr>
 </table>
 <ul>
 <li class="fn">2 protected functions inherited from <a href="syntrothread.html#protected-functions">SyntroThread</a></li>
@@ -331,6 +333,10 @@
 <h3 class="fn"><a name="clientGetServiceData"></a><span class="type">int</span> Endpoint::<span class="name">clientGetServiceData</span>(<span class="type">int</span><i> servicePort</i>)<tt> [protected]</tt></h3>
 <p>Retrieves and returns the <i>servicePort</i>'s value set by a previous <a href="endpoint.html#clientSetServiceData">clientSetServiceData</a>() call.</p>
 <!-- @@@clientGetServiceData -->
+<!-- $$$clientGetServiceDataPointer[overload1]$$$clientGetServiceDataPointerint -->
+<h3 class="fn"><a name="clientGetServiceDataPointer"></a><span class="type">void *</span> Endpoint::<span class="name">clientGetServiceDataPointer</span>(<span class="type">int</span><i> servicePort</i>)<tt> [protected]</tt></h3>
+<p>Retrieves and returns the <i>servicePort</i>'s value set by a previous <a href="endpoint.html#clientSetServiceDataPointer">clientSetServiceDataPointer</a>() call.</p>
+<!-- @@@clientGetServiceDataPointer -->
 <!-- $$$clientGetServiceDestPort[overload1]$$$clientGetServiceDestPortint -->
 <h3 class="fn"><a name="clientGetServiceDestPort"></a><span class="type">int</span> Endpoint::<span class="name">clientGetServiceDestPort</span>(<span class="type">int</span><i> servicePort</i>)<tt> [protected]</tt></h3>
 <p>Returns destination port to be used for a message on a service which is in state SYNTRO_REMOTE_SERVICE_STATE_REGISTERED. If the state of the port referenced by <i>servicePort</i> is in a different state, -1 will be returned.</p>
@@ -397,6 +403,10 @@
 <h3 class="fn"><a name="clientSetServiceData"></a><span class="type">bool</span> Endpoint::<span class="name">clientSetServiceData</span>(<span class="type">int</span><i> servicePort</i>, <span class="type">int</span><i> value</i>)<tt> [protected]</tt></h3>
 <p>This function allows an integer user data <i>value</i> to be added to the service entry indicated by <i>servicePort</i>.</p>
 <!-- @@@clientSetServiceData -->
+<!-- $$$clientSetServiceDataPointer[overload1]$$$clientSetServiceDataPointerintvoid* -->
+<h3 class="fn"><a name="clientSetServiceData"></a><span class="type">bool</span> Endpoint::<span class="name">clientSetServiceDataPointer</span>(<span class="type">int</span><i> servicePort</i>, <span class="type">void *</span><i> value</i>)<tt> [protected]</tt></h3>
+<p>Stores a user pointer <i>value</i> with the service entry indicated by <i>servicePort</i>.</p>
+<!-- @@@clientSetServiceDataPointer -->
 <!-- $$$exitThread[overload1]$$$exitThread -->
 <h3 class="fn"><a name="exitThread"></a><span class="type">void</span> Endpoint::<span class="name">exitThread</span>()<tt> [virtual]</tt></h3>
 <p>Reimplemented from <a href="syntrothread.html#exitThread">SyntroThread::exitThread</a>().</p>
