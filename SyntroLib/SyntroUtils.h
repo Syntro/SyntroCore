@@ -171,6 +171,10 @@ public:
 	static void avmuxHeaderInit(SYNTRO_RECORD_AVMUX *avmuxHead, SYNTRO_AVPARAMS *avParams,
 		int param, int recordIndex, int muxSize, int videoSize,int audioSize);
 	static void avmuxHeaderToAVParams(SYNTRO_RECORD_AVMUX *avmuxHead, SYNTRO_AVPARAMS *avParams);
+	static bool avmuxHeaderValidate(SYNTRO_RECORD_AVMUX *avmuxHead, int length,
+				unsigned char **muxPtr, int& muxLength,
+				unsigned char **videoPtr, int& videoLength,
+				unsigned char **audioPtr, int& audioLength);
 	static void videoHeaderInit(SYNTRO_RECORD_VIDEO *videoHead, int width, int height, int size);
 
 
@@ -179,6 +183,8 @@ public:
     static bool isReservedNameCharacter(char value);	// returns true if value is not allowed in names (components of paths)
     static bool isReservedPathCharacter(char value);	// returns true if value is not allowed in paths
     static QString insertStreamNameInPath(const QString& streamSource, const QString& streamName); // adds in a stream name before any extension 
+    static void removeStreamNameFromPath(const QString& servicePath,
+			QString& streamSource, QString& streamName); // extracts a stream name before any extension 
 
 //	IP Address functions
 

@@ -705,6 +705,44 @@ QString SyntroUtils::insertStreamNameInPath(const QString& streamSource, const Q
 }
 
 /*!
+	This funtion takes \a servicePath, and return a \a streamSource that is the servicePath with
+	the stream name removed. The stream name is returned in \a streamName. 
+
+	For example "Ubuntu/video:lr" would return a streamSource of "ubuntu:lr" and a streamName of "video".
+
+*/
+
+void SyntroUtils::removeStreamNameFromPath(const QString& servicePath,
+			QString& streamSource, QString& streamName)
+{
+	 int start, end;
+
+	 start = servicePath.indexOf(SYNTRO_SERVICEPATH_SEP);	// find the "/"
+	 if (start == -1) {										// not found
+		 streamSource = servicePath;
+		 streamName = "";
+		 return;
+	 }
+	 end = servicePath.indexOf(SYNTRO_STREAM_TYPE_SEP);	// find the ":" if there is one
+
+	 if (end == -1) {										// there isn't
+		 streamSource = servicePath.left(start);
+		 streamName = servicePath;
+		 streamName.remove(0, start + 1);
+		 return;
+	 }
+
+	 // We have all parts present
+
+	 streamSource = servicePath;
+	 streamSource.remove(start, end - start);				// take out stream name
+	 streamName = servicePath;
+	 streamName.remove(end, streamName.length());			// make sure everything at end removed
+	 streamName.remove(0, start + 1);
+}
+
+
+/*!
 	Returns the broadcast address of the selected network interface.
 */
 
@@ -903,6 +941,44 @@ void SyntroUtils::avmuxHeaderToAVParams(SYNTRO_RECORD_AVMUX *avmuxHead, SYNTRO_A
 	avParams->audioChannels = convertUC2ToInt(avmuxHead->audioChannels);
 	avParams->audioSampleSize = convertUC2ToInt(avmuxHead->audioSampleSize);
 }
+
+/*!
+	Performs validation of an avmux record. \a avmuxHead is a pointer to the avmux record,
+	\a length is its total length (header plus data). The function returns true if the header passes
+	validation. This means that the lengths of the component parts
+	correctly add up to the total length. If the function returns false
+	then the avmux record should not be processed further.
+
+	Additionally, the function can return useful data extracted form the header. \a muxPtr is a
+	pointer to a pointer to the mux data part, \a muxLength is a reference to its length with
+	the same for \a videoPtr, \a videoLength, \a audioPtr and \a audioLength. If NULL is passed as
+	any of these pointers, that variable is not set.
+*/
+
+bool SyntroUtils::avmuxHeaderValidate(SYNTRO_RECORD_AVMUX *avmuxHead, int length,
+				unsigned char **muxPtr, int& muxLength,
+				unsigned char **videoPtr, int& videoLength,
+				unsigned char **audioPtr, int& audioLength)
+{
+	muxLength = SyntroUtils::convertUC4ToInt(avmuxHead->muxSize);
+	videoLength = SyntroUtils::convertUC4ToInt(avmuxHead->videoSize);
+	audioLength = SyntroUtils::convertUC4ToInt(avmuxHead->audioSize);
+
+	if (length != (sizeof(SYNTRO_RECORD_AVMUX) + muxLength + videoLength + audioLength))
+		return false;
+
+	if (muxPtr != NULL)
+		*muxPtr = (unsigned char *)(avmuxHead + 1);
+
+	if (videoPtr != NULL)
+		*videoPtr = (unsigned char *)(avmuxHead + 1) + muxLength;
+
+	if (audioPtr != NULL)
+		*audioPtr = (unsigned char *)(avmuxHead + 1) + muxLength + videoLength;
+
+	return true;
+}
+
 
 void SyntroUtils::videoHeaderInit(SYNTRO_RECORD_VIDEO *videoHead, int width, int height, int size)
 {
