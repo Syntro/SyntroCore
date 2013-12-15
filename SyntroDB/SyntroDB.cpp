@@ -101,6 +101,7 @@ void SyntroDB::closeEvent(QCloseEvent *)
 		m_CFSClient->exitThread();
 	}
 
+/*
 	QSettings *settings = SyntroUtils::getSettings();
 
 	settings->beginWriteArray(SYNTRODB_PARAMS_STREAM_SOURCES);
@@ -115,7 +116,7 @@ void SyntroDB::closeEvent(QCloseEvent *)
 	settings->endArray();
 
 	delete settings;
-
+*/
 	saveWindowState();
 	SyntroUtils::syntroAppExit();
 }

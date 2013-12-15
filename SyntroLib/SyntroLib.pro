@@ -14,19 +14,33 @@ include(../version.pri)
 
 # common mac or linux
 unix {
-        target.path = /usr/lib
+	macx {
+		target.path = /usr/local/lib
 
-	headerfiles.path = /usr/include/syntro
-	headerfiles.files += *.h
+		headerfiles.path = /usr/local/include/syntro
+		headerfiles.files += *.h
 
-	avheaderfiles.path = /usr/include/syntro/SyntroAV
-	avheaderfiles.files += SyntroAV/*.h
+		avheaderfiles.path = /usr/local/include/syntro/SyntroAV
+		avheaderfiles.files += SyntroAV/*.h
 
-	robotheaderfiles.path = /usr/include/syntro/SyntroRobot
-	robotheaderfiles.files += SyntroRobot/*.h
+		robotheaderfiles.path = /usr/local/include/syntro/SyntroRobot
+		robotheaderfiles.files += SyntroRobot/*.h
+	}
+	else {
+	        target.path = /usr/lib
 
-        pkgconfigfiles.path = /usr/lib/pkgconfig
-        pkgconfigfiles.files = syntro.pc
+		headerfiles.path = /usr/include/syntro
+		headerfiles.files += *.h
+
+		avheaderfiles.path = /usr/include/syntro/SyntroAV
+		avheaderfiles.files += SyntroAV/*.h
+
+		robotheaderfiles.path = /usr/include/syntro/SyntroRobot
+		robotheaderfiles.files += SyntroRobot/*.h
+
+		pkgconfigfiles.path = /usr/lib/pkgconfig
+		pkgconfigfiles.files = syntro.pc
+	}
 
 	INSTALLS += headerfiles \
 		avheaderfiles \

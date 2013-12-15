@@ -15,10 +15,16 @@ include(../version.pri)
 
 # common mac or linux
 unix {
-        target.path = /usr/lib
-	headerfiles.path = /usr/include/syntro/SyntroControlLib
-	headerfiles.files += *.h
+	macx {
+		target.path = /usr/local/lib
+		headerfiles.path = /usr/local/include/syntro/SyntroControlLib
+	}
+	else {
+        	target.path = /usr/lib
+		headerfiles.path = /usr/include/syntro/SyntroControlLib
+	}
 
+	headerfiles.files += *.h
 	INSTALLS += headerfiles target
 }
 

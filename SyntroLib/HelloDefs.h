@@ -26,7 +26,7 @@
 //	The Hello data structure
 
 #define	INSTANCE_CONTROL			0						// the instance for SyntroControl
-#define	INSTANCE_EXEC				1						// instance for SyntroExec
+
 #define	INSTANCE_DYNAMIC			-1						// for a non core app, this means that instance is dynamic
 #define	INSTANCE_COMPONENT			2						// instance of first component
 

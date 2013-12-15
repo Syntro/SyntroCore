@@ -50,9 +50,7 @@ void SyntroComponentData::init(const char *compType, int hbInterval, int priorit
 	strcpy(m_myComponentType, compType);
 	
 	// set up instance values and create hello socket using dynamic instance if a normal component
-	if (strcmp(compType, COMPTYPE_EXEC) == 0)
-		m_myInstance = INSTANCE_EXEC;
-	else if (strcmp(compType, COMPTYPE_CONTROL) == 0)
+	if (strcmp(compType, COMPTYPE_CONTROL) == 0)
 		m_myInstance = INSTANCE_CONTROL;
 	else
 		createHelloSocket();

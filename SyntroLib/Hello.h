@@ -81,7 +81,6 @@ protected:
 	void deleteEntry(HELLOENTRY *pH);
 	bool matchHello(HELLO *a, HELLO *b);
 	void processTimers();
-	void sendHello();
 
 	HELLO m_RXHello;
 	char m_IpAddr[SYNTRO_MAX_NONTAG];				

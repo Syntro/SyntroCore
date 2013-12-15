@@ -14,7 +14,6 @@ else {
 }
 
 QT += core gui network
-
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
 CONFIG += release
@@ -23,8 +22,14 @@ CONFIG += release
 unix:QMAKE_CXXFLAGS_RELEASE -= -g
 
 unix {
-        target.path = /usr/bin
-        INSTALLS += target
+	macx {
+		target.path = /usr/local/bin
+	}
+	else {
+		target.path = /usr/bin
+	}
+
+	INSTALLS += target
 
         INCLUDEPATH += ../SyntroLib \
                 ../SyntroGUI

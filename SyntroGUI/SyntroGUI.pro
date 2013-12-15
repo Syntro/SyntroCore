@@ -14,8 +14,15 @@ include(../version.pri)
 
 # common mac or linux
 unix {
-        target.path = /usr/lib
-	headerfiles.path = /usr/include/syntro
+	macx {
+		target.path = /usr/local/lib
+		headerfiles.path = /usr/local/include/syntro
+	}
+	else {
+		target.path = /usr/lib
+		headerfiles.path = /usr/include/syntro
+	}
+
 	headerfiles.files += *.h
 	INSTALLS += headerfiles target
 }

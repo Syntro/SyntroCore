@@ -556,11 +556,44 @@ void SyntroUtils::loadStandardSettings(const char *appType, QStringList arglist)
 	}
 
 	// user can override the default location for the ini file
+	if (m_iniPath.size() > 0) {
+		// make sure the file specified is usable
+		QFileInfo fileInfo(m_iniPath);
 
-    if (m_iniPath.size() == 0)
-		m_iniPath = QDir::currentPath() + "/" + appType + ".ini";
+		if (fileInfo.exists()) {
+			if (!fileInfo.isWritable())
+				logWarn(QString("Ini file is not writable: %1").arg(m_iniPath));
 
-	settings = new QSettings(m_iniPath, QSettings::IniFormat);
+			if (!fileInfo.isReadable())
+				logWarn(QString("Ini file is not readable: %1").arg(m_iniPath));
+		}
+		else {
+			QFileInfo dirInfo(fileInfo.path());
+
+			if (!dirInfo.exists()) {
+				logWarn(QString("Directory for ini file does not exist: %1").arg(fileInfo.path()));
+			}
+			else {
+				if (!dirInfo.isWritable())
+					logWarn(QString("Directory for ini file is not writable: %1").arg(fileInfo.path()));
+
+				if (!dirInfo.isReadable())
+					logWarn(QString("Directory for ini file is not readable: %1").arg(fileInfo.path()));
+			}
+		}
+
+		// regardless of how the checks turned out, we don't want to fall back to the
+		// default as that might overwrite an existing good default configuration
+		// i.e. the common reason for passing an ini file is to start a second instance
+		// of the app
+		settings = new QSettings(m_iniPath, QSettings::IniFormat);
+	}
+	else {
+		settings = new QSettings(QSettings::IniFormat, QSettings::UserScope, "Syntro", appType);
+
+		// need this for subsequent opens
+		m_iniPath = settings->fileName();
+	}
 
 	// Save settings generated from command line arguments
 

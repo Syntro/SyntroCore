@@ -23,8 +23,14 @@ CONFIG += release
 unix:QMAKE_CXXFLAGS_RELEASE -= -g
 
 unix {
-        target.path = /usr/bin
-        INSTALLS += target
+	macx {
+		target.path = /usr/local/bin
+		INSTALLS += target
+	}
+	else {
+		target.path = /usr/bin
+		INSTALLS += target
+	}
 
         INCLUDEPATH += ../SyntroLib \
                 ../SyntroGUI

@@ -22,7 +22,7 @@
 
 //	Version
 
-#define	SYNTROLIB_VERSION	"0.8.0"
+#define	SYNTROLIB_VERSION	"0.9.1"
 
 //	Timer definition
 //
@@ -162,8 +162,7 @@ typedef char	SYNTRO_SERVPATH[SYNTRO_MAX_SERVPATH];		// the service path type
 //-------------------------------------------------------------------------------------------
 //	SyntroCore App Type defs
 
-#define	APPTYPE_CONTROL			"SyntroControl"				
-#define	APPTYPE_EXEC			"SyntroExec"				
+#define	APPTYPE_CONTROL			"SyntroControl"								
 #define APPTYPE_DB				"SyntroDB"
 #define APPTYPE_LOG				"SyntroLog"
 #define APPTYPE_FT				"SyntroFT"
@@ -171,8 +170,7 @@ typedef char	SYNTRO_SERVPATH[SYNTRO_MAX_SERVPATH];		// the service path type
 //-------------------------------------------------------------------------------------------
 //	SyntroCore Component Type defs
 
-#define	COMPTYPE_CONTROL		"Control"				
-#define	COMPTYPE_EXEC			"Exec"				
+#define	COMPTYPE_CONTROL		"Control"							
 #define COMPTYPE_STORE			"Store"
 #define COMPTYPE_CFS			"CFS"
 #define COMPTYPE_DB				"DB"

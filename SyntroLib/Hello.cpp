@@ -219,7 +219,7 @@ void Hello::processHello()
 	// Only put the entry in the table if I am SyntroExec or else I am SyntroControl and
 	// the hello came from another SyntroControl
 
-	if ((strcmp(m_componentData->getMyComponentType(), COMPTYPE_EXEC) == 0) || (instance == INSTANCE_CONTROL)) {												
+	if (instance == INSTANCE_CONTROL) {												
 		// See if we already have this in the table
 
 		helloEntry = m_helloArray;
@@ -297,22 +297,10 @@ void Hello::processTimers()
 				memcpy(messageHelloEntry, helloEntry, sizeof(HELLOENTRY));
 				m_parentThread->postThreadMessage(HELLO_STATUS_CHANGE_MESSAGE, HELLO_DOWN, messageHelloEntry);
 			}
-			TRACE1("Hello deleted %s", helloEntry->IPAddr);
+//			TRACE1("Hello deleted %s", helloEntry->IPAddr);
 			helloEntry->inUse = false;
 			emit helloDisplayEvent(this);
 		}
-	}
-}
-
-void Hello::sendHello()
-{
-    HELLO hello = m_componentData->getMyHeartbeat().hello;
-
-	if (strcmp(m_componentData->getMyComponentType(), COMPTYPE_EXEC) != 0) {
-        m_helloSocket->sockSendTo(&(hello), sizeof(HELLO), SOCKET_HELLO + INSTANCE_EXEC, NULL);
-	}
-	if (strcmp(m_componentData->getMyComponentType(), COMPTYPE_CONTROL) == 0) {
-        m_helloSocket->sockSendTo(&(hello), sizeof(HELLO), SOCKET_HELLO + INSTANCE_CONTROL, NULL);
 	}
 }
 
@@ -355,7 +343,6 @@ bool Hello::processMessage(SyntroThreadMsg* msg)
 
 void Hello::timerEvent(QTimerEvent *)
 {
-	sendHello();
 	processTimers();
 }
 		
