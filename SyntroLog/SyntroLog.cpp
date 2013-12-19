@@ -334,14 +334,14 @@ void SyntroLog::initStatusBar()
 
 void SyntroLog::onAbout()
 {
-	SyntroAbout *dlg = new SyntroAbout();
-	dlg->show();
+	SyntroAbout dlg;
+	dlg.exec();
 }
 
 void SyntroLog::onBasicSetup()
 {
-	BasicSetupDlg *dlg = new BasicSetupDlg(this);
-	dlg->show();
+	BasicSetupDlg dlg(this);
+	dlg.exec();
 }
 
 void SyntroLog::saveWindowState()

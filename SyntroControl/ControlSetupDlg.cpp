@@ -20,13 +20,13 @@
 #include "ControlSetupDlg.h"
 #include "SyntroControl.h"
 
-ControlSetupDlg::ControlSetupDlg()
-	: QDialog()
+ControlSetupDlg::ControlSetupDlg(QWidget *parent)
+	: QDialog(parent, Qt::WindowCloseButtonHint | Qt::WindowTitleHint)
 {
 	layoutWindow();
 	setWindowTitle("Basic setup");
 	connect(m_buttons, SIGNAL(accepted()), this, SLOT(onOk()));
-    connect(m_buttons, SIGNAL(rejected()), this, SLOT(onCancel()));
+    connect(m_buttons, SIGNAL(rejected()), this, SLOT(reject()));
 }
 
 ControlSetupDlg::~ControlSetupDlg()
@@ -37,67 +37,80 @@ ControlSetupDlg::~ControlSetupDlg()
 void ControlSetupDlg::onOk()
 {
 	QMessageBox msgBox;
-	bool changed;
 
-	changed = false;
-
-	// check to see if any setting has changed
+	bool changed = false;
 
 	QSettings *settings = SyntroUtils::getSettings();
 
 	changed = m_appName->text() != settings->value(SYNTRO_PARAMS_APPNAME).toString();
 	changed |= m_priority->text() != settings->value(SYNTRO_PARAMS_LOCALCONTROL_PRI).toString();
 
-	if (!changed)
-		reject();
+	if (m_adaptor->currentText() == "<any>") {
+		if (settings->value(SYNTRO_RUNTIME_ADAPTER).toString() != "")
+			changed = true;
+	} 
 	else {
+		if (m_adaptor->currentText() != settings->value(SYNTRO_RUNTIME_ADAPTER).toString())
+			changed = true;
+	}
+
+	if (changed) {
 		msgBox.setText("The component must be restarted for these changes to take effect");
 		msgBox.exec();
-
-		// save changes to settings
 
 		settings->setValue(SYNTRO_PARAMS_APPNAME, m_appName->text());
 		settings->setValue(SYNTRO_PARAMS_LOCALCONTROL_PRI, m_priority->text());
 		
+		if (m_adaptor->currentText() == "<any>")
+			settings->setValue(SYNTRO_RUNTIME_ADAPTER, "");
+		else
+			settings->setValue(SYNTRO_RUNTIME_ADAPTER, m_adaptor->currentText());
+		
 		delete settings;
-
 		accept();
 	}
-}
-
-void ControlSetupDlg::onCancel()
-{
-	reject();
+	else {
+		delete settings;
+		reject();
+	}
 }
 
 void ControlSetupDlg::layoutWindow()
 {
-    setModal(true);
-
 	QSettings *settings = SyntroUtils::getSettings();
 
 	QVBoxLayout *centralLayout = new QVBoxLayout(this);
-	centralLayout->setSpacing(20);
-	centralLayout->setContentsMargins(11, 11, 11, 11);
 	
 	QFormLayout *formLayout = new QFormLayout();
-	formLayout->setSpacing(16);
-	formLayout->setFieldGrowthPolicy(QFormLayout::AllNonFixedFieldsGrow);
 
-	m_appName = new QLineEdit(this);
+	m_appName = new QLineEdit(settings->value(SYNTRO_PARAMS_APPNAME).toString());
 	m_appName->setMinimumWidth(200);
 	formLayout->addRow(tr("App name:"), m_appName);
-	m_appName->setText(settings->value(SYNTRO_PARAMS_APPNAME).toString());
 
 	m_validator = new ServiceNameValidator();
 	m_appName->setValidator(m_validator);
 
-	centralLayout->addLayout(formLayout);
-
-	m_priority = new QLineEdit();
+	m_priority = new QLineEdit(settings->value(SYNTRO_PARAMS_LOCALCONTROL_PRI).toString());
 	formLayout->addRow(tr("Priority (0 (lowest) - 255):"), m_priority);
-	m_priority->setText(settings->value(SYNTRO_PARAMS_LOCALCONTROL_PRI).toString());
 	m_priority->setValidator(new QIntValidator(0, 255));
+
+	m_adaptor = new QComboBox;
+	m_adaptor->setEditable(false);
+
+	populateAdaptors();
+
+	formLayout->addRow(new QLabel("Ethernet adaptor:"), m_adaptor);
+
+	int findIndex = m_adaptor->findText(settings->value(SYNTRO_RUNTIME_ADAPTER).toString());
+
+	if (findIndex != -1)
+		m_adaptor->setCurrentIndex(findIndex);
+	else
+		m_adaptor->setCurrentIndex(0);
+
+	centralLayout->addLayout(formLayout);
+	
+	centralLayout->addSpacerItem(new QSpacerItem(20, 20));
 
 	m_buttons = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel, Qt::Horizontal, this);
 	m_buttons->setCenterButtons(true);
@@ -105,3 +118,16 @@ void ControlSetupDlg::layoutWindow()
 	centralLayout->addWidget(m_buttons);
 }
 
+void ControlSetupDlg::populateAdaptors()
+{
+	QNetworkInterface cInterface;
+
+	m_adaptor->insertItem(0, "<any>");
+
+	int index = 1;
+
+	QList<QNetworkInterface> ani = QNetworkInterface::allInterfaces();
+
+	foreach (cInterface, ani)
+		m_adaptor->insertItem(index++, cInterface.humanReadableName());
+}

@@ -23,12 +23,12 @@
 #include <qformlayout.h>
 
 BasicSetupDlg::BasicSetupDlg(QWidget *parent)
-	: QDialog(parent)
+	: QDialog(parent, Qt::WindowCloseButtonHint | Qt::WindowTitleHint)
 {
 	layoutWindow();
 	setWindowTitle("Basic setup");
 	connect(m_buttons, SIGNAL(accepted()), this, SLOT(onOk()));
-    connect(m_buttons, SIGNAL(rejected()), this, SLOT(onCancel()));
+    connect(m_buttons, SIGNAL(rejected()), this, SLOT(reject()));
 }
 
 BasicSetupDlg::~BasicSetupDlg()
@@ -107,11 +107,6 @@ goChanged:
 	delete settings;
 
 	accept();
-}
-
-void BasicSetupDlg::onCancel()
-{
-	reject();
 }
 
 void BasicSetupDlg::layoutWindow()

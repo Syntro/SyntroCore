@@ -23,8 +23,8 @@
 #include "SyntroAboutDlg.h"
 #include "SyntroUtils.h"
 
-SyntroAbout::SyntroAbout()
-	: QDialog(0, Qt::WindowCloseButtonHint | Qt::WindowTitleHint)
+SyntroAbout::SyntroAbout(QWidget *parent)
+	: QDialog(parent, Qt::WindowCloseButtonHint | Qt::WindowTitleHint)
 {
 	layoutWindow();
 

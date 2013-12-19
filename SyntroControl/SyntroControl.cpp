@@ -143,7 +143,6 @@ SyntroControl::SyntroControl()
 		this, SLOT(serverMulticastUpdate(qint64, unsigned, qint64, unsigned)), Qt::QueuedConnection);
 	connect(m_server, SIGNAL(serverE2EUpdate(qint64, unsigned, qint64, unsigned)), 
 		this, SLOT(serverE2EUpdate(qint64, unsigned, qint64, unsigned)), Qt::QueuedConnection);
-
 }
 
 void SyntroControl::closeEvent(QCloseEvent *)
@@ -161,7 +160,6 @@ void SyntroControl::timerEvent(QTimerEvent *)
 		m_helloConnected = true;
 	}
 }
-
 
 void SyntroControl::onDirectory()
 {
@@ -247,16 +245,15 @@ void SyntroControl::restoreWindowState()
 
 void SyntroControl::onAbout()
 {
-	SyntroAbout *dlg = new SyntroAbout();
-	dlg->show();
+	SyntroAbout dlg;
+	dlg.exec();
 }
 
 void SyntroControl::onBasicSetup()
 {
-	ControlSetupDlg *dlg = new ControlSetupDlg();
-	dlg->show();
+	ControlSetupDlg dlg(this);
+	dlg.exec();
 }
-
 
 void SyntroControl::serverMulticastUpdate(qint64 in, unsigned inRate, qint64 out, unsigned outRate)
 {
@@ -265,7 +262,6 @@ void SyntroControl::serverMulticastUpdate(qint64 in, unsigned inRate, qint64 out
 										QString("  Mcast rate: in=") + QString::number(inRate) +
 										QString(" out=") + QString::number(outRate));
 }
-
 
 void SyntroControl::serverE2EUpdate(qint64 in, unsigned inRate, qint64 out, unsigned outRate)
 {

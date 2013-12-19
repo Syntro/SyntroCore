@@ -27,27 +27,29 @@
 #include <qdialogbuttonbox.h>
 #include <qmessagebox.h>
 #include <qformlayout.h>
+#include <qcombobox.h>
 
 class ControlSetupDlg : public QDialog
 {
 	Q_OBJECT
 
 public:
-	ControlSetupDlg();
+	ControlSetupDlg(QWidget *parent);
 	~ControlSetupDlg();
 
 public slots:
 	void onOk();
-	void onCancel();
 
 private:
 	void layoutWindow();
+	void populateAdaptors();
 
 	QLineEdit *m_channels;
 	QLineEdit *m_appName;
 	QDialogButtonBox *m_buttons;
 	ServiceNameValidator *m_validator;
 	QLineEdit *m_priority;
+	QComboBox *m_adaptor;
 };
 
 #endif // CONSTROLSETUPDLG_H

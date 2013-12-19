@@ -31,7 +31,7 @@ class SYNTROGUI_EXPORT SyntroAbout : public QDialog
 	Q_OBJECT
 
 public:
-	SyntroAbout();
+	SyntroAbout(QWidget *parent = 0);
 	
 private:
 	void layoutWindow();

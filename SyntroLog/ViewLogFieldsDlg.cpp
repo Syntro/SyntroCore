@@ -25,7 +25,7 @@
 #include "ViewLogFieldsDlg.h"
 
 ViewLogFieldsDlg::ViewLogFieldsDlg(QWidget *parent, QList<int> fields)
-    : QDialog(parent)
+    : QDialog(parent,  Qt::WindowCloseButtonHint | Qt::WindowTitleHint)
 {
     layoutWindow(fields);
 }

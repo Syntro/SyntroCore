@@ -25,7 +25,7 @@
 #include "SeverityLevelDlg.h"
 
 SeverityLevelDlg::SeverityLevelDlg(QWidget *parent, int level)
-    : QDialog(parent)
+    : QDialog(parent,  Qt::WindowCloseButtonHint | Qt::WindowTitleHint)
 {
     layoutWindow(level);
 }

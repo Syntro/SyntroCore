@@ -256,20 +256,21 @@ void SyntroDB::restoreWindowState()
 
 void SyntroDB::onAbout()
 {
-	SyntroAbout *dlg = new SyntroAbout();
-	dlg->show();
+	SyntroAbout dlg;
+	dlg.exec();
 }
 
 void SyntroDB::onBasicSetup()
 {
-	BasicSetupDlg *dlg = new BasicSetupDlg(this);
-	dlg->show();
+	BasicSetupDlg dlg(this);
+	dlg.exec();
 }
 
 void SyntroDB::buttonClicked(int buttonId)
 {
-	StoreStreamDlg *dlg = new StoreStreamDlg(this, buttonId);
-	if (dlg->exec()) {										// need to update client with changes
+	StoreStreamDlg dlg(this, buttonId);
+
+	if (dlg.exec()) {										// need to update client with changes
 		TRACE1("Refreshing source index %d", buttonId);
 		displayStreamDetails(buttonId);
 		emit refreshStreamSource(buttonId);
@@ -279,9 +280,9 @@ void SyntroDB::buttonClicked(int buttonId)
 void SyntroDB::onConfiguration()
 {
 	QMessageBox msgBox;
+	ConfigurationDlg dlg(this);
 
-	ConfigurationDlg *dlg = new ConfigurationDlg(this);
-	if (dlg->exec()) {										// need to update client with changes
+	if (dlg.exec()) {										// need to update client with changes
 		msgBox.setText("The component must be restarted for these changes to take effect");
 		msgBox.exec();
 	}

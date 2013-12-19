@@ -38,12 +38,11 @@ class SYNTROGUI_EXPORT BasicSetupDlg : public QDialog
 	Q_OBJECT
 
 public:
-	BasicSetupDlg(QWidget *parent);
+	BasicSetupDlg(QWidget *parent = 0);
 	~BasicSetupDlg();
 
 public slots:
 	void onOk();
-	void onCancel();
 
 private:
 	void layoutWindow();
