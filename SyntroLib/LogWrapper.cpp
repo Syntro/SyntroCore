@@ -97,51 +97,56 @@ void logDestroy()
 	}
 }
 
-void logAny(QString level, QString str)
+void logAny(QString type, QString msg)
 {
 	if (logSingleton)
-		logSingleton->logWrite(level, str);
+		logSingleton->logWrite(type, msg);
 }
 
-void _logDebug(QString str)
+void _logDebug(QString msg)
 {
 	if (logLevel < SYNTRO_LOG_LEVEL_DEBUG)
 		return;
 
-	logAny(SYNTRO_LOG_DEBUG, str);
+	logAny(SYNTRO_LOG_DEBUG, msg);
 
-	qDebug() << qPrintable(str);
+	qDebug() << qPrintable(msg);
 }
 
-void _logInfo(QString str)
+void _logInfo(QString msg)
 {
 	if (logLevel < SYNTRO_LOG_LEVEL_INFO)
 		return;
 
-	logAny(SYNTRO_LOG_INFO, str);
+	logAny(SYNTRO_LOG_INFO, msg);
 
 	if (logLevel >= SYNTRO_LOG_LEVEL_DEBUG)
-		qDebug() << qPrintable(str);
+		qDebug() << qPrintable(msg);
 }
 
-void _logWarn(QString str)
+void _logWarn(QString msg)
 {
 	if (logLevel < SYNTRO_LOG_LEVEL_WARN)
 		return;
 
-	logAny(SYNTRO_LOG_WARN, str);
+	logAny(SYNTRO_LOG_WARN, msg);
 
-	qWarning() << qPrintable(str);
+	qWarning() << qPrintable(msg);
 }
 
-void _logError(QString str)
+void _logError(QString msg)
 {
 	if (logLevel < SYNTRO_LOG_LEVEL_ERROR)
 		return;
 
-	logAny(SYNTRO_LOG_ERROR, str);
+	logAny(SYNTRO_LOG_ERROR, msg);
 
-	qCritical() << qPrintable(str);
+	qCritical() << qPrintable(msg);
+}
+
+void alert(QString type, QString msg)
+{
+	logAny(type, msg);
 }
 
 QQueue<LogMessage>* activeStreamQueue()

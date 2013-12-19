@@ -29,7 +29,6 @@
 
 Logger::Logger(const QString& appName, int level, bool diskLog, bool netLog, int logKeep, int maxSize)
 	: Endpoint(SYNTROLOG_BGND_INTERVAL, COMPTYPE_LOGSOURCE)
-
 {
 	m_lastFlushTime = SyntroClock();
     m_activeDiskQ = 0;
@@ -45,17 +44,19 @@ Logger::Logger(const QString& appName, int level, bool diskLog, bool netLog, int
 	m_logName.replace(' ', '_');
 
  	if (m_diskLog) {
-		if (!diskOpen()) {
+		if (!diskOpen())
 			m_diskLog = false;
-		}
 	}
 
 	if (level >= SYNTRO_LOG_LEVEL_INFO) {
-        logWrite("INFO", QString("Log start: %1").arg(m_logName.left(m_logName.length() - 4)));
+        logWrite(SYNTRO_LOG_INFO, QString("Log start: %1").arg(m_logName.left(m_logName.length() - 4)));
 
-		if (level == SYNTRO_LOG_LEVEL_DEBUG)
-			logWrite("DEBUG", QString("Qt  runtime %1  build %2").arg(qVersion()).arg(QT_VERSION_STR));
+		if (level == SYNTRO_LOG_LEVEL_DEBUG) {
+			logWrite(SYNTRO_LOG_DEBUG, QString("Qt  runtime %1  build %2").arg(qVersion()).arg(QT_VERSION_STR));
+			logWrite(SYNTRO_LOG_DEBUG, QString("SyntroLib version %1").arg(SYNTROLIB_VERSION));
+		}
 	}
+
 	m_maxDiskSize = maxSize * 1024;
 }
 
@@ -69,6 +70,7 @@ void Logger::appClientInit()
 {
 	if (!m_netLog)
 		return;
+
 	m_logPort = clientAddService(SyntroUtils::getAppType() + SYNTRO_LOG_SERVICE_TAG, SERVICETYPE_MULTICAST, true);
 }
 
@@ -89,12 +91,14 @@ void Logger::appClientBackground()
 		return;
 
 	QQueue<LogMessage> *log = streamQueue();
+
 	if (!log)
 		return;
 
 	m_streamMutex.lock();
 
 	int count = log->count();
+
 	if (count < 1) {
 		m_streamMutex.unlock();
 		return;
@@ -102,7 +106,7 @@ void Logger::appClientBackground()
 
 	for (int i = 0; i < count; i++) {
 		LogMessage m = log->dequeue();
-		packedMsg += m.m_level + SYNTRO_LOG_COMPONENT_SEP
+		packedMsg += m.m_type + SYNTRO_LOG_COMPONENT_SEP
 			+ m.m_timeStamp + SYNTRO_LOG_COMPONENT_SEP
 			+ SyntroUtils::displayUID(&m_UID) + SYNTRO_LOG_COMPONENT_SEP
 			+ SyntroUtils::getAppType() + SYNTRO_LOG_SERVICE_TAG + SYNTRO_LOG_COMPONENT_SEP
@@ -113,6 +117,7 @@ void Logger::appClientBackground()
 	m_streamMutex.unlock();
 
 	QByteArray data = packedMsg.toLatin1();
+
 	int length = sizeof(SYNTRO_RECORD_HEADER) + data.length();
 
 	SYNTRO_EHEAD *multiCast = clientBuildMessage(m_logPort, length);
@@ -129,10 +134,9 @@ void Logger::appClientBackground()
 	}
 }
 
-
-void Logger::logWrite(QString level, QString str)
+void Logger::logWrite(QString type, QString msg)
 {
-	LogMessage m(level, str);
+	LogMessage m(type, msg);
 
 	if (m_diskLog) {
 		if (m_flushMutex.tryLock()) {
@@ -183,11 +187,9 @@ bool Logger::diskOpen()
 // So that we can then open logName for use.
 bool Logger::rotateLogs(QString logName)
 {
-	QFile file;
 	QFileInfo info;
-	QString src, dst;
 
-	dst = logName + '.' + QString::number(m_logKeep);
+	QString dst = logName + '.' + QString::number(m_logKeep);
 
 	info.setFile(dst);
 
@@ -199,7 +201,7 @@ bool Logger::rotateLogs(QString logName)
 	}
 
 	for (int i = m_logKeep; i > 1; i--) {
-		src = logName + '.' + QString::number(i - 1);
+		QString src = logName + '.' + QString::number(i - 1);
 
 		info.setFile(src);
 
@@ -245,16 +247,17 @@ void Logger::diskFlush()
  		LogMessage next = m_diskQ[write_queue].dequeue();
 
 #ifdef WIN32
-		m_stream << next.m_level << " " << next.m_timeStamp << " " << next.m_msg << '\r' << endl;
+		m_stream << next.m_type << " " << next.m_timeStamp << " " << next.m_msg << '\r' << endl;
 #else
-		m_stream << next.m_level << " " << next.m_timeStamp << " " << next.m_msg << endl;
+		m_stream << next.m_type << " " << next.m_timeStamp << " " << next.m_msg << endl;
 #endif
     }
+
 	if (m_maxDiskSize > 0) {
 		QFileInfo fi(m_logName);
-		if (fi.size() >= m_maxDiskSize) {
+
+		if (fi.size() >= m_maxDiskSize)
 			m_file.close();										// this will cause a rotation
-		}
 	}
 }
 
@@ -273,9 +276,9 @@ QQueue<LogMessage>* Logger::streamQueue()
 	return &m_streamQ[n];
 }
 
-LogMessage::LogMessage(QString level, QString &msg)
+LogMessage::LogMessage(QString type, QString &msg)
 {
-	m_level = level;
+	m_type = type;
 	QDateTime dt = QDateTime::currentDateTime();
 	m_timeStamp = QString("%1.%2").arg(dt.toString(Qt::ISODate)).arg(dt.time().msec(), 3, 10, QChar('0'));
 	m_msg = msg;
@@ -283,7 +286,7 @@ LogMessage::LogMessage(QString level, QString &msg)
 
 LogMessage::LogMessage(const LogMessage &rhs)
 {
-	m_level = rhs.m_level;
+	m_type = rhs.m_type;
 	m_msg = rhs.m_msg;
 	m_timeStamp = rhs.m_timeStamp;
 }
@@ -291,11 +294,10 @@ LogMessage::LogMessage(const LogMessage &rhs)
 LogMessage& LogMessage::operator=(const LogMessage &rhs)
 {
 	if (this != &rhs) {
-		m_level = rhs.m_level;
+		m_type = rhs.m_type;
 		m_msg = rhs.m_msg;
 		m_timeStamp = rhs.m_timeStamp;
 	}
 
 	return *this;
 }
-

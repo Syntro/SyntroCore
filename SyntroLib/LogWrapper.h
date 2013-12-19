@@ -41,9 +41,11 @@
 
 SYNTROLIB_EXPORT bool logCreate();
 SYNTROLIB_EXPORT void logDestroy();
-SYNTROLIB_EXPORT void _logDebug(QString str);
-SYNTROLIB_EXPORT void _logInfo(QString str);
-SYNTROLIB_EXPORT void _logWarn(QString str);
-SYNTROLIB_EXPORT void _logError(QString str);
+SYNTROLIB_EXPORT void _logDebug(QString msg);
+SYNTROLIB_EXPORT void _logInfo(QString msg);
+SYNTROLIB_EXPORT void _logWarn(QString msg);
+SYNTROLIB_EXPORT void _logError(QString msg);
+
+SYNTROLIB_EXPORT void alert(QString type, QString msg);
 
 #endif // LOGWRAPPER_H

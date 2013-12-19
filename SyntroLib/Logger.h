@@ -39,12 +39,12 @@
 class SYNTROLIB_EXPORT LogMessage
 {
 public:
-	LogMessage(QString level, QString &msg);
+	LogMessage(QString type, QString &msg);
 	LogMessage(const LogMessage &rhs);
 
 	LogMessage& operator=(const LogMessage &rhs);
 
-	QString m_level;
+	QString m_type;
 	QString m_msg;
     QString m_timeStamp;
 };
@@ -56,7 +56,7 @@ public:
 
 	~Logger();
 
-	void logWrite(QString level, QString str);
+	void logWrite(QString level, QString msg);
 	QQueue<LogMessage>* streamQueue();
 
 protected:
