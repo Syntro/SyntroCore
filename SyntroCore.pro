@@ -12,11 +12,13 @@ SUBDIRS = SyntroLib \
         SyntroControlLib \
         SyntroControl \
         SyntroDB \
-        SyntroLog
+        SyntroLog \
+        SyntroAlert
 
 SyntroGUI.depends = SyntroLib
 SyntroControlLib.depends = SyntroLib
 SyntroControl.depends = SyntroLib SyntroGUI SyntroControlLib
 SyntroLog.depends = SyntroLib SyntroGUI
 SyntroDB.depends = SyntroLib SyntroGUI
+SyntroAlert.depends = SyntroLib SyntroGUI SyntroControlLib
 
