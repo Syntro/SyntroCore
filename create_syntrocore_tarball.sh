@@ -6,7 +6,7 @@ fi
 
 rm -f *.tgz *.bz2 Makefile *.log* *.ini
 
-subdirs=( SyntroLib SyntroGUI SyntroControlLib SyntroCFS SyntroControl SyntroExec SyntroLog SyntroStore SyntroDB )
+subdirs=( SyntroLib SyntroGUI SyntroControlLib SyntroControl SyntroAlert SyntroLog SyntroDB )
 
 for subdir in ${subdirs[@]}; do
         if [ -d $subdir ]; then
