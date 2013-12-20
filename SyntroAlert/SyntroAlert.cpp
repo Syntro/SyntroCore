@@ -366,11 +366,11 @@ void SyntroAlert::saveWindowState()
 	settings->endGroup();
 
 	settings->beginGroup("Types");
-	settings->setValue(SYNTRO_LOG_ERROR, m_currentTypes.contains(SYNTRO_LOG_ERROR));
-	settings->setValue(SYNTRO_LOG_WARN, m_currentTypes.contains(SYNTRO_LOG_WARN));
-	settings->setValue(SYNTRO_LOG_INFO, m_currentTypes.contains(SYNTRO_LOG_INFO));
-	settings->setValue(SYNTRO_LOG_DEBUG, m_currentTypes.contains(SYNTRO_LOG_DEBUG));
-	settings->setValue("alert", m_currentTypes.contains("alert"));
+	settings->setValue(SYNTRO_LOG_ERROR, m_currentTypes.contains(SYNTRO_LOG_ERROR) ? true : false);
+	settings->setValue(SYNTRO_LOG_WARN, m_currentTypes.contains(SYNTRO_LOG_WARN) ? true : false);
+	settings->setValue(SYNTRO_LOG_INFO, m_currentTypes.contains(SYNTRO_LOG_INFO) ? true : false);
+	settings->setValue(SYNTRO_LOG_DEBUG, m_currentTypes.contains(SYNTRO_LOG_DEBUG) ? true : false);
+	settings->setValue("alert", m_currentTypes.contains("alert") ? true : false);
 	settings->endGroup();
 
 	delete settings;
