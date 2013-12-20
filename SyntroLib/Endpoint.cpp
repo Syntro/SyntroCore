@@ -926,23 +926,29 @@ bool Endpoint::clientSendMulticastAck(int servicePort)
 	}
 
 	service = m_serviceInfo + servicePort;
+
 	if (!service->enabled) {
 		logWarn(QString("clientSendMulticastAck on disabled port %1").arg(servicePort));
 		return false;
 	}
+
 	if (!service->inUse) {
 		logWarn(QString("clientSendMulticastAck on not in use port %1").arg(servicePort));
 		return false;
 	}
+
 	if (service->local) {
 		logWarn(QString("clientSendMulticastAck on local service port %1").arg(servicePort));
 		return false;
 	}
+
 	if (service->serviceType != SERVICETYPE_MULTICAST) {
 		logWarn(QString("clientSendMulticastAck on service port %1 that isn't multicast").arg(servicePort));
 		return false;
 	}
+
 	sendMulticastAck(servicePort, service->lastReceivedSeqNo + 1);
+
 	return true;
 }
 
@@ -1648,6 +1654,11 @@ void Endpoint::serviceInit()
 		service->serviceData = -1;
 		service->serviceDataPointer = NULL;
 		SyntroUtils::convertIntToUC2(i, service->serviceLookup.localPort); // this is my local port index
+
+		service->lastReceivedSeqNo = -1;
+		service->nextSendSeqNo = 0;
+		service->lastReceivedAck = 0;
+		service->lastSendTime = 0;
 	}	
 }
 
@@ -2066,18 +2077,22 @@ void Endpoint::endpointConnected()
 	m_connected = true;
 
 	service = m_serviceInfo;
+
 	for (int i = 0; i < SYNTRO_MAX_SERVICESPERCOMPONENT; i++, service++) {
 		if (!service->inUse)
 			continue;
+
 		if (service->local)
 			service->state = SYNTRO_LOCAL_SERVICE_STATE_INACTIVE;
 		else
 			service->state = SYNTRO_REMOTE_SERVICE_STATE_LOOK;
+
 		service->lastReceivedSeqNo = -1;
 		service->nextSendSeqNo = 0;
 		service->lastReceivedAck = 0;
 		service->lastSendTime = SyntroClock();
 	}
+
 	appClientConnected();
 }
 
@@ -2113,20 +2128,25 @@ void Endpoint::processMulticast(SYNTRO_EHEAD *message, int length, int destPort)
 	SYNTRO_SERVICE_INFO *service;
 
 	service = m_serviceInfo + destPort;
+
 	if (!service->inUse) {
 		logWarn(QString("Nulticast data received on not in use port %1").arg(destPort));
 		free(message);
 		return;								
 	}
+
 	if (service->serviceType != SERVICETYPE_MULTICAST) {
 		logWarn(QString("Multicast data received on port %1 that is not a multicast service port").arg(destPort));
 		free(message);
 		return;								
 	}
 
-	if (service->lastReceivedSeqNo == message->seq) {
-		logWarn(QString("Received duplicate multicast seq number %1").arg(message->seq));
-	}
+	if (service->lastReceivedSeqNo == message->seq)
+		logWarn(QString("Received duplicate multicast seq number %1  source %2  dest %2")
+			.arg(message->seq)
+			.arg(SyntroUtils::displayUID(&message->sourceUID))
+			.arg(SyntroUtils::displayUID(&message->destUID)));
+
 	service->lastReceivedSeqNo = message->seq;
 
 	appClientReceiveMulticast(destPort, message, length);
