@@ -1,9 +1,12 @@
-HEADERS += syntrogui_global.h \
-    SyntroAboutDlg.h \
-    BasicSetupDlg.h \
-    SyntroValidators.h
+INCLUDEPATH += $$PWD
+DEPENDPATH += $$PWD
 
-SOURCES += SyntroAboutDlg.cpp \
-    BasicSetupDlg.cpp \
-    SyntroValidators.cpp
+HEADERS += $$PWD/syntrogui_global.h \
+    $$PWD/SyntroAboutDlg.h \
+    $$PWD/BasicSetupDlg.h \
+    $$PWD/SyntroValidators.h
+
+SOURCES += $$PWD/SyntroAboutDlg.cpp \
+    $$PWD/BasicSetupDlg.cpp \
+    $$PWD/SyntroValidators.cpp
 

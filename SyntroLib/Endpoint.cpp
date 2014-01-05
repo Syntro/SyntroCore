@@ -862,6 +862,11 @@ bool Endpoint::clientSendMessage(int servicePort, SYNTRO_EHEAD *message, int len
 {
 	SYNTRO_SERVICE_INFO *service;
 
+	if (!message || length < 1) {
+		logWarn(QString("clientSendMessage called with invalid parameters"));
+		return false;
+	}
+
 	QMutexLocker locker(&m_serviceLock);
 
 	if ((servicePort < 0) || (servicePort >= SYNTRO_MAX_SERVICESPERCOMPONENT)) {

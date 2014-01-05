@@ -36,6 +36,7 @@ SyntroAlert::SyntroAlert(QWidget *parent)
 
 	connect(ui.actionExit, SIGNAL(triggered()), this, SLOT(close()));
 	connect(ui.actionSave, SIGNAL(triggered()), this, SLOT(onSave()));
+	connect(ui.actionClear, SIGNAL(triggered()), this, SLOT(onClear()));
 	connect(ui.actionAbout, SIGNAL(triggered()), this, SLOT(onAbout()));
 	connect(ui.actionBasicSetup, SIGNAL(triggered()), this, SLOT(onBasicSetup()));
 	connect(ui.actionTypes, SIGNAL(triggered()), this, SLOT(onTypes()));
@@ -211,6 +212,12 @@ bool SyntroAlert::filtered(QString type)
 	}
 
 	return true;
+}
+
+void SyntroAlert::onClear()
+{
+	m_entries.clear();
+	onTypesChange();
 }
 
 void SyntroAlert::onSave()

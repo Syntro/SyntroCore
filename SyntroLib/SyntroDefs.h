@@ -22,7 +22,7 @@
 
 //	Version
 
-#define	SYNTROLIB_VERSION	"0.9.2"
+#define	SYNTROLIB_VERSION	"0.9.3"
 
 //	Timer definition
 //
@@ -400,6 +400,7 @@ typedef struct
 #define SYNTRO_STREAMNAME_PRESSURE			"pressure"
 #define SYNTRO_STREAMNAME_ACCELEROMETER		"accelerometer"
 #define SYNTRO_STREAMNAME_ZIGBEE_MULTICAST  "zbmc"
+#define SYNTRO_STREAMNAME_HOMEAUTOMATION		"ha"
 
 //	Standard E2E stream names
 

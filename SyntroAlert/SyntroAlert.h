@@ -39,6 +39,7 @@ public:
 public slots:
 	void newLogMsg(QByteArray bulkMsg);
 	void activeClientUpdate(int count);
+	void onClear();
 	void onSave();
 	void onBasicSetup();
 	void onAbout();
@@ -60,7 +61,6 @@ private:
     void updateTable(QStringList msg);
     int findRowInsertPosition(QStringList msg);
 	bool filtered(QString type);
-    //int msgLogLevel(QString level);
     void onTypesChange();
     void onFieldsChange();
     void validateViewFields();
@@ -78,14 +78,12 @@ private:
 	QMutex m_activeClientMutex;
 
 	QLabel *m_controlStatus;
-    //QLabel *m_severityLevelStatus;
 	QLabel *m_activeClientStatus;
 
     QList<QStringList> m_entries;
     QList<int> m_viewFields;
     QStringList m_fieldLabels;
     QList<int> m_colWidths;
-    //int m_severityLevel;
 	QStringList m_currentTypes;
     int m_timestampCol;
 

@@ -86,3 +86,4 @@ protected:
 };
 
 #endif // _SYNTROLINK_H_
+
