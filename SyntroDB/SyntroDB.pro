@@ -32,12 +32,14 @@ unix {
 	INSTALLS += target
 
         INCLUDEPATH += ../SyntroLib \
-                ../SyntroGUI
+                       ../SyntroGUI \
+                       ../SyntroControlLib
  
         QMAKE_LIBDIR += ../SyntroLib \
-                ../SyntroGUI
+                        ../SyntroGUI \
+                        ../SyntroControlLib
 
-        LIBS += -lSyntroLib -lSyntroGUI
+        LIBS += -lSyntroLib -lSyntroGUI -lSyntroControlLib
 }
 
 DEFINES += QT_NETWORK_LIB
@@ -53,7 +55,7 @@ win32-msvc*:LIBS += -L"$(SYNTRODIR)/lib"
 win32 {
         DEFINES += _CRT_SECURE_NO_WARNINGS
         INCLUDEPATH += $(SYNTRODIR)/include
-        LIBS += -lSyntroLib -lSyntroGUI
+        LIBS += -lSyntroLib -lSyntroGUI -lSyntroControlLib
 }
 
 DEPENDPATH +=
