@@ -219,15 +219,17 @@ void StoreStream::doRotation()
 	setCurrentStart(now);
 
 	if (m_storeFormat == rawFileFormat) {
-		m_fileMutex.lock();			
+		QMutexLocker lock(&m_fileMutex);
+
 		m_currentFile = QString(m_filePrefix + m_current.toString("yyyyMMdd_hhmm.") 
 			+ SYNTRO_RECORD_FLAT_EXT);
 
 		m_currentFileFullPath = m_storePath + m_currentFile;
 
 		checkDeletion(now);
-	} else if (m_storeFormat == structuredFileFormat) {
-		m_fileMutex.lock();
+	} 
+	else if (m_storeFormat == structuredFileFormat) {
+		QMutexLocker lock(&m_fileMutex);
 
 		m_currentFile = QString(m_filePrefix + m_current.toString("yyyyMMdd_hhmm.") 
 			+ SYNTRO_RECORD_SRF_RECORD_EXT);
@@ -238,7 +240,6 @@ void StoreStream::doRotation()
 			+ m_current.toString("yyyyMMdd_hhmm.") + SYNTRO_RECORD_SRF_INDEX_EXT);
 
 		checkDeletion(now);
-		m_fileMutex.unlock();			
 	}
 
 	m_statMutex.lock();
