@@ -7,6 +7,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "SyntroLog", "..\SyntroLog\S
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "SyntroDB", "..\SyntroDB\SyntroDB.vcxproj", "{21B5C482-CD24-452E-A4CD-E1CB06E7DAB8}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "SyntroAlert", "..\SyntroAlert\SyntroAlert.vcxproj", "{E4615BD5-2B7E-4863-943A-0DE4DA589C5F}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
@@ -39,6 +41,14 @@ Global
 		{21B5C482-CD24-452E-A4CD-E1CB06E7DAB8}.StaticDebug|Win32.Build.0 = StaticDebug|Win32
 		{21B5C482-CD24-452E-A4CD-E1CB06E7DAB8}.StaticRelease|Win32.ActiveCfg = StaticRelease|Win32
 		{21B5C482-CD24-452E-A4CD-E1CB06E7DAB8}.StaticRelease|Win32.Build.0 = StaticRelease|Win32
+		{E4615BD5-2B7E-4863-943A-0DE4DA589C5F}.Debug|Win32.ActiveCfg = Debug|Win32
+		{E4615BD5-2B7E-4863-943A-0DE4DA589C5F}.Debug|Win32.Build.0 = Debug|Win32
+		{E4615BD5-2B7E-4863-943A-0DE4DA589C5F}.Release|Win32.ActiveCfg = Release|Win32
+		{E4615BD5-2B7E-4863-943A-0DE4DA589C5F}.Release|Win32.Build.0 = Release|Win32
+		{E4615BD5-2B7E-4863-943A-0DE4DA589C5F}.StaticDebug|Win32.ActiveCfg = StaticDebug|Win32
+		{E4615BD5-2B7E-4863-943A-0DE4DA589C5F}.StaticDebug|Win32.Build.0 = StaticDebug|Win32
+		{E4615BD5-2B7E-4863-943A-0DE4DA589C5F}.StaticRelease|Win32.ActiveCfg = StaticRelease|Win32
+		{E4615BD5-2B7E-4863-943A-0DE4DA589C5F}.StaticRelease|Win32.Build.0 = StaticRelease|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
