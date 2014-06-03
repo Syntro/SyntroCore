@@ -22,6 +22,7 @@
 
 #include <QThread>
 #include <QSettings>
+#include "SyntroServer.h"
 #include "StoreStream.h"
 
 class StoreClient;
@@ -48,7 +49,9 @@ private:
 	void showStatus();
 	void showCounts();
 	void showHelp();
+	void startControlServer();
 
+	SyntroServer *m_controlServer;
 	StoreClient *m_storeClient;
 	CFSClient *m_CFSClient;
 };

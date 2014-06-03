@@ -24,6 +24,7 @@
 #include <qtablewidget.h>
 #include "ui_SyntroDB.h"
 #include "SyntroLib.h"
+#include "SyntroServer.h"
 #include "StoreStreamDlg.h"
 
 #define	SYNTRODB_MAX_STREAMS		(SYNTRO_MAX_SERVICESPERCOMPONENT / 2)
@@ -156,6 +157,7 @@ protected:
 	void timerEvent(QTimerEvent *event);
 
 private:
+	void startControlServer();
 	void saveWindowState();
 	void restoreWindowState();
 	void initStatusBar();
@@ -163,6 +165,7 @@ private:
 	void displayStreamDetails(int index);
 	
 	Ui::CSyntroDBClass ui;
+	SyntroServer *m_controlServer;
 	QLabel *m_controlStatus;
 	QTableWidget *m_rxStreamTable;
 	StoreClient *m_storeClient;

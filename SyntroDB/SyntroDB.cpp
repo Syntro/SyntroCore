@@ -47,6 +47,7 @@ SyntroDB::SyntroDB()
 	m_timerId = startTimer(2000);
 
 	SyntroUtils::syntroAppInit();
+	startControlServer();
 
 	setWindowTitle(QString("%1 - %2")
 		.arg(SyntroUtils::getAppType())
@@ -79,6 +80,21 @@ SyntroDB::SyntroDB()
 
 
 	m_startingUp = false;
+
+	delete settings;
+}
+
+void SyntroDB::startControlServer()
+{
+	QSettings *settings = SyntroUtils::getSettings();
+
+	if (settings->value(SYNTRO_PARAMS_LOCALCONTROL).toBool()) {
+		m_controlServer = new SyntroServer();
+		m_controlServer->resumeThread();
+	} 
+	else {
+		m_controlServer = NULL;
+	}
 
 	delete settings;
 }
@@ -117,6 +133,12 @@ void SyntroDB::closeEvent(QCloseEvent *)
 
 	delete settings;
 */
+
+	if (m_controlServer) {
+		m_controlServer->exitThread();
+		m_controlServer = NULL;
+	}
+
 	saveWindowState();
 	SyntroUtils::syntroAppExit();
 }

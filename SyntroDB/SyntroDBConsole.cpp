@@ -34,6 +34,7 @@ SyntroDBConsole::SyntroDBConsole(QObject *parent)
 	: QThread(parent)
 {
 	SyntroUtils::syntroAppInit();
+	startControlServer();
 
     m_storeClient = new StoreClient(this);
 
@@ -51,6 +52,21 @@ SyntroDBConsole::SyntroDBConsole(QObject *parent)
 
 SyntroDBConsole::~SyntroDBConsole()
 {
+}
+
+void SyntroDBConsole::startControlServer()
+{
+	QSettings *settings = SyntroUtils::getSettings();
+
+	if (settings->value(SYNTRO_PARAMS_LOCALCONTROL).toBool()) {
+		m_controlServer = new SyntroServer();
+		m_controlServer->resumeThread();
+	} 
+	else {
+		m_controlServer = NULL;
+	}
+
+	delete settings;
 }
 
 void SyntroDBConsole::storeRunning()
@@ -132,6 +148,12 @@ void SyntroDBConsole::run()
 			m_storeClient->exitThread();
 			m_CFSClient->exitThread();
 			mustExit = true;
+
+			if (m_controlServer) {
+				m_controlServer->exitThread();
+				m_controlServer = NULL;
+			}
+
 			SyntroUtils::syntroAppExit();
 			((QCoreApplication *)parent())->exit();
 			break;
