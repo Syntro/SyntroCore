@@ -1,3 +1,4 @@
+*.cache
 Makefile*
 *.tgz
 *.bz2
