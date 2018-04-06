@@ -58,3 +58,5 @@ openexr-1.4.0-vsnet2003/
 *.opensdf
 ipch/
 *.dat
+*.db
+*.opendb
