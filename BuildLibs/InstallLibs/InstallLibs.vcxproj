@@ -185,7 +185,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
     <CustomBuildStep>
-      <Command>CScript $(SolutionDir)\..\win_install_libs.vbs</Command>
+      <Command>CScript $(SolutionDir)\..\win_install_libs64.vbs</Command>
       <Outputs>libs</Outputs>
     </CustomBuildStep>
     <PostBuildEvent>
@@ -229,8 +229,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
     <CustomBuildStep>
-      <Command>
-      </Command>
+      <Command>CScript $(SolutionDir)\..\win_install_libs64.vbs</Command>
       <Outputs>
       </Outputs>
     </CustomBuildStep>
@@ -281,7 +280,7 @@
       <OptimizeReferences>true</OptimizeReferences>
     </Link>
     <CustomBuildStep>
-      <Command>cscript.exe $(SolutionDir)\..\win_install_libs.vbs</Command>
+      <Command>cscript.exe $(SolutionDir)\..\win_install_libs64.vbs</Command>
       <Outputs>libs</Outputs>
     </CustomBuildStep>
     <PostBuildEvent>
@@ -333,8 +332,7 @@
       <OptimizeReferences>true</OptimizeReferences>
     </Link>
     <CustomBuildStep>
-      <Command>
-      </Command>
+      <Command>CScript $(SolutionDir)\..\win_install_libs64.vbs</Command>
       <Outputs>
       </Outputs>
     </CustomBuildStep>
