@@ -178,6 +178,8 @@ void SyntroDB::timerEvent(QTimerEvent *)
 void SyntroDB::initDisplayStats()
 {
 	QTableWidgetItem *item;
+	QHBoxLayout *layout;
+	QWidget *widget;
 
 	int cellHeight = fontMetrics().lineSpacing() + CELL_HEIGHT_PAD;
 	
@@ -211,7 +213,17 @@ void SyntroDB::initDisplayStats()
 		connect(button, SIGNAL(buttonClicked(int)), this, SLOT(buttonClicked(int)));
 
 		m_useBox[row] = new StoreCheckBox(m_rxStreamTable, row);
-		m_rxStreamTable->setCellWidget(row, SYNTRODB_COL_INUSE, m_useBox[row]);
+
+		// center the checkbox in cell
+		widget = new QWidget;
+		layout = new QHBoxLayout;
+		layout->setSpacing(0);
+		layout->setContentsMargins(0, 0, 0, 0);
+		layout->addWidget(m_useBox[row]);
+		layout->setAlignment(Qt::AlignCenter);
+		widget->setLayout(layout);
+		m_rxStreamTable->setCellWidget(row, SYNTRODB_COL_INUSE, widget);
+
 		connect(m_useBox[row], SIGNAL(boxClicked(bool, int)), this, SLOT(boxClicked(bool, int)));
 		
 		for (int col = 2; col < SYNTRODB_COL_COUNT; col++) {
