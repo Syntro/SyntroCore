@@ -25,7 +25,7 @@
 #include "BasicSetupDlg.h"
 #include "ConfigurationDlg.h"
 
-#define CELL_HEIGHT_PAD 6
+#define CELL_HEIGHT_PAD 14
 
 SyntroDB::SyntroDB()
 	: QMainWindow()
@@ -203,7 +203,7 @@ void SyntroDB::initDisplayStats()
  
 	for (int row = 0; row < SYNTRODB_MAX_STREAMS; row++) {
 		m_rxStreamTable->insertRow(row);
-		m_rxStreamTable->setRowHeight(row, 20);
+		m_rxStreamTable->setRowHeight(row, cellHeight);
 		m_rxStreamTable->setContentsMargins(5, 5, 5, 5);
 
 		StoreButton *button = new StoreButton("Configure", this, row);
