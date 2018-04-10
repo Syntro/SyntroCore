@@ -5,17 +5,33 @@
       <Configuration>Debug</Configuration>
       <Platform>Win32</Platform>
     </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
     <ProjectConfiguration Include="Release|Win32">
       <Configuration>Release</Configuration>
       <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
     </ProjectConfiguration>
     <ProjectConfiguration Include="StaticDebug|Win32">
       <Configuration>StaticDebug</Configuration>
       <Platform>Win32</Platform>
     </ProjectConfiguration>
+    <ProjectConfiguration Include="StaticDebug|x64">
+      <Configuration>StaticDebug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
     <ProjectConfiguration Include="StaticRelease|Win32">
       <Configuration>StaticRelease</Configuration>
       <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="StaticRelease|x64">
+      <Configuration>StaticRelease</Configuration>
+      <Platform>x64</Platform>
     </ProjectConfiguration>
   </ItemGroup>
   <PropertyGroup Label="Globals">
@@ -27,7 +43,15 @@
     <ConfigurationType>DynamicLibrary</ConfigurationType>
     <PlatformToolset>v140</PlatformToolset>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <PlatformToolset>v140</PlatformToolset>
+  </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='StaticDebug|Win32'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <PlatformToolset>v140</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='StaticDebug|x64'" Label="Configuration">
     <ConfigurationType>StaticLibrary</ConfigurationType>
     <PlatformToolset>v140</PlatformToolset>
   </PropertyGroup>
@@ -35,7 +59,15 @@
     <ConfigurationType>DynamicLibrary</ConfigurationType>
     <PlatformToolset>v140</PlatformToolset>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <PlatformToolset>v140</PlatformToolset>
+  </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='StaticRelease|Win32'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <PlatformToolset>v140</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='StaticRelease|x64'" Label="Configuration">
     <ConfigurationType>StaticLibrary</ConfigurationType>
     <PlatformToolset>v140</PlatformToolset>
   </PropertyGroup>
@@ -45,13 +77,25 @@
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='StaticDebug|Win32'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='StaticDebug|x64'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='StaticRelease|Win32'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='StaticRelease|x64'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
@@ -66,13 +110,42 @@
     <IntDir Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(ProjectDir)$(Configuration)\</IntDir>
     <IntDir Condition="'$(Configuration)|$(Platform)'=='StaticRelease|Win32'">$(ProjectDir)$(Configuration)\</IntDir>
     <TargetName Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(ProjectName)d</TargetName>
+    <TargetName Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(ProjectName)d</TargetName>
     <TargetName Condition="'$(Configuration)|$(Platform)'=='StaticDebug|Win32'">$(ProjectName)d</TargetName>
+    <TargetName Condition="'$(Configuration)|$(Platform)'=='StaticDebug|x64'">$(ProjectName)d</TargetName>
     <TargetExt Condition="'$(Configuration)|$(Platform)'=='StaticDebug|Win32'">.lib</TargetExt>
+    <TargetExt Condition="'$(Configuration)|$(Platform)'=='StaticDebug|x64'">.lib</TargetExt>
     <TargetExt Condition="'$(Configuration)|$(Platform)'=='StaticRelease|Win32'">.lib</TargetExt>
+    <TargetExt Condition="'$(Configuration)|$(Platform)'=='StaticRelease|x64'">.lib</TargetExt>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
-      <PreprocessorDefinitions>UNICODE;WIN32;QT_DLL;QT_CORE_LIB;QT_NETWORK_LIB;SYNTROCONTROLLIB_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>UNICODE;WIN32;QT_CORE_LIB;QT_NETWORK_LIB;SYNTROCONTROLLIB_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>.\;$(QTDIR)\include\QtWidgets;..\SyntroLib\;.\GeneratedFiles;.;$(QTDIR)\include;.\GeneratedFiles\$(ConfigurationName);$(QTDIR)\include\QtCore;$(QTDIR)\include\QtNetwork;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <Optimization>Disabled</Optimization>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
+      <TreatWChar_tAsBuiltInType>true</TreatWChar_tAsBuiltInType>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <OutputFile>$(OutDir)\$(ProjectName)d.dll</OutputFile>
+      <AdditionalLibraryDirectories>..\SyntroLib\debug;$(QTDIR)\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalDependencies>SyntroLibd.lib;qtmaind.lib;Qt5Cored.lib;Qt5Networkd.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+    <PostBuildEvent>
+      <Command>
+      </Command>
+    </PostBuildEvent>
+    <PreBuildEvent>
+      <Command>
+      </Command>
+    </PreBuildEvent>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ClCompile>
+      <PreprocessorDefinitions>UNICODE;WIN32;QT_CORE_LIB;QT_NETWORK_LIB;SYNTROCONTROLLIB_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>.\;$(QTDIR)\include\QtWidgets;..\SyntroLib\;.\GeneratedFiles;.;$(QTDIR)\include;.\GeneratedFiles\$(ConfigurationName);$(QTDIR)\include\QtCore;$(QTDIR)\include\QtNetwork;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <Optimization>Disabled</Optimization>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
@@ -97,7 +170,32 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='StaticDebug|Win32'">
     <ClCompile>
-      <PreprocessorDefinitions>UNICODE;WIN32;QT_DLL;QT_CORE_LIB;QT_NETWORK_LIB;SYNTRO_STATIC_LIB;SYNTROCONTROL_STATIC_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>UNICODE;WIN32;QT_CORE_LIB;QT_NETWORK_LIB;SYNTRO_STATIC_LIB;SYNTROCONTROL_STATIC_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>.\;$(QTDIR)\include\QtWidgets;..\SyntroLib\;.\GeneratedFiles;.;$(QTDIR)\include;.\GeneratedFiles\$(ConfigurationName);$(QTDIR)\include\QtCore;$(QTDIR)\include\QtNetwork;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <Optimization>Disabled</Optimization>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
+      <TreatWChar_tAsBuiltInType>true</TreatWChar_tAsBuiltInType>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <OutputFile>$(OutDir)\$(ProjectName)d.dll</OutputFile>
+      <AdditionalLibraryDirectories>$(SYNTRODIR)\lib;$(QTDIR)\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalDependencies>SyntroLibd.lib;qtmaind.lib;Qt5Cored.lib;Qt5Networkd.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+    <PostBuildEvent>
+      <Command>
+      </Command>
+    </PostBuildEvent>
+    <PreBuildEvent>
+      <Command>
+      </Command>
+    </PreBuildEvent>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='StaticDebug|x64'">
+    <ClCompile>
+      <PreprocessorDefinitions>UNICODE;WIN32;QT_CORE_LIB;QT_NETWORK_LIB;SYNTRO_STATIC_LIB;SYNTROCONTROL_STATIC_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>.\;$(QTDIR)\include\QtWidgets;..\SyntroLib\;.\GeneratedFiles;.;$(QTDIR)\include;.\GeneratedFiles\$(ConfigurationName);$(QTDIR)\include\QtCore;$(QTDIR)\include\QtNetwork;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <Optimization>Disabled</Optimization>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
@@ -122,7 +220,28 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
-      <PreprocessorDefinitions>UNICODE;WIN32;QT_DLL;QT_NO_DEBUG;NDEBUG;QT_CORE_LIB;QT_NETWORK_LIB;SYNTROCONTROLLIB_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>UNICODE;WIN32;QT_NO_DEBUG;NDEBUG;QT_CORE_LIB;QT_NETWORK_LIB;SYNTROCONTROLLIB_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>.\;$(QTDIR)\include\QtWidgets;..\SyntroLib\;.\GeneratedFiles;.;$(QTDIR)\include;.\GeneratedFiles\$(ConfigurationName);$(QTDIR)\include\QtCore;$(QTDIR)\include\QtNetwork;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <DebugInformationFormat>
+      </DebugInformationFormat>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <TreatWChar_tAsBuiltInType>true</TreatWChar_tAsBuiltInType>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <OutputFile>$(OutDir)\$(ProjectName).dll</OutputFile>
+      <AdditionalLibraryDirectories>..\SyntroLib\release;$(QTDIR)\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <GenerateDebugInformation>false</GenerateDebugInformation>
+      <AdditionalDependencies>SyntroLib.lib;qtmain.lib;Qt5Core.lib;Qt5Network.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+    <PreBuildEvent>
+      <Command>
+      </Command>
+    </PreBuildEvent>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <ClCompile>
+      <PreprocessorDefinitions>UNICODE;WIN32;QT_NO_DEBUG;NDEBUG;QT_CORE_LIB;QT_NETWORK_LIB;SYNTROCONTROLLIB_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>.\;$(QTDIR)\include\QtWidgets;..\SyntroLib\;.\GeneratedFiles;.;$(QTDIR)\include;.\GeneratedFiles\$(ConfigurationName);$(QTDIR)\include\QtCore;$(QTDIR)\include\QtNetwork;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>
       </DebugInformationFormat>
@@ -143,7 +262,28 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='StaticRelease|Win32'">
     <ClCompile>
-      <PreprocessorDefinitions>UNICODE;WIN32;QT_DLL;QT_NO_DEBUG;NDEBUG;QT_CORE_LIB;QT_NETWORK_LIB;SYNTRO_STATIC_LIB;SYNTROCONTROL_STATIC_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>UNICODE;WIN32;QT_NO_DEBUG;NDEBUG;QT_CORE_LIB;QT_NETWORK_LIB;SYNTRO_STATIC_LIB;SYNTROCONTROL_STATIC_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>.\;$(QTDIR)\include\QtWidgets;..\SyntroLib\;.\GeneratedFiles;.;$(QTDIR)\include;.\GeneratedFiles\$(ConfigurationName);$(QTDIR)\include\QtCore;$(QTDIR)\include\QtNetwork;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <DebugInformationFormat>
+      </DebugInformationFormat>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <TreatWChar_tAsBuiltInType>true</TreatWChar_tAsBuiltInType>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <OutputFile>$(OutDir)\$(ProjectName).dll</OutputFile>
+      <AdditionalLibraryDirectories>$(SYNTRODIR)\lib;$(QTDIR)\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <GenerateDebugInformation>false</GenerateDebugInformation>
+      <AdditionalDependencies>SyntroLib.lib;qtmain.lib;Qt5Core.lib;Qt5Network.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+    <PreBuildEvent>
+      <Command>
+      </Command>
+    </PreBuildEvent>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='StaticRelease|x64'">
+    <ClCompile>
+      <PreprocessorDefinitions>UNICODE;WIN32;QT_NO_DEBUG;NDEBUG;QT_CORE_LIB;QT_NETWORK_LIB;SYNTRO_STATIC_LIB;SYNTROCONTROL_STATIC_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>.\;$(QTDIR)\include\QtWidgets;..\SyntroLib\;.\GeneratedFiles;.;$(QTDIR)\include;.\GeneratedFiles\$(ConfigurationName);$(QTDIR)\include\QtCore;$(QTDIR)\include\QtNetwork;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>
       </DebugInformationFormat>
@@ -167,63 +307,99 @@
     <ClCompile Include="FastUIDLookup.cpp" />
     <ClCompile Include="GeneratedFiles\Debug\moc_DirectoryManager.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='StaticDebug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='StaticDebug|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='StaticRelease|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='StaticRelease|x64'">true</ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="GeneratedFiles\Debug\moc_MulticastManager.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='StaticDebug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='StaticDebug|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='StaticRelease|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='StaticRelease|x64'">true</ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="GeneratedFiles\Debug\moc_SyntroServer.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='StaticDebug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='StaticDebug|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='StaticRelease|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='StaticRelease|x64'">true</ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="GeneratedFiles\Release\moc_DirectoryManager.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='StaticDebug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='StaticDebug|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='StaticRelease|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='StaticRelease|x64'">true</ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="GeneratedFiles\Release\moc_MulticastManager.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='StaticDebug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='StaticDebug|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='StaticRelease|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='StaticRelease|x64'">true</ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="GeneratedFiles\Release\moc_SyntroServer.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='StaticDebug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='StaticDebug|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='StaticRelease|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='StaticRelease|x64'">true</ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="GeneratedFiles\StaticDebug\moc_DirectoryManager.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='StaticRelease|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='StaticRelease|x64'">true</ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="GeneratedFiles\StaticDebug\moc_MulticastManager.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='StaticRelease|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='StaticRelease|x64'">true</ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="GeneratedFiles\StaticDebug\moc_SyntroServer.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='StaticRelease|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='StaticRelease|x64'">true</ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="GeneratedFiles\StaticRelease\moc_DirectoryManager.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='StaticDebug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='StaticDebug|x64'">true</ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="GeneratedFiles\StaticRelease\moc_MulticastManager.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='StaticDebug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='StaticDebug|x64'">true</ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="GeneratedFiles\StaticRelease\moc_SyntroServer.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='StaticDebug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='StaticDebug|x64'">true</ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="MulticastManager.cpp" />
     <ClCompile Include="SyntroControLlib.cpp" />
@@ -234,58 +410,106 @@
     <ClInclude Include="SyntroTunnel.h" />
     <CustomBuild Include="SyntroServer.h">
       <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(QTDIR)\bin\moc.exe;%(FullPath);%(AdditionalInputs)</AdditionalInputs>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(QTDIR)\bin\moc.exe;%(FullPath);%(AdditionalInputs)</AdditionalInputs>
       <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='StaticDebug|Win32'">$(QTDIR)\bin\moc.exe;%(FullPath);%(AdditionalInputs)</AdditionalInputs>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='StaticDebug|x64'">$(QTDIR)\bin\moc.exe;%(FullPath);%(AdditionalInputs)</AdditionalInputs>
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Moc%27ing SyntroServer.h...</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Moc%27ing SyntroServer.h...</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='StaticDebug|Win32'">Moc%27ing SyntroServer.h...</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='StaticDebug|x64'">Moc%27ing SyntroServer.h...</Message>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">.\GeneratedFiles\$(ConfigurationName)\moc_%(Filename).cpp</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">.\GeneratedFiles\$(ConfigurationName)\moc_%(Filename).cpp</Outputs>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='StaticDebug|Win32'">.\GeneratedFiles\$(ConfigurationName)\moc_%(Filename).cpp</Outputs>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">"$(QTDIR)\bin\moc.exe"  "%(FullPath)" -o ".\GeneratedFiles\$(ConfigurationName)\moc_%(Filename).cpp"  -DUNICODE -DWIN32 -DQT_DLL -DQT_CORE_LIB -DQT_NETWORK_LIB -DSYNTROCONTROLLIB_LIB -D_WINDLL  "-I." "-I$(QTDIR)\include\QtWidgets" "-I.\..\SyntroLib" "-I.\GeneratedFiles" "-I." "-I$(QTDIR)\include" "-I.\GeneratedFiles\$(ConfigurationName)\." "-I$(QTDIR)\include\QtCore" "-I$(QTDIR)\include\QtNetwork"</Command>
-      <Command Condition="'$(Configuration)|$(Platform)'=='StaticDebug|Win32'">"$(QTDIR)\bin\moc.exe"  "%(FullPath)" -o ".\GeneratedFiles\$(ConfigurationName)\moc_%(Filename).cpp"  -DUNICODE -DWIN32 -DQT_DLL -DQT_CORE_LIB -DQT_NETWORK_LIB -DSYNTRO_STATIC_LIB -DSYNTROCONTROL_STATIC_LIB  "-I." "-I$(QTDIR)\include\QtWidgets" "-I.\..\SyntroLib" "-I.\GeneratedFiles" "-I." "-I$(QTDIR)\include" "-I.\GeneratedFiles\$(ConfigurationName)\." "-I$(QTDIR)\include\QtCore" "-I$(QTDIR)\include\QtNetwork"</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='StaticDebug|x64'">.\GeneratedFiles\$(ConfigurationName)\moc_%(Filename).cpp</Outputs>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">"$(QTDIR)\bin\moc.exe"  "%(FullPath)" -o ".\GeneratedFiles\$(ConfigurationName)\moc_%(Filename).cpp"  -DUNICODE -DWIN32 -DQT_CORE_LIB -DQT_NETWORK_LIB -DSYNTROCONTROLLIB_LIB -D_WINDLL  "-I." "-I$(QTDIR)\include\QtWidgets" "-I.\..\SyntroLib" "-I.\GeneratedFiles" "-I." "-I$(QTDIR)\include" "-I.\GeneratedFiles\$(ConfigurationName)\." "-I$(QTDIR)\include\QtCore" "-I$(QTDIR)\include\QtNetwork"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">"$(QTDIR)\bin\moc.exe"  "%(FullPath)" -o ".\GeneratedFiles\$(ConfigurationName)\moc_%(Filename).cpp"  -DUNICODE -DWIN32 -DQT_CORE_LIB -DQT_NETWORK_LIB -DSYNTROCONTROLLIB_LIB -D_WINDLL  "-I." "-I$(QTDIR)\include\QtWidgets" "-I.\..\SyntroLib" "-I.\GeneratedFiles" "-I." "-I$(QTDIR)\include" "-I.\GeneratedFiles\$(ConfigurationName)\." "-I$(QTDIR)\include\QtCore" "-I$(QTDIR)\include\QtNetwork"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='StaticDebug|Win32'">"$(QTDIR)\bin\moc.exe"  "%(FullPath)" -o ".\GeneratedFiles\$(ConfigurationName)\moc_%(Filename).cpp"  -DUNICODE -DWIN32 -DQT_CORE_LIB -DQT_NETWORK_LIB -DSYNTRO_STATIC_LIB -DSYNTROCONTROL_STATIC_LIB  "-I." "-I$(QTDIR)\include\QtWidgets" "-I.\..\SyntroLib" "-I.\GeneratedFiles" "-I." "-I$(QTDIR)\include" "-I.\GeneratedFiles\$(ConfigurationName)\." "-I$(QTDIR)\include\QtCore" "-I$(QTDIR)\include\QtNetwork"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='StaticDebug|x64'">"$(QTDIR)\bin\moc.exe"  "%(FullPath)" -o ".\GeneratedFiles\$(ConfigurationName)\moc_%(Filename).cpp"  -DUNICODE -DWIN32 -DQT_CORE_LIB -DQT_NETWORK_LIB -DSYNTRO_STATIC_LIB -DSYNTROCONTROL_STATIC_LIB  "-I." "-I$(QTDIR)\include\QtWidgets" "-I.\..\SyntroLib" "-I.\GeneratedFiles" "-I." "-I$(QTDIR)\include" "-I.\GeneratedFiles\$(ConfigurationName)\." "-I$(QTDIR)\include\QtCore" "-I$(QTDIR)\include\QtNetwork"</Command>
       <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(QTDIR)\bin\moc.exe;%(FullPath);%(AdditionalInputs)</AdditionalInputs>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(QTDIR)\bin\moc.exe;%(FullPath);%(AdditionalInputs)</AdditionalInputs>
       <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='StaticRelease|Win32'">$(QTDIR)\bin\moc.exe;%(FullPath);%(AdditionalInputs)</AdditionalInputs>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='StaticRelease|x64'">$(QTDIR)\bin\moc.exe;%(FullPath);%(AdditionalInputs)</AdditionalInputs>
       <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Moc%27ing SyntroServer.h...</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Moc%27ing SyntroServer.h...</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='StaticRelease|Win32'">Moc%27ing SyntroServer.h...</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='StaticRelease|x64'">Moc%27ing SyntroServer.h...</Message>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">.\GeneratedFiles\$(ConfigurationName)\moc_%(Filename).cpp</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">.\GeneratedFiles\$(ConfigurationName)\moc_%(Filename).cpp</Outputs>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='StaticRelease|Win32'">.\GeneratedFiles\$(ConfigurationName)\moc_%(Filename).cpp</Outputs>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">"$(QTDIR)\bin\moc.exe"  "%(FullPath)" -o ".\GeneratedFiles\$(ConfigurationName)\moc_%(Filename).cpp"  -DUNICODE -DWIN32 -DQT_DLL -DQT_NO_DEBUG -DNDEBUG -DQT_CORE_LIB -DQT_NETWORK_LIB -DSYNTROCONTROLLIB_LIB -D_WINDLL  "-I." "-I$(QTDIR)\include\QtWidgets" "-I.\..\SyntroLib" "-I.\GeneratedFiles" "-I." "-I$(QTDIR)\include" "-I.\GeneratedFiles\$(ConfigurationName)\." "-I$(QTDIR)\include\QtCore" "-I$(QTDIR)\include\QtNetwork"</Command>
-      <Command Condition="'$(Configuration)|$(Platform)'=='StaticRelease|Win32'">"$(QTDIR)\bin\moc.exe"  "%(FullPath)" -o ".\GeneratedFiles\$(ConfigurationName)\moc_%(Filename).cpp"  -DUNICODE -DWIN32 -DQT_DLL -DQT_NO_DEBUG -DNDEBUG -DQT_CORE_LIB -DQT_NETWORK_LIB -DSYNTRO_STATIC_LIB -DSYNTROCONTROL_STATIC_LIB  "-I." "-I$(QTDIR)\include\QtWidgets" "-I.\..\SyntroLib" "-I.\GeneratedFiles" "-I." "-I$(QTDIR)\include" "-I.\GeneratedFiles\$(ConfigurationName)\." "-I$(QTDIR)\include\QtCore" "-I$(QTDIR)\include\QtNetwork"</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='StaticRelease|x64'">.\GeneratedFiles\$(ConfigurationName)\moc_%(Filename).cpp</Outputs>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">"$(QTDIR)\bin\moc.exe"  "%(FullPath)" -o ".\GeneratedFiles\$(ConfigurationName)\moc_%(Filename).cpp"  -DUNICODE -DWIN32 -DQT_NO_DEBUG -DNDEBUG -DQT_CORE_LIB -DQT_NETWORK_LIB -DSYNTROCONTROLLIB_LIB -D_WINDLL  "-I." "-I$(QTDIR)\include\QtWidgets" "-I.\..\SyntroLib" "-I.\GeneratedFiles" "-I." "-I$(QTDIR)\include" "-I.\GeneratedFiles\$(ConfigurationName)\." "-I$(QTDIR)\include\QtCore" "-I$(QTDIR)\include\QtNetwork"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">"$(QTDIR)\bin\moc.exe"  "%(FullPath)" -o ".\GeneratedFiles\$(ConfigurationName)\moc_%(Filename).cpp"  -DUNICODE -DWIN32 -DQT_NO_DEBUG -DNDEBUG -DQT_CORE_LIB -DQT_NETWORK_LIB -DSYNTROCONTROLLIB_LIB -D_WINDLL  "-I." "-I$(QTDIR)\include\QtWidgets" "-I.\..\SyntroLib" "-I.\GeneratedFiles" "-I." "-I$(QTDIR)\include" "-I.\GeneratedFiles\$(ConfigurationName)\." "-I$(QTDIR)\include\QtCore" "-I$(QTDIR)\include\QtNetwork"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='StaticRelease|Win32'">"$(QTDIR)\bin\moc.exe"  "%(FullPath)" -o ".\GeneratedFiles\$(ConfigurationName)\moc_%(Filename).cpp"  -DUNICODE -DWIN32 -DQT_NO_DEBUG -DNDEBUG -DQT_CORE_LIB -DQT_NETWORK_LIB -DSYNTRO_STATIC_LIB -DSYNTROCONTROL_STATIC_LIB  "-I." "-I$(QTDIR)\include\QtWidgets" "-I.\..\SyntroLib" "-I.\GeneratedFiles" "-I." "-I$(QTDIR)\include" "-I.\GeneratedFiles\$(ConfigurationName)\." "-I$(QTDIR)\include\QtCore" "-I$(QTDIR)\include\QtNetwork"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='StaticRelease|x64'">"$(QTDIR)\bin\moc.exe"  "%(FullPath)" -o ".\GeneratedFiles\$(ConfigurationName)\moc_%(Filename).cpp"  -DUNICODE -DWIN32 -DQT_NO_DEBUG -DNDEBUG -DQT_CORE_LIB -DQT_NETWORK_LIB -DSYNTRO_STATIC_LIB -DSYNTROCONTROL_STATIC_LIB  "-I." "-I$(QTDIR)\include\QtWidgets" "-I.\..\SyntroLib" "-I.\GeneratedFiles" "-I." "-I$(QTDIR)\include" "-I.\GeneratedFiles\$(ConfigurationName)\." "-I$(QTDIR)\include\QtCore" "-I$(QTDIR)\include\QtNetwork"</Command>
     </CustomBuild>
     <CustomBuild Include="DirectoryManager.h">
       <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(QTDIR)\bin\moc.exe;%(FullPath);%(AdditionalInputs)</AdditionalInputs>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(QTDIR)\bin\moc.exe;%(FullPath);%(AdditionalInputs)</AdditionalInputs>
       <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='StaticDebug|Win32'">$(QTDIR)\bin\moc.exe;%(FullPath);%(AdditionalInputs)</AdditionalInputs>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='StaticDebug|x64'">$(QTDIR)\bin\moc.exe;%(FullPath);%(AdditionalInputs)</AdditionalInputs>
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Moc%27ing DirectoryManager.h...</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Moc%27ing DirectoryManager.h...</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='StaticDebug|Win32'">Moc%27ing DirectoryManager.h...</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='StaticDebug|x64'">Moc%27ing DirectoryManager.h...</Message>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">.\GeneratedFiles\$(ConfigurationName)\moc_%(Filename).cpp</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">.\GeneratedFiles\$(ConfigurationName)\moc_%(Filename).cpp</Outputs>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='StaticDebug|Win32'">.\GeneratedFiles\$(ConfigurationName)\moc_%(Filename).cpp</Outputs>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">"$(QTDIR)\bin\moc.exe"  "%(FullPath)" -o ".\GeneratedFiles\$(ConfigurationName)\moc_%(Filename).cpp"  -DUNICODE -DWIN32 -DQT_DLL -DQT_CORE_LIB -DQT_NETWORK_LIB -DSYNTROCONTROLLIB_LIB -D_WINDLL  "-I." "-I$(QTDIR)\include\QtWidgets" "-I.\..\SyntroLib" "-I.\GeneratedFiles" "-I." "-I$(QTDIR)\include" "-I.\GeneratedFiles\$(ConfigurationName)\." "-I$(QTDIR)\include\QtCore" "-I$(QTDIR)\include\QtNetwork"</Command>
-      <Command Condition="'$(Configuration)|$(Platform)'=='StaticDebug|Win32'">"$(QTDIR)\bin\moc.exe"  "%(FullPath)" -o ".\GeneratedFiles\$(ConfigurationName)\moc_%(Filename).cpp"  -DUNICODE -DWIN32 -DQT_DLL -DQT_CORE_LIB -DQT_NETWORK_LIB -DSYNTRO_STATIC_LIB -DSYNTROCONTROL_STATIC_LIB  "-I." "-I$(QTDIR)\include\QtWidgets" "-I.\..\SyntroLib" "-I.\GeneratedFiles" "-I." "-I$(QTDIR)\include" "-I.\GeneratedFiles\$(ConfigurationName)\." "-I$(QTDIR)\include\QtCore" "-I$(QTDIR)\include\QtNetwork"</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='StaticDebug|x64'">.\GeneratedFiles\$(ConfigurationName)\moc_%(Filename).cpp</Outputs>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">"$(QTDIR)\bin\moc.exe"  "%(FullPath)" -o ".\GeneratedFiles\$(ConfigurationName)\moc_%(Filename).cpp"  -DUNICODE -DWIN32 -DQT_CORE_LIB -DQT_NETWORK_LIB -DSYNTROCONTROLLIB_LIB -D_WINDLL  "-I." "-I$(QTDIR)\include\QtWidgets" "-I.\..\SyntroLib" "-I.\GeneratedFiles" "-I." "-I$(QTDIR)\include" "-I.\GeneratedFiles\$(ConfigurationName)\." "-I$(QTDIR)\include\QtCore" "-I$(QTDIR)\include\QtNetwork"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">"$(QTDIR)\bin\moc.exe"  "%(FullPath)" -o ".\GeneratedFiles\$(ConfigurationName)\moc_%(Filename).cpp"  -DUNICODE -DWIN32 -DQT_CORE_LIB -DQT_NETWORK_LIB -DSYNTROCONTROLLIB_LIB -D_WINDLL  "-I." "-I$(QTDIR)\include\QtWidgets" "-I.\..\SyntroLib" "-I.\GeneratedFiles" "-I." "-I$(QTDIR)\include" "-I.\GeneratedFiles\$(ConfigurationName)\." "-I$(QTDIR)\include\QtCore" "-I$(QTDIR)\include\QtNetwork"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='StaticDebug|Win32'">"$(QTDIR)\bin\moc.exe"  "%(FullPath)" -o ".\GeneratedFiles\$(ConfigurationName)\moc_%(Filename).cpp"  -DUNICODE -DWIN32 -DQT_CORE_LIB -DQT_NETWORK_LIB -DSYNTRO_STATIC_LIB -DSYNTROCONTROL_STATIC_LIB  "-I." "-I$(QTDIR)\include\QtWidgets" "-I.\..\SyntroLib" "-I.\GeneratedFiles" "-I." "-I$(QTDIR)\include" "-I.\GeneratedFiles\$(ConfigurationName)\." "-I$(QTDIR)\include\QtCore" "-I$(QTDIR)\include\QtNetwork"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='StaticDebug|x64'">"$(QTDIR)\bin\moc.exe"  "%(FullPath)" -o ".\GeneratedFiles\$(ConfigurationName)\moc_%(Filename).cpp"  -DUNICODE -DWIN32 -DQT_CORE_LIB -DQT_NETWORK_LIB -DSYNTRO_STATIC_LIB -DSYNTROCONTROL_STATIC_LIB  "-I." "-I$(QTDIR)\include\QtWidgets" "-I.\..\SyntroLib" "-I.\GeneratedFiles" "-I." "-I$(QTDIR)\include" "-I.\GeneratedFiles\$(ConfigurationName)\." "-I$(QTDIR)\include\QtCore" "-I$(QTDIR)\include\QtNetwork"</Command>
       <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(QTDIR)\bin\moc.exe;%(FullPath);%(AdditionalInputs)</AdditionalInputs>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(QTDIR)\bin\moc.exe;%(FullPath);%(AdditionalInputs)</AdditionalInputs>
       <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='StaticRelease|Win32'">$(QTDIR)\bin\moc.exe;%(FullPath);%(AdditionalInputs)</AdditionalInputs>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='StaticRelease|x64'">$(QTDIR)\bin\moc.exe;%(FullPath);%(AdditionalInputs)</AdditionalInputs>
       <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Moc%27ing DirectoryManager.h...</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Moc%27ing DirectoryManager.h...</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='StaticRelease|Win32'">Moc%27ing DirectoryManager.h...</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='StaticRelease|x64'">Moc%27ing DirectoryManager.h...</Message>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">.\GeneratedFiles\$(ConfigurationName)\moc_%(Filename).cpp</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">.\GeneratedFiles\$(ConfigurationName)\moc_%(Filename).cpp</Outputs>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='StaticRelease|Win32'">.\GeneratedFiles\$(ConfigurationName)\moc_%(Filename).cpp</Outputs>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">"$(QTDIR)\bin\moc.exe"  "%(FullPath)" -o ".\GeneratedFiles\$(ConfigurationName)\moc_%(Filename).cpp"  -DUNICODE -DWIN32 -DQT_DLL -DQT_NO_DEBUG -DNDEBUG -DQT_CORE_LIB -DQT_NETWORK_LIB -DSYNTROCONTROLLIB_LIB -D_WINDLL  "-I." "-I$(QTDIR)\include\QtWidgets" "-I.\..\SyntroLib" "-I.\GeneratedFiles" "-I." "-I$(QTDIR)\include" "-I.\GeneratedFiles\$(ConfigurationName)\." "-I$(QTDIR)\include\QtCore" "-I$(QTDIR)\include\QtNetwork"</Command>
-      <Command Condition="'$(Configuration)|$(Platform)'=='StaticRelease|Win32'">"$(QTDIR)\bin\moc.exe"  "%(FullPath)" -o ".\GeneratedFiles\$(ConfigurationName)\moc_%(Filename).cpp"  -DUNICODE -DWIN32 -DQT_DLL -DQT_NO_DEBUG -DNDEBUG -DQT_CORE_LIB -DQT_NETWORK_LIB -DSYNTRO_STATIC_LIB -DSYNTROCONTROL_STATIC_LIB  "-I." "-I$(QTDIR)\include\QtWidgets" "-I.\..\SyntroLib" "-I.\GeneratedFiles" "-I." "-I$(QTDIR)\include" "-I.\GeneratedFiles\$(ConfigurationName)\." "-I$(QTDIR)\include\QtCore" "-I$(QTDIR)\include\QtNetwork"</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='StaticRelease|x64'">.\GeneratedFiles\$(ConfigurationName)\moc_%(Filename).cpp</Outputs>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">"$(QTDIR)\bin\moc.exe"  "%(FullPath)" -o ".\GeneratedFiles\$(ConfigurationName)\moc_%(Filename).cpp"  -DUNICODE -DWIN32 -DQT_NO_DEBUG -DNDEBUG -DQT_CORE_LIB -DQT_NETWORK_LIB -DSYNTROCONTROLLIB_LIB -D_WINDLL  "-I." "-I$(QTDIR)\include\QtWidgets" "-I.\..\SyntroLib" "-I.\GeneratedFiles" "-I." "-I$(QTDIR)\include" "-I.\GeneratedFiles\$(ConfigurationName)\." "-I$(QTDIR)\include\QtCore" "-I$(QTDIR)\include\QtNetwork"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">"$(QTDIR)\bin\moc.exe"  "%(FullPath)" -o ".\GeneratedFiles\$(ConfigurationName)\moc_%(Filename).cpp"  -DUNICODE -DWIN32 -DQT_NO_DEBUG -DNDEBUG -DQT_CORE_LIB -DQT_NETWORK_LIB -DSYNTROCONTROLLIB_LIB -D_WINDLL  "-I." "-I$(QTDIR)\include\QtWidgets" "-I.\..\SyntroLib" "-I.\GeneratedFiles" "-I." "-I$(QTDIR)\include" "-I.\GeneratedFiles\$(ConfigurationName)\." "-I$(QTDIR)\include\QtCore" "-I$(QTDIR)\include\QtNetwork"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='StaticRelease|Win32'">"$(QTDIR)\bin\moc.exe"  "%(FullPath)" -o ".\GeneratedFiles\$(ConfigurationName)\moc_%(Filename).cpp"  -DUNICODE -DWIN32 -DQT_NO_DEBUG -DNDEBUG -DQT_CORE_LIB -DQT_NETWORK_LIB -DSYNTRO_STATIC_LIB -DSYNTROCONTROL_STATIC_LIB  "-I." "-I$(QTDIR)\include\QtWidgets" "-I.\..\SyntroLib" "-I.\GeneratedFiles" "-I." "-I$(QTDIR)\include" "-I.\GeneratedFiles\$(ConfigurationName)\." "-I$(QTDIR)\include\QtCore" "-I$(QTDIR)\include\QtNetwork"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='StaticRelease|x64'">"$(QTDIR)\bin\moc.exe"  "%(FullPath)" -o ".\GeneratedFiles\$(ConfigurationName)\moc_%(Filename).cpp"  -DUNICODE -DWIN32 -DQT_NO_DEBUG -DNDEBUG -DQT_CORE_LIB -DQT_NETWORK_LIB -DSYNTRO_STATIC_LIB -DSYNTROCONTROL_STATIC_LIB  "-I." "-I$(QTDIR)\include\QtWidgets" "-I.\..\SyntroLib" "-I.\GeneratedFiles" "-I." "-I$(QTDIR)\include" "-I.\GeneratedFiles\$(ConfigurationName)\." "-I$(QTDIR)\include\QtCore" "-I$(QTDIR)\include\QtNetwork"</Command>
     </CustomBuild>
     <ClInclude Include="FastUIDLookup.h" />
     <CustomBuild Include="MulticastManager.h">
       <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(QTDIR)\bin\moc.exe;%(FullPath);%(AdditionalInputs)</AdditionalInputs>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(QTDIR)\bin\moc.exe;%(FullPath);%(AdditionalInputs)</AdditionalInputs>
       <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='StaticDebug|Win32'">$(QTDIR)\bin\moc.exe;%(FullPath);%(AdditionalInputs)</AdditionalInputs>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='StaticDebug|x64'">$(QTDIR)\bin\moc.exe;%(FullPath);%(AdditionalInputs)</AdditionalInputs>
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Moc%27ing MulticastManager.h...</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Moc%27ing MulticastManager.h...</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='StaticDebug|Win32'">Moc%27ing MulticastManager.h...</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='StaticDebug|x64'">Moc%27ing MulticastManager.h...</Message>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">.\GeneratedFiles\$(ConfigurationName)\moc_%(Filename).cpp</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">.\GeneratedFiles\$(ConfigurationName)\moc_%(Filename).cpp</Outputs>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='StaticDebug|Win32'">.\GeneratedFiles\$(ConfigurationName)\moc_%(Filename).cpp</Outputs>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">"$(QTDIR)\bin\moc.exe"  "%(FullPath)" -o ".\GeneratedFiles\$(ConfigurationName)\moc_%(Filename).cpp"  -DUNICODE -DWIN32 -DQT_DLL -DQT_CORE_LIB -DQT_NETWORK_LIB -DSYNTROCONTROLLIB_LIB -D_WINDLL  "-I." "-I$(QTDIR)\include\QtWidgets" "-I.\..\SyntroLib" "-I.\GeneratedFiles" "-I." "-I$(QTDIR)\include" "-I.\GeneratedFiles\$(ConfigurationName)\." "-I$(QTDIR)\include\QtCore" "-I$(QTDIR)\include\QtNetwork"</Command>
-      <Command Condition="'$(Configuration)|$(Platform)'=='StaticDebug|Win32'">"$(QTDIR)\bin\moc.exe"  "%(FullPath)" -o ".\GeneratedFiles\$(ConfigurationName)\moc_%(Filename).cpp"  -DUNICODE -DWIN32 -DQT_DLL -DQT_CORE_LIB -DQT_NETWORK_LIB -DSYNTRO_STATIC_LIB -DSYNTROCONTROL_STATIC_LIB  "-I." "-I$(QTDIR)\include\QtWidgets" "-I.\..\SyntroLib" "-I.\GeneratedFiles" "-I." "-I$(QTDIR)\include" "-I.\GeneratedFiles\$(ConfigurationName)\." "-I$(QTDIR)\include\QtCore" "-I$(QTDIR)\include\QtNetwork"</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='StaticDebug|x64'">.\GeneratedFiles\$(ConfigurationName)\moc_%(Filename).cpp</Outputs>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">"$(QTDIR)\bin\moc.exe"  "%(FullPath)" -o ".\GeneratedFiles\$(ConfigurationName)\moc_%(Filename).cpp"  -DUNICODE -DWIN32 -DQT_CORE_LIB -DQT_NETWORK_LIB -DSYNTROCONTROLLIB_LIB -D_WINDLL  "-I." "-I$(QTDIR)\include\QtWidgets" "-I.\..\SyntroLib" "-I.\GeneratedFiles" "-I." "-I$(QTDIR)\include" "-I.\GeneratedFiles\$(ConfigurationName)\." "-I$(QTDIR)\include\QtCore" "-I$(QTDIR)\include\QtNetwork"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">"$(QTDIR)\bin\moc.exe"  "%(FullPath)" -o ".\GeneratedFiles\$(ConfigurationName)\moc_%(Filename).cpp"  -DUNICODE -DWIN32 -DQT_CORE_LIB -DQT_NETWORK_LIB -DSYNTROCONTROLLIB_LIB -D_WINDLL  "-I." "-I$(QTDIR)\include\QtWidgets" "-I.\..\SyntroLib" "-I.\GeneratedFiles" "-I." "-I$(QTDIR)\include" "-I.\GeneratedFiles\$(ConfigurationName)\." "-I$(QTDIR)\include\QtCore" "-I$(QTDIR)\include\QtNetwork"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='StaticDebug|Win32'">"$(QTDIR)\bin\moc.exe"  "%(FullPath)" -o ".\GeneratedFiles\$(ConfigurationName)\moc_%(Filename).cpp"  -DUNICODE -DWIN32 -DQT_CORE_LIB -DQT_NETWORK_LIB -DSYNTRO_STATIC_LIB -DSYNTROCONTROL_STATIC_LIB  "-I." "-I$(QTDIR)\include\QtWidgets" "-I.\..\SyntroLib" "-I.\GeneratedFiles" "-I." "-I$(QTDIR)\include" "-I.\GeneratedFiles\$(ConfigurationName)\." "-I$(QTDIR)\include\QtCore" "-I$(QTDIR)\include\QtNetwork"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='StaticDebug|x64'">"$(QTDIR)\bin\moc.exe"  "%(FullPath)" -o ".\GeneratedFiles\$(ConfigurationName)\moc_%(Filename).cpp"  -DUNICODE -DWIN32 -DQT_CORE_LIB -DQT_NETWORK_LIB -DSYNTRO_STATIC_LIB -DSYNTROCONTROL_STATIC_LIB  "-I." "-I$(QTDIR)\include\QtWidgets" "-I.\..\SyntroLib" "-I.\GeneratedFiles" "-I." "-I$(QTDIR)\include" "-I.\GeneratedFiles\$(ConfigurationName)\." "-I$(QTDIR)\include\QtCore" "-I$(QTDIR)\include\QtNetwork"</Command>
       <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(QTDIR)\bin\moc.exe;%(FullPath);%(AdditionalInputs)</AdditionalInputs>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(QTDIR)\bin\moc.exe;%(FullPath);%(AdditionalInputs)</AdditionalInputs>
       <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='StaticRelease|Win32'">$(QTDIR)\bin\moc.exe;%(FullPath);%(AdditionalInputs)</AdditionalInputs>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='StaticRelease|x64'">$(QTDIR)\bin\moc.exe;%(FullPath);%(AdditionalInputs)</AdditionalInputs>
       <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Moc%27ing MulticastManager.h...</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Moc%27ing MulticastManager.h...</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='StaticRelease|Win32'">Moc%27ing MulticastManager.h...</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='StaticRelease|x64'">Moc%27ing MulticastManager.h...</Message>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">.\GeneratedFiles\$(ConfigurationName)\moc_%(Filename).cpp</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">.\GeneratedFiles\$(ConfigurationName)\moc_%(Filename).cpp</Outputs>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='StaticRelease|Win32'">.\GeneratedFiles\$(ConfigurationName)\moc_%(Filename).cpp</Outputs>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">"$(QTDIR)\bin\moc.exe"  "%(FullPath)" -o ".\GeneratedFiles\$(ConfigurationName)\moc_%(Filename).cpp"  -DUNICODE -DWIN32 -DQT_DLL -DQT_NO_DEBUG -DNDEBUG -DQT_CORE_LIB -DQT_NETWORK_LIB -DSYNTROCONTROLLIB_LIB -D_WINDLL  "-I." "-I$(QTDIR)\include\QtWidgets" "-I.\..\SyntroLib" "-I.\GeneratedFiles" "-I." "-I$(QTDIR)\include" "-I.\GeneratedFiles\$(ConfigurationName)\." "-I$(QTDIR)\include\QtCore" "-I$(QTDIR)\include\QtNetwork"</Command>
-      <Command Condition="'$(Configuration)|$(Platform)'=='StaticRelease|Win32'">"$(QTDIR)\bin\moc.exe"  "%(FullPath)" -o ".\GeneratedFiles\$(ConfigurationName)\moc_%(Filename).cpp"  -DUNICODE -DWIN32 -DQT_DLL -DQT_NO_DEBUG -DNDEBUG -DQT_CORE_LIB -DQT_NETWORK_LIB -DSYNTRO_STATIC_LIB -DSYNTROCONTROL_STATIC_LIB  "-I." "-I$(QTDIR)\include\QtWidgets" "-I.\..\SyntroLib" "-I.\GeneratedFiles" "-I." "-I$(QTDIR)\include" "-I.\GeneratedFiles\$(ConfigurationName)\." "-I$(QTDIR)\include\QtCore" "-I$(QTDIR)\include\QtNetwork"</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='StaticRelease|x64'">.\GeneratedFiles\$(ConfigurationName)\moc_%(Filename).cpp</Outputs>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">"$(QTDIR)\bin\moc.exe"  "%(FullPath)" -o ".\GeneratedFiles\$(ConfigurationName)\moc_%(Filename).cpp"  -DUNICODE -DWIN32 -DQT_NO_DEBUG -DNDEBUG -DQT_CORE_LIB -DQT_NETWORK_LIB -DSYNTROCONTROLLIB_LIB -D_WINDLL  "-I." "-I$(QTDIR)\include\QtWidgets" "-I.\..\SyntroLib" "-I.\GeneratedFiles" "-I." "-I$(QTDIR)\include" "-I.\GeneratedFiles\$(ConfigurationName)\." "-I$(QTDIR)\include\QtCore" "-I$(QTDIR)\include\QtNetwork"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">"$(QTDIR)\bin\moc.exe"  "%(FullPath)" -o ".\GeneratedFiles\$(ConfigurationName)\moc_%(Filename).cpp"  -DUNICODE -DWIN32 -DQT_NO_DEBUG -DNDEBUG -DQT_CORE_LIB -DQT_NETWORK_LIB -DSYNTROCONTROLLIB_LIB -D_WINDLL  "-I." "-I$(QTDIR)\include\QtWidgets" "-I.\..\SyntroLib" "-I.\GeneratedFiles" "-I." "-I$(QTDIR)\include" "-I.\GeneratedFiles\$(ConfigurationName)\." "-I$(QTDIR)\include\QtCore" "-I$(QTDIR)\include\QtNetwork"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='StaticRelease|Win32'">"$(QTDIR)\bin\moc.exe"  "%(FullPath)" -o ".\GeneratedFiles\$(ConfigurationName)\moc_%(Filename).cpp"  -DUNICODE -DWIN32 -DQT_NO_DEBUG -DNDEBUG -DQT_CORE_LIB -DQT_NETWORK_LIB -DSYNTRO_STATIC_LIB -DSYNTROCONTROL_STATIC_LIB  "-I." "-I$(QTDIR)\include\QtWidgets" "-I.\..\SyntroLib" "-I.\GeneratedFiles" "-I." "-I$(QTDIR)\include" "-I.\GeneratedFiles\$(ConfigurationName)\." "-I$(QTDIR)\include\QtCore" "-I$(QTDIR)\include\QtNetwork"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='StaticRelease|x64'">"$(QTDIR)\bin\moc.exe"  "%(FullPath)" -o ".\GeneratedFiles\$(ConfigurationName)\moc_%(Filename).cpp"  -DUNICODE -DWIN32 -DQT_NO_DEBUG -DNDEBUG -DQT_CORE_LIB -DQT_NETWORK_LIB -DSYNTRO_STATIC_LIB -DSYNTROCONTROL_STATIC_LIB  "-I." "-I$(QTDIR)\include\QtWidgets" "-I.\..\SyntroLib" "-I.\GeneratedFiles" "-I." "-I$(QTDIR)\include" "-I.\GeneratedFiles\$(ConfigurationName)\." "-I$(QTDIR)\include\QtCore" "-I$(QTDIR)\include\QtNetwork"</Command>
     </CustomBuild>
     <ClInclude Include="SyntroControlLib.h" />
     <ClInclude Include="syntrocontrollib_global.h" />
@@ -295,7 +519,7 @@
   </ImportGroup>
   <ProjectExtensions>
     <VisualStudio>
-      <UserProperties UicDir=".\GeneratedFiles" MocDir=".\GeneratedFiles\$(ConfigurationName)" MocOptions="" RccDir=".\GeneratedFiles" lupdateOnBuild="0" lupdateOptions="" lreleaseOptions="" Qt5Version_x0020_Win32="$(DefaultQtVersion)" />
+      <UserProperties MocDir=".\GeneratedFiles\$(ConfigurationName)" UicDir=".\GeneratedFiles" RccDir=".\GeneratedFiles" lupdateOptions="" lupdateOnBuild="0" lreleaseOptions="" Qt5Version_x0020_Win32="$(DefaultQtVersion)" Qt5Version_x0020_x64="5.6" MocOptions="" />
     </VisualStudio>
   </ProjectExtensions>
 </Project>
