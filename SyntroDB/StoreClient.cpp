@@ -122,12 +122,13 @@ void StoreClient::deleteStreamSource(int index)
 		return;
 
 	clientRemoveService(m_sources[index]->port);
+
 	StoreManager *dm = m_storeManagers[index];
-	dm->stop();
 
 	// deletes automatically, but don't want to reference it again
 	m_storeManagers[index] = NULL;
-	
+
+	dm->stop();
 	dm->exitThread();
 
 	delete m_sources[index];

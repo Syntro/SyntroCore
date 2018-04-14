@@ -43,6 +43,7 @@ bool StoreStream::streamIndexValid(int index)
 		result = false;
 
 	settings->endArray();
+
     delete settings;
 	
 	return result;

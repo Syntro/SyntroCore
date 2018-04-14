@@ -77,33 +77,5 @@ void loadSettings(QStringList arglist)
 	if (!settings->contains(SYNTRODB_PARAMS_ROOT_DIRECTORY))
 		settings->setValue(SYNTRODB_PARAMS_ROOT_DIRECTORY, QDir::homePath());
 
-	// Max age of files in days afterwhich they will be deleted
-	// A value of 0 turns off the delete behavior
-	if (!settings->contains(SYNTRODB_MAXAGE))
-		settings->setValue(SYNTRODB_MAXAGE, 0);		
-
-	// The SyntroStore component can save any type of stream.
-	// Here you can list the Syntro streams by name that it should look for.
-	int	nSize = settings->beginReadArray(SYNTRODB_PARAMS_STREAM_SOURCES);
-	settings->endArray();
-
-	if (nSize == 0) {
-		settings->beginWriteArray(SYNTRODB_PARAMS_STREAM_SOURCES);
-	
-		for (int index = 0; index < SYNTRODB_MAX_STREAMS; index++) {
-			settings->setArrayIndex(index);
-			if (index == 0) {
-				settings->setValue(SYNTRODB_PARAMS_INUSE, SYNTRO_PARAMS_FALSE);
-				settings->setValue(SYNTRODB_PARAMS_STREAM_SOURCE, "source/video");
-			} else {
-				settings->setValue(SYNTRODB_PARAMS_INUSE, SYNTRO_PARAMS_FALSE);
-				settings->setValue(SYNTRODB_PARAMS_STREAM_SOURCE, "");
-			}
-		}
-		settings->endArray();
-	}
-
 	delete settings;
-
-	return;
 }

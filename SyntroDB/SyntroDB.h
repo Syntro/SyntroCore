@@ -31,8 +31,6 @@
 
 // SyntroDB specific setting keys
 
-#define	SYNTRODB_MAXAGE					"maxAge"
-
 #define SYNTRODB_PARAMS_ROOT_DIRECTORY  "RootDirectory"
 
 #define	SYNTRODB_PARAMS_STREAM_SOURCES	"Streams"

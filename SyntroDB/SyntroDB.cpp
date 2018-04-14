@@ -44,8 +44,6 @@ SyntroDB::SyntroDB()
 	initDisplayStats();
 	restoreWindowState();
 
-	m_timerId = startTimer(2000);
-
 	SyntroUtils::syntroAppInit();
 	startControlServer();
 
@@ -67,21 +65,32 @@ SyntroDB::SyntroDB()
 	QSettings *settings = SyntroUtils::getSettings();
 
 	settings->beginReadArray(SYNTRODB_PARAMS_STREAM_SOURCES);
+
 	for (int index = 0; index < SYNTRODB_MAX_STREAMS; index++) {
 		settings->setArrayIndex(index);
 
-		m_rxStreamTable->item(index, SYNTRODB_COL_STREAM)->setText(settings->value(SYNTRODB_PARAMS_STREAM_SOURCE).toString());
-		if (settings->value(SYNTRODB_PARAMS_INUSE).toString() == SYNTRO_PARAMS_TRUE)
-			m_useBox[index]->setCheckState(Qt::Checked);
-		else
-			m_useBox[index]->setCheckState(Qt::Unchecked);
-	}
-	settings->endArray();
+		QString source = settings->value(SYNTRODB_PARAMS_STREAM_SOURCE).toString();
 
+		m_rxStreamTable->item(index, SYNTRODB_COL_STREAM)->setText(source);
+
+		if (source.length() > 0) {
+			if (settings->value(SYNTRODB_PARAMS_INUSE, SYNTRO_PARAMS_FALSE).toString() == SYNTRO_PARAMS_TRUE)
+				m_useBox[index]->setCheckState(Qt::Checked);
+			else
+				m_useBox[index]->setCheckState(Qt::Unchecked);
+		}
+		else {
+			m_useBox[index]->setCheckState(Qt::Unchecked);
+		}
+	}
+
+	settings->endArray();
 
 	m_startingUp = false;
 
 	delete settings;
+
+	m_timerId = startTimer(2000);
 }
 
 void SyntroDB::startControlServer()
@@ -116,23 +125,6 @@ void SyntroDB::closeEvent(QCloseEvent *)
 	if (m_CFSClient) {
 		m_CFSClient->exitThread();
 	}
-
-/*
-	QSettings *settings = SyntroUtils::getSettings();
-
-	settings->beginWriteArray(SYNTRODB_PARAMS_STREAM_SOURCES);
-	for (int index = 0; index < SYNTRODB_MAX_STREAMS; index++) {
-		settings->setArrayIndex(index);
-
-		if (m_useBox[index]->checkState() == Qt::Checked)
-			settings->setValue(SYNTRODB_PARAMS_INUSE, SYNTRO_PARAMS_TRUE);
-		else
-			settings->setValue(SYNTRODB_PARAMS_INUSE, SYNTRO_PARAMS_FALSE);
-	}
-	settings->endArray();
-
-	delete settings;
-*/
 
 	if (m_controlServer) {
 		m_controlServer->exitThread();

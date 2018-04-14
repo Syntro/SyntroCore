@@ -127,7 +127,7 @@ void StoreStreamDlg::loadCurrentValues()
 
 	m_streamName->setText(settings->value(SYNTRODB_PARAMS_STREAM_SOURCE).toString());
 
-	if (settings->value(SYNTRODB_PARAMS_FORMAT) == SYNTRO_RECORD_STORE_FORMAT_RAW)
+	if (settings->value(SYNTRODB_PARAMS_FORMAT, SYNTRO_RECORD_STORE_FORMAT_RAW).toString() == SYNTRO_RECORD_STORE_FORMAT_RAW)
 		m_formatCombo->setCurrentIndex(1);
 	else // if (settings->value(SYNTRODB_PARAMS_FORMAT) == SYNTRO_RECORD_STORE_FORMAT_SRF)
 		m_formatCombo->setCurrentIndex(0);
