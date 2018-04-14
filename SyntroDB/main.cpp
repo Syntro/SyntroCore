@@ -19,6 +19,7 @@
 
 #include "SyntroDB.h"
 #include <QApplication>
+#include <qdir.h>
 
 #include <QtDebug>
 
@@ -74,7 +75,7 @@ void loadSettings(QStringList arglist)
 	QSettings *settings = SyntroUtils::getSettings();
 
 	if (!settings->contains(SYNTRODB_PARAMS_ROOT_DIRECTORY))
-		settings->setValue(SYNTRODB_PARAMS_ROOT_DIRECTORY, "./");		
+		settings->setValue(SYNTRODB_PARAMS_ROOT_DIRECTORY, QDir::homePath());
 
 	// Max age of files in days afterwhich they will be deleted
 	// A value of 0 turns off the delete behavior
@@ -92,7 +93,7 @@ void loadSettings(QStringList arglist)
 		for (int index = 0; index < SYNTRODB_MAX_STREAMS; index++) {
 			settings->setArrayIndex(index);
 			if (index == 0) {
-				settings->setValue(SYNTRODB_PARAMS_INUSE, SYNTRO_PARAMS_TRUE);
+				settings->setValue(SYNTRODB_PARAMS_INUSE, SYNTRO_PARAMS_FALSE);
 				settings->setValue(SYNTRODB_PARAMS_STREAM_SOURCE, "source/video");
 			} else {
 				settings->setValue(SYNTRODB_PARAMS_INUSE, SYNTRO_PARAMS_FALSE);

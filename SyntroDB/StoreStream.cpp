@@ -63,7 +63,7 @@ bool StoreStream::streamIndexInUse(int index)
 
 	if (index < count) {
 		settings->setArrayIndex(index);
-		result = (settings->value(SYNTRODB_PARAMS_INUSE).toString() == SYNTRO_PARAMS_TRUE);
+		result = (settings->value(SYNTRODB_PARAMS_INUSE, SYNTRO_PARAMS_FALSE).toString() == SYNTRO_PARAMS_TRUE);
 	}
 
 	settings->endArray();
@@ -75,7 +75,7 @@ bool StoreStream::streamIndexInUse(int index)
 StoreStream::StoreStream()
 {
 	m_logTag = "StoreStream";
-	m_storePath = "./";
+	m_storePath = QDir::homePath();
 	m_createSubFolder = false;
 	m_storeFormat = structuredFileFormat;
 
@@ -97,7 +97,7 @@ StoreStream::StoreStream()
 StoreStream::StoreStream(const QString& logTag)
 {
 	m_logTag = logTag;
-	m_storePath = "./";
+	m_storePath = QDir::homePath();
 	m_createSubFolder = false;
 	m_storeFormat = structuredFileFormat;
 
@@ -493,7 +493,7 @@ bool StoreStream::load(QSettings *settings, const QString& rootDirectory)
 	m_storePath = rootDirectory;
 
 	if (m_storePath.length() == 0)
-		m_storePath = "./";
+		m_storePath = QDir::homePath();
 
 	if (!m_storePath.endsWith('/') && !m_storePath.endsWith('\\'))
 		 m_storePath += '/';
