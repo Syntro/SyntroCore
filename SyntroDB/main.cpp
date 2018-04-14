@@ -75,7 +75,7 @@ void loadSettings(QStringList arglist)
 	QSettings *settings = SyntroUtils::getSettings();
 
 	if (!settings->contains(SYNTRODB_PARAMS_ROOT_DIRECTORY))
-		settings->setValue(SYNTRODB_PARAMS_ROOT_DIRECTORY, QDir::homePath());
+		settings->setValue(SYNTRODB_PARAMS_ROOT_DIRECTORY, QDir::homePath() + "/Syntro/");
 
 	delete settings;
 }

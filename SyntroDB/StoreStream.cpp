@@ -76,7 +76,7 @@ bool StoreStream::streamIndexInUse(int index)
 StoreStream::StoreStream()
 {
 	m_logTag = "StoreStream";
-	m_storePath = QDir::homePath();
+	m_storePath = QDir::homePath() + "/Syntro/";
 	m_createSubFolder = false;
 	m_storeFormat = structuredFileFormat;
 
@@ -98,7 +98,7 @@ StoreStream::StoreStream()
 StoreStream::StoreStream(const QString& logTag)
 {
 	m_logTag = logTag;
-	m_storePath = QDir::homePath();
+	m_storePath = QDir::homePath() + "/Syntro/";
 	m_createSubFolder = false;
 	m_storeFormat = structuredFileFormat;
 
@@ -494,7 +494,7 @@ bool StoreStream::load(QSettings *settings, const QString& rootDirectory)
 	m_storePath = rootDirectory;
 
 	if (m_storePath.length() == 0)
-		m_storePath = QDir::homePath();
+		m_storePath = QDir::homePath() + "/Syntro/";
 
 	if (!m_storePath.endsWith('/') && !m_storePath.endsWith('\\'))
 		 m_storePath += '/';
@@ -541,7 +541,8 @@ bool StoreStream::load(QSettings *settings, const QString& rootDirectory)
 		m_folder.replace("/", "_");
 		m_storePath += m_folder + '/';
 		m_filePrefix = "";
-	} else {
+	}
+	else {
 		m_filePrefix = m_streamName + "_";
 		m_filePrefix.replace(":", "_");
 		m_filePrefix.replace("/", "_");
@@ -551,14 +552,15 @@ bool StoreStream::load(QSettings *settings, const QString& rootDirectory)
 	if (!dir.mkpath(m_storePath)) {
 		m_folderWritable = false;
 		logError(QString("Failed to create folder: %1").arg(m_storePath));
-	} else {
-		m_folderWritable = checkFolderPermissions();
-
-		if (!m_folderWritable)
-			logError(QString("Folder is not writable: %1").arg(m_storePath));
+		return false;
 	}
 
+	m_folderWritable = checkFolderPermissions();
 
+	if (!m_folderWritable) {
+		logError(QString("Folder is not writable: %1").arg(m_storePath));
+		return false;
+	}
 
 	//	Format
 

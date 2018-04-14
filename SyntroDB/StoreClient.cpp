@@ -99,6 +99,7 @@ void StoreClient::refreshStreamSource(int index)
 		logError(QString("Folder is not writable: %1").arg(m_sources[index]->pathOnly()));
 		delete m_sources[index];
 		m_sources[index] = NULL;
+		return;
 	}
 
 	m_storeManagers[index] = new StoreManager(m_sources[index]);
