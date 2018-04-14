@@ -638,13 +638,13 @@ void SyntroUtils::loadStandardSettings(const char *appType, QStringList arglist)
 	}
 
 	if (!settings->contains(SYNTRO_PARAMS_CONTROLREVERT))
-		settings->setValue(SYNTRO_PARAMS_CONTROLREVERT, 0);		
+		settings->setValue(SYNTRO_PARAMS_CONTROLREVERT, false);
 	
 	if (!settings->contains(SYNTRO_PARAMS_LOCALCONTROL))
-		settings->setValue(SYNTRO_PARAMS_LOCALCONTROL, 0);		
-	
+		settings->setValue(SYNTRO_PARAMS_LOCALCONTROL, false);
+
 	if (!settings->contains(SYNTRO_PARAMS_LOCALCONTROL_PRI))
-		settings->setValue(SYNTRO_PARAMS_LOCALCONTROL_PRI, 0);		
+		settings->setValue(SYNTRO_PARAMS_LOCALCONTROL_PRI, 0);
 	
 	if (!settings->contains(SYNTRO_PARAMS_HBINTERVAL))
 		settings->setValue(SYNTRO_PARAMS_HBINTERVAL, SYNTRO_HEARTBEAT_INTERVAL);
